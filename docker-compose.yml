@@ -1,0 +1,19 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: tallam-v2-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: tallam_root
+      MYSQL_DATABASE: govzalla_t_25
+      MYSQL_USER: tallam
+      MYSQL_PASSWORD: tallam_local
+    ports:
+      - "3307:3306"
+    volumes:
+      - tallam_mysql_data:/var/lib/mysql
+      - ./database/init:/docker-entrypoint-initdb.d:ro
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+volumes:
+  tallam_mysql_data:

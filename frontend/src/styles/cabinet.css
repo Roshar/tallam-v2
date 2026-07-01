@@ -1,0 +1,64 @@
+.cabinet-page {
+  flex: 1;
+  background: var(--color-lightblue);
+  padding: 2rem 1.5rem 4rem;
+}
+
+.cabinet-card {
+  max-width: 960px;
+  margin: 0 auto;
+  background: #fff;
+  padding: 2rem;
+}
+
+.cabinet-card h2 {
+  margin: 0 0 0.5rem;
+  color: var(--color-darkblue);
+}
+
+.cabinet-meta {
+  display: grid;
+  gap: 0.75rem;
+  margin: 1.5rem 0 2rem;
+}
+
+.cabinet-meta dt {
+  font-weight: 700;
+  color: var(--color-darkblue);
+}
+
+.cabinet-meta dd {
+  margin: 0;
+}
+
+.cabinet-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  padding: 0.85rem 1.25rem;
+  border: 1px solid var(--color-darkblue);
+  background: #fff;
+  color: var(--color-darkblue);
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  background: var(--color-darkblue);
+  color: #fff;
+}
+
+.cabinet-topbar {
+  max-width: 960px;
+  margin: 0 auto 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.cabinet-topbar__email {
+  color: var(--color-darkblue);
+}
