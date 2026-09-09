@@ -1,0 +1,267 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(20, 40, 70, 0.45);
+}
+
+.modal-card {
+  width: min(100%, 760px);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.modal-card--narrow {
+  width: min(100%, 560px);
+}
+
+.modal-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.modal-card__title {
+  margin: 0;
+  font-size: 1.2rem;
+  color: var(--color-darkblue);
+}
+
+.modal-card__close {
+  width: 2rem;
+  height: 2rem;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--color-text-muted);
+}
+
+.modal-form {
+  padding: 1.25rem 1.5rem 1.5rem;
+}
+
+.modal-section {
+  margin-bottom: 0;
+  padding: 1.25rem 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modal-section:first-of-type {
+  padding-top: 0;
+}
+
+.modal-section:last-of-type {
+  border-bottom: none;
+  padding-bottom: 0.5rem;
+}
+
+.modal-section__title {
+  margin: 0 0 1rem;
+  padding-bottom: 0.65rem;
+  font-size: 1rem;
+  color: var(--color-darkblue);
+  border-bottom: 1px solid #e8eef5;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.form-group--wide {
+  grid-column: 1 / -1;
+}
+
+.discipline-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.5rem;
+  max-height: 160px;
+  overflow: auto;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.discipline-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+}
+
+.modal-actions .btn-primary {
+  width: auto;
+  min-width: 140px;
+}
+
+.picker-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  max-height: 360px;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.picker-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.picker-list__item:last-child {
+  border-bottom: none;
+}
+
+.picker-list__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.picker-list__info strong {
+  color: var(--color-darkblue);
+}
+
+.picker-list__info span {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.workers-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1.5rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.workers-header__school {
+  margin: 0 0 0.35rem;
+  font-size: 1.5rem;
+  color: var(--color-darkblue);
+}
+
+.workers-header__title {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.workers-header__meta p {
+  margin: 0.25rem 0;
+  color: var(--color-text-muted);
+}
+
+.excel-export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #39b76c;
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: #267712;
+  font-weight: 600;
+  text-align: left;
+  max-width: 280px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.excel-export-btn:hover:not(:disabled) {
+  background: #edf7ea;
+  box-shadow: var(--shadow-sm);
+}
+
+.excel-export-btn:disabled {
+  opacity: 0.6;
+}
+
+.excel-export-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-sm);
+  background: #39b76c;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.workers-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.workers-toolbar .btn-primary {
+  white-space: nowrap;
+}
+
+.cabinet-nav__school {
+  margin: 0.15rem 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-darkblue);
+  max-width: 420px;
+}
+
+@media (max-width: 768px) {
+  .workers-header {
+    grid-template-columns: 1fr;
+  }
+
+  .excel-export-btn {
+    max-width: none;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cabinet-nav__school {
+    max-width: 200px;
+  }
+}

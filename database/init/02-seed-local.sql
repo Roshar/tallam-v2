@@ -33,8 +33,8 @@ ON DUPLICATE KEY UPDATE `title_level` = VALUES(`title_level`);
 
 INSERT INTO `teachers` (
   `id_tbl`, `id_teacher`, `surname`, `firstname`, `patronymic`, `birthday`,
-  `gender_id`, `level_of_education_id`, `school_id`
+  `gender_id`, `level_of_education_id`, `school_id`, `phone`, `email`, `position`
 ) VALUES
-(1, 'teacher-1', 'Иванов', 'Иван', 'Иванович', '1985-05-15', 1, 1, 1),
-(2, 'teacher-2', 'Петрова', 'Мария', 'Сергеевна', '1990-09-20', 2, 1, 1)
+(1, 'teacher-1', 'Иванов', 'Иван', 'Иванович', '1985-05-15', 1, 1, 1, '+7 900 111-22-33', 'ivanov@school.ru', 1),
+(2, 'teacher-2', 'Петрова', 'Мария', 'Сергеевна', '1990-09-20', 2, 1, 1, '+7 900 444-55-66', 'petrova@school.ru', 1)
 ON DUPLICATE KEY UPDATE `surname` = VALUES(`surname`);

@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { authenticate, getSchoolName, countTeachers } from "../services/auth.service.js";
+import { authenticate } from "../services/auth.service.js";
 
 export async function login(req: Request, res: Response) {
   const { email, password, accountType } = req.body as {
@@ -41,22 +41,4 @@ export function me(req: Request, res: Response) {
     return res.status(401).json({ error: "Не авторизован" });
   }
   return res.json({ user: req.session.user });
-}
-
-export async function schoolDashboard(req: Request, res: Response) {
-  const user = req.session.user;
-  if (!user || user.accountType !== "school") {
-    return res.status(403).json({ error: "Доступ только для школы" });
-  }
-
-  const [schoolName, teachersCount] = await Promise.all([
-    getSchoolName(user.schoolId),
-    countTeachers(user.schoolId),
-  ]);
-
-  return res.json({
-    schoolName,
-    teachersCount,
-    schoolId: user.schoolId,
-  });
 }

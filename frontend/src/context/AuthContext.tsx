@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, type User } from "../api/client";
+import { api, setUnauthorizedHandler, type User } from "../api/client";
 
 interface AuthContextValue {
   user: User | null;
@@ -22,6 +22,13 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+function redirectToAuth() {
+  if (window.location.pathname.startsWith("/auth")) {
+    return;
+  }
+  window.location.assign("/auth");
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -42,6 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      setUser(null);
+      redirectToAuth();
+    });
+
+    return () => setUnauthorizedHandler(null);
+  }, []);
+
   const login = useCallback(
     async (
       email: string,
@@ -55,7 +71,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const logout = useCallback(async () => {
-    await api.logout();
+    try {
+      await api.logout();
+    } catch {
+      // даже если сессия уже протухла — выходим локально
+    }
     setUser(null);
   }, []);
 

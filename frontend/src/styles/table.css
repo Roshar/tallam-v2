@@ -1,0 +1,242 @@
+.page-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.count-badge {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--radius-full);
+  background: var(--color-lightblue);
+  color: var(--color-darkblue);
+  font-weight: 700;
+  text-align: center;
+}
+
+.page-header-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.page-header-row__actions .btn {
+  width: auto;
+  text-decoration: none;
+}
+
+.table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+
+.data-table thead {
+  background: #f4f8fc;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  vertical-align: middle;
+}
+
+.data-table th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-darkblue);
+}
+
+.data-table th:first-child,
+.data-table td:first-child {
+  width: 3.25rem;
+}
+
+.data-table__project {
+  max-width: 10rem;
+  white-space: nowrap;
+}
+
+.data-table tbody tr:hover {
+  background: #fafcff;
+}
+
+.data-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.project-status {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-darkblue);
+}
+
+.project-status--muted {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.project-status--active {
+  color: var(--color-darkblue);
+}
+
+.table-empty {
+  padding: var(--space-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+  background: #fafcff;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.table-action-link {
+  color: var(--color-blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.table-action-link:hover {
+  text-decoration: underline;
+}
+
+.data-table__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.table-action-link--button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font: inherit;
+}
+
+.table-action-link--danger {
+  color: #b42318;
+}
+
+.table-action-link--button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.table-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.table-pagination__size {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.table-pagination__select {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+}
+
+.table-pagination__info {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.table-pagination__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.table-pagination__btn {
+  min-width: 4.5rem;
+}
+
+.table-pagination__page-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.table-pagination__page {
+  min-width: 2.25rem;
+  height: 2.25rem;
+  padding: 0 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-darkblue);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.table-pagination__page:hover:not(:disabled) {
+  background: var(--color-lightblue);
+}
+
+.table-pagination__page.active {
+  border-color: var(--color-blue);
+  background: var(--color-blue);
+  color: #fff;
+}
+
+.table-pagination__page:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.table-pagination__ellipsis {
+  color: var(--color-text-muted);
+  padding: 0 0.15rem;
+}
+
+@media (max-width: 768px) {
+  .page-header-row {
+    flex-direction: column;
+  }
+
+  .page-header-row__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .data-table th:nth-child(5),
+  .data-table td:nth-child(5),
+  .data-table th:nth-child(6),
+  .data-table td:nth-child(6) {
+    display: none;
+  }
+}

@@ -1,12 +1,12 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { SiteFooter, SiteHeader } from "../components/Layout";
+import { CabinetLayout } from "../components/Layout";
 
 export function MethodistCabinetPage() {
   const { user, loading, logout } = useAuth();
 
   if (loading) {
-    return <div className="app-shell" />;
+    return <div className="loading-state">Загрузка...</div>;
   }
 
   if (!user || user.accountType !== "methodist") {
@@ -18,23 +18,30 @@ export function MethodistCabinetPage() {
     .join(" ");
 
   return (
-    <div className="app-shell">
-      <SiteHeader />
-      <div className="cabinet-topbar">
-        <span className="cabinet-topbar__email">{user.email}</span>
-        <button className="btn-secondary" type="button" onClick={() => void logout()}>
-          Выйти
-        </button>
-      </div>
+    <CabinetLayout
+      roleLabel="Методист"
+      userEmail={user.email}
+      onLogout={() => void logout()}
+      menu={[
+        { id: "home", label: "Главная", active: true },
+        { id: "schools", label: "Школы", disabled: true, soon: true },
+        { id: "cards", label: "Проверка карт", disabled: true, soon: true },
+      ]}
+    >
+      <div className="card">
+        <div className="card-body">
+          <h2 className="page-title">Кабинет методиста</h2>
+          <p className="page-subtitle">{fullName || user.email}</p>
 
-      <main className="cabinet-page">
-        <section className="cabinet-card">
-          <h2>Кабинет методиста</h2>
-          <p>{fullName || user.email}</p>
-          <p>Раздел в разработке — следующий этап после школьного кабинета.</p>
-        </section>
-      </main>
-      <SiteFooter />
-    </div>
+          <div className="cabinet-welcome">
+            <p className="cabinet-welcome__title">Раздел в разработке</p>
+            <p className="cabinet-welcome__text">
+              Следующий этап — просмотр школ, проверка оценочных карт и
+              аналитика по методистам.
+            </p>
+          </div>
+        </div>
+      </div>
+    </CabinetLayout>
   );
 }

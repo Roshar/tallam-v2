@@ -1,64 +1,188 @@
-.cabinet-page {
-  flex: 1;
-  background: var(--color-lightblue);
-  padding: 2rem 1.5rem 4rem;
+.cabinet-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
-.cabinet-card {
-  max-width: 960px;
-  margin: 0 auto;
-  background: #fff;
-  padding: 2rem;
+.cabinet-nav__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding: var(--space-md) 0;
 }
 
-.cabinet-card h2 {
-  margin: 0 0 0.5rem;
+.cabinet-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.cabinet-nav__logo {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 700;
   color: var(--color-darkblue);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.cabinet-meta {
-  display: grid;
-  gap: 0.75rem;
-  margin: 1.5rem 0 2rem;
+.cabinet-nav__badge {
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-lightblue);
+  color: var(--color-darkblue);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.cabinet-meta dt {
+.cabinet-nav__user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.cabinet-nav__email {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cabinet-tabs {
+  border-top: 1px solid var(--color-border);
+  background: #f7fafe;
+}
+
+.cabinet-tabs__inner {
+  padding: 0;
+}
+
+.cabinet-menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.cabinet-menu__item {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text);
+  font-size: 0.925rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.cabinet-menu__item:hover:not(:disabled) {
+  color: var(--color-darkblue);
+  background: rgba(199, 217, 237, 0.45);
+}
+
+.cabinet-menu__item.active {
+  color: var(--color-darkblue);
+  font-weight: 700;
+  border-bottom-color: var(--color-blue);
+  background: transparent;
+}
+
+.cabinet-menu__item:disabled {
+  opacity: 0.45;
+}
+
+.cabinet-menu__soon {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.cabinet-main {
+  flex: 1;
+  padding: var(--space-xl) 0 var(--space-2xl);
+}
+
+.cabinet-content .card-body {
+  padding: var(--space-xl);
+}
+
+.cabinet-welcome {
+  padding: var(--space-lg);
+  margin-bottom: var(--space-lg);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--color-lightblue) 0%, #e8f1fa 100%);
+  border: 1px solid var(--color-border);
+}
+
+.cabinet-welcome__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--color-darkblue);
 }
 
-.cabinet-meta dd {
+.cabinet-welcome__text {
   margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.925rem;
 }
 
-.cabinet-actions {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
+.site-footer {
+  margin-top: auto;
+  padding: var(--space-lg) 0;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
 }
 
-.btn-secondary {
-  padding: 0.85rem 1.25rem;
-  border: 1px solid var(--color-darkblue);
-  background: #fff;
-  color: var(--color-darkblue);
-  cursor: pointer;
-}
-
-.btn-secondary:hover {
-  background: var(--color-darkblue);
-  color: #fff;
-}
-
-.cabinet-topbar {
-  max-width: 960px;
-  margin: 0 auto 1rem;
+.site-footer__inner {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: var(--space-md);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
-.cabinet-topbar__email {
-  color: var(--color-darkblue);
+.site-footer a {
+  color: var(--color-brightblue);
+  font-weight: 600;
+}
+
+.site-footer a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 768px) {
+  .cabinet-menu {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .cabinet-menu__item {
+    padding: 0.7rem 0.85rem;
+  }
+
+  .cabinet-nav__email {
+    display: none;
+  }
+
+  .site-footer__inner {
+    flex-direction: column;
+    text-align: center;
+  }
 }

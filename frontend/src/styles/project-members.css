@@ -1,0 +1,106 @@
+.project-member-boards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+}
+
+.project-member-board__header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.project-member-board__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-darkblue);
+  line-height: 1.35;
+}
+
+.project-member-board__hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.project-member-list {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0;
+  min-height: 12rem;
+  max-height: 28rem;
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.project-member-list__empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.project-member-list__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.project-member-list__item:last-child {
+  border-bottom: none;
+}
+
+.project-member-list__item:hover {
+  background: #f7fbff;
+}
+
+.project-member-list__name {
+  min-width: 0;
+  color: var(--color-text);
+  line-height: 1.35;
+}
+
+.project-member-list__btn {
+  flex-shrink: 0;
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid var(--color-blue);
+  border-radius: 0.25rem;
+  background: #fff;
+  color: var(--color-blue);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.project-member-list__btn:hover:not(:disabled) {
+  background: var(--color-lightblue);
+}
+
+.project-member-list__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.project-member-list__btn--remove {
+  border-color: #b42318;
+  color: #b42318;
+}
+
+.project-member-list__btn--remove:hover:not(:disabled) {
+  background: #fff5f5;
+}
+
+@media (max-width: 900px) {
+  .project-member-boards {
+    grid-template-columns: 1fr;
+  }
+}

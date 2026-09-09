@@ -6,6 +6,7 @@ import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 import { config } from "./config.js";
 import authRoutes from "./routes/auth.routes.js";
+import schoolRoutes from "./routes/school.routes.js";
 
 const MySQLStore = MySQLStoreFactory(session);
 
@@ -67,6 +68,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/school", schoolRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });
