@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { api, setUnauthorizedHandler, type User } from "../api/client";
+import { api, schoolLandingPath, setUnauthorizedHandler, type User } from "../api/client";
 
 interface AuthContextValue {
   user: User | null;
@@ -19,6 +19,8 @@ interface AuthContextValue {
   ) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
+  impersonateSchool: (schoolId: number) => Promise<void>;
+  stopImpersonation: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -79,9 +81,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
+  const impersonateSchool = useCallback(async (schoolId: number) => {
+    const { user: schoolUser } = await api.impersonateSchool(schoolId);
+    setUser(schoolUser);
+    window.location.assign(schoolLandingPath(schoolUser));
+  }, []);
+
+  const stopImpersonation = useCallback(async () => {
+    const { schoolId } = await api.stopImpersonation();
+    window.location.assign(`/admin/schools/${schoolId}`);
+  }, []);
+
   const value = useMemo(
-    () => ({ user, loading, login, logout, refresh }),
-    [user, loading, login, logout, refresh],
+    () => ({
+      user,
+      loading,
+      login,
+      logout,
+      refresh,
+      impersonateSchool,
+      stopImpersonation,
+    }),
+    [user, loading, login, logout, refresh, impersonateSchool, stopImpersonation],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

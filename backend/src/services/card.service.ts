@@ -377,7 +377,7 @@ export async function createProjectTeacherEvaluation(
     await connection.beginTransaction();
 
     let insertSql: string;
-    let insertParams: unknown[];
+    let insertParams: Array<string | number>;
 
     if (input.cardType === "full") {
       insertSql = `INSERT INTO card_from_project_teacher_mark3 (

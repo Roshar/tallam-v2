@@ -78,11 +78,20 @@ export async function authenticate(
 ): Promise<SessionUser | null> {
   if (accountType === "school") {
     const user = await findSchoolUserByEmail(email);
-    if (!user || user.status !== "on") {
+    if (!user) {
       return null;
     }
     const valid = await bcrypt.compare(password, user.password);
-    return valid ? mapSchoolUser(user) : null;
+    if (!valid) {
+      return null;
+    }
+    if (user.role === "admin") {
+      return user.status === "on" ? mapSchoolUser(user) : null;
+    }
+    if (user.role !== "school_admin") {
+      return null;
+    }
+    return mapSchoolUser(user);
   }
 
   const methodist = await findMethodistByEmail(email);
@@ -91,6 +100,20 @@ export async function authenticate(
   }
   const valid = await bcrypt.compare(password, methodist.password);
   return valid ? mapMethodist(methodist) : null;
+}
+
+export async function getSchoolSessionUser(
+  schoolId: number,
+): Promise<SessionUser | null> {
+  const rows = await query<DbUser[]>(
+    `SELECT id, id_user, email, password, status, school_id, role
+     FROM users
+     WHERE school_id = ? AND role = 'school_admin'
+     ORDER BY status = 'on' DESC, id ASC
+     LIMIT 1`,
+    [schoolId],
+  );
+  return rows[0] ? mapSchoolUser(rows[0]) : null;
 }
 
 export async function getSchoolName(schoolId: number): Promise<string | null> {

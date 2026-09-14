@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `actor_user_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `actor_email` varchar(255) NOT NULL,
+  `actor_account_type` varchar(30) DEFAULT NULL,
+  `school_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `category` varchar(40) NOT NULL,
+  `action` varchar(100) NOT NULL,
+  `status` enum('success','failure') NOT NULL,
+  `entity_type` varchar(50) DEFAULT NULL,
+  `entity_id` varchar(100) DEFAULT NULL,
+  `details` json DEFAULT NULL,
+  `ip_address` varchar(64) DEFAULT NULL,
+  `user_agent` varchar(500) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_audit_created` (`created_at`),
+  KEY `idx_audit_action_created` (`action`, `created_at`),
+  KEY `idx_audit_email_created` (`actor_email`, `created_at`),
+  KEY `idx_audit_category_created` (`category`, `created_at`),
+  KEY `idx_audit_status_created` (`status`, `created_at`),
+  KEY `idx_audit_school_created` (`school_id`, `created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

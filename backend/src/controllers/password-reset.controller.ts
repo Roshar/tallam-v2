@@ -4,6 +4,43 @@ import {
   resetSchoolPassword,
   validateResetToken,
 } from "../services/password-reset.service.js";
+import { recordAuditLog } from "../services/audit-log.service.js";
+
+function logPasswordChange(
+  req: Request,
+  status: "success" | "failure",
+  identity?: { email?: string; userId?: number; schoolId?: number },
+  httpStatus = 200,
+) {
+  void recordAuditLog({
+    actorUserId: identity?.userId ?? null,
+    actorEmail: identity?.email ?? "unknown",
+    actorAccountType: identity?.email ? "school" : null,
+    schoolId: identity?.schoolId ?? null,
+    category: "password",
+    action: "password.changed",
+    status,
+    details: { httpStatus },
+    ipAddress: req.ip || req.socket.remoteAddress || null,
+    userAgent: req.get("user-agent") ?? null,
+  }).catch((error) => {
+    console.error("Password audit log write failed:", error);
+  });
+}
+
+function logPasswordFailureForToken(
+  req: Request,
+  token: string,
+  httpStatus: number,
+) {
+  void validateResetToken(token)
+    .then((identity) => {
+      logPasswordChange(req, "failure", identity, httpStatus);
+    })
+    .catch(() => {
+      logPasswordChange(req, "failure", undefined, httpStatus);
+    });
+}
 
 export async function forgotPassword(req: Request, res: Response) {
   const { email } = req.body as { email?: string };
@@ -34,7 +71,7 @@ export async function checkResetToken(req: Request, res: Response) {
     if (!result.valid) {
       return res.status(400).json({ valid: false, error: result.reason });
     }
-    return res.json({ valid: true });
+    return res.json({ valid: true, schoolName: result.schoolName });
   } catch (error) {
     console.error("Validate reset token error:", error);
     return res.status(500).json({ error: "Ошибка сервера" });
@@ -49,24 +86,29 @@ export async function resetPassword(req: Request, res: Response) {
   };
 
   if (!password || !confirmPassword) {
+    logPasswordFailureForToken(req, token, 400);
     return res.status(400).json({ error: "Укажите пароль и подтверждение" });
   }
 
   if (password !== confirmPassword) {
+    logPasswordFailureForToken(req, token, 400);
     return res.status(400).json({ error: "Пароли не совпадают" });
   }
 
   try {
     const result = await resetSchoolPassword(token, password);
     if (!result.ok) {
+      logPasswordChange(req, "failure", result, 400);
       return res.status(400).json({ error: result.error });
     }
 
+    logPasswordChange(req, "success", result);
     return res.json({
       ok: true,
       message: "Пароль успешно изменён. Теперь вы можете войти.",
     });
   } catch (error) {
+    logPasswordChange(req, "failure", undefined, 500);
     console.error("Reset password error:", error);
     return res.status(500).json({ error: "Не удалось изменить пароль" });
   }

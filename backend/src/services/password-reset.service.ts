@@ -3,12 +3,14 @@ import crypto from "node:crypto";
 import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { sendPasswordResetEmail } from "./email.service.js";
+import { getSchoolAccessState, syncSchoolCabinetAccess } from "./school-access.service.js";
 
 interface SchoolUserRow {
   id: number;
   email: string;
   status: "on" | "off";
   role: string;
+  school_id: number;
 }
 
 interface ResetTokenRow {
@@ -20,6 +22,8 @@ interface ResetTokenRow {
   email: string;
   status: "on" | "off";
   role: string;
+  school_id: number;
+  school_name: string;
 }
 
 const MIN_PASSWORD_LENGTH = 6;
@@ -32,31 +36,10 @@ function generateToken(): string {
   return crypto.randomBytes(32).toString("hex");
 }
 
-export function validatePassword(password: string): string | null {
-  if (!password || password.length < MIN_PASSWORD_LENGTH) {
-    return `Пароль должен содержать не менее ${MIN_PASSWORD_LENGTH} символов`;
-  }
-  return null;
-}
-
-async function findSchoolAccount(email: string): Promise<SchoolUserRow | null> {
-  const rows = await query<SchoolUserRow[]>(
-    `SELECT id, email, status, role
-     FROM users
-     WHERE email = ? AND role = 'school_admin'
-     LIMIT 1`,
-    [email.trim()],
-  );
-  return rows[0] ?? null;
-}
-
-export async function requestSchoolPasswordReset(email: string): Promise<void> {
-  const user = await findSchoolAccount(email);
-
-  if (!user || user.status !== "on") {
-    return;
-  }
-
+async function createResetLink(user: SchoolUserRow): Promise<{
+  resetUrl: string;
+  expiresAt: Date;
+}> {
   const token = generateToken();
   const tokenHash = hashToken(token);
   const expiresAt = new Date(
@@ -74,22 +57,93 @@ export async function requestSchoolPasswordReset(email: string): Promise<void> {
     [user.id, tokenHash, expiresAt],
   );
 
-  const resetUrl = `${config.frontendUrl}/auth/reset/${token}`;
+  return {
+    resetUrl: `${config.frontendUrl}/auth/reset/${token}`,
+    expiresAt,
+  };
+}
+
+export function validatePassword(password: string): string | null {
+  if (!password || password.length < MIN_PASSWORD_LENGTH) {
+    return `Пароль должен содержать не менее ${MIN_PASSWORD_LENGTH} символов`;
+  }
+  return null;
+}
+
+async function findSchoolAccount(email: string): Promise<SchoolUserRow | null> {
+  const rows = await query<SchoolUserRow[]>(
+    `SELECT id, email, status, role, school_id
+     FROM users
+     WHERE email = ? AND role = 'school_admin'
+     LIMIT 1`,
+    [email.trim()],
+  );
+  return rows[0] ?? null;
+}
+
+export async function requestSchoolPasswordReset(email: string): Promise<void> {
+  const user = await findSchoolAccount(email);
+
+  if (!user) {
+    return;
+  }
+
+  await syncSchoolCabinetAccess(user.school_id);
+  const access = await getSchoolAccessState(user.school_id);
+  if (!access.canLogin) {
+    return;
+  }
+
+  const { resetUrl } = await createResetLink(user);
   await sendPasswordResetEmail(user.email, resetUrl);
+}
+
+export async function createSchoolPasswordResetLink(
+  schoolId: number,
+): Promise<{ resetUrl: string; expiresAt: Date; email: string } | null> {
+  const rows = await query<SchoolUserRow[]>(
+    `SELECT id, email, status, role, school_id
+     FROM users
+     WHERE school_id = ? AND role = 'school_admin'
+     LIMIT 1`,
+    [schoolId],
+  );
+  const user = rows[0];
+
+  if (!user) {
+    return null;
+  }
+
+  await syncSchoolCabinetAccess(user.school_id);
+  const access = await getSchoolAccessState(user.school_id);
+  if (!access.canLogin) {
+    return null;
+  }
+
+  const result = await createResetLink(user);
+  return { ...result, email: user.email };
 }
 
 export async function validateResetToken(
   token: string,
-): Promise<{ valid: boolean; reason?: string }> {
+): Promise<{
+  valid: boolean;
+  reason?: string;
+  email?: string;
+  userId?: number;
+  schoolId?: number;
+  schoolName?: string;
+}> {
   if (!token?.trim()) {
     return { valid: false, reason: "Ссылка недействительна" };
   }
 
   const rows = await query<ResetTokenRow[]>(
     `SELECT t.id, t.user_id, t.token_hash, t.expires_at, t.used_at,
-            u.email, u.status, u.role
+            u.email, u.status, u.role, u.school_id, s.school_name
      FROM password_reset_tokens t
      JOIN users u ON u.id = t.user_id
+     JOIN schools s ON s.id_school = u.school_id
      WHERE t.token_hash = ?
      LIMIT 1`,
     [hashToken(token.trim())],
@@ -108,33 +162,61 @@ export async function validateResetToken(
     return { valid: false, reason: "Срок действия ссылки истёк" };
   }
 
-  if (row.role !== "school_admin" || row.status !== "on") {
+  if (row.role !== "school_admin") {
     return { valid: false, reason: "Аккаунт недоступен" };
   }
 
-  return { valid: true };
+  await syncSchoolCabinetAccess(row.school_id);
+  const access = await getSchoolAccessState(row.school_id);
+  if (!access.canLogin) {
+    return { valid: false, reason: access.message };
+  }
+
+  return {
+    valid: true,
+    email: row.email,
+    userId: row.user_id,
+    schoolId: row.school_id,
+    schoolName: row.school_name,
+  };
 }
 
 export async function resetSchoolPassword(
   token: string,
   password: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
-  const passwordError = validatePassword(password);
-  if (passwordError) {
-    return { ok: false, error: passwordError };
-  }
-
+): Promise<
+  | { ok: true; email: string; userId: number; schoolId: number }
+  | {
+      ok: false;
+      error: string;
+      email?: string;
+      userId?: number;
+      schoolId?: number;
+    }
+> {
   const validation = await validateResetToken(token);
   if (!validation.valid) {
     return { ok: false, error: validation.reason ?? "Ссылка недействительна" };
   }
 
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    return {
+      ok: false,
+      error: passwordError,
+      email: validation.email,
+      userId: validation.userId,
+      schoolId: validation.schoolId,
+    };
+  }
+
   const tokenHash = hashToken(token.trim());
   const rows = await query<ResetTokenRow[]>(
     `SELECT t.id, t.user_id, t.token_hash, t.expires_at, t.used_at,
-            u.email, u.status, u.role
+            u.email, u.status, u.role, u.school_id, s.school_name
      FROM password_reset_tokens t
      JOIN users u ON u.id = t.user_id
+     JOIN schools s ON s.id_school = u.school_id
      WHERE t.token_hash = ?
      LIMIT 1`,
     [tokenHash],
@@ -157,5 +239,10 @@ export async function resetSchoolPassword(
     [row.user_id],
   );
 
-  return { ok: true };
+  return {
+    ok: true,
+    email: row.email,
+    userId: row.user_id,
+    schoolId: row.school_id,
+  };
 }

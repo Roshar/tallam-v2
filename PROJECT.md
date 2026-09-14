@@ -22,7 +22,7 @@ npm run dev                   # API :4000, web :5173
 
 ## Что уже сделано (кабинет школы)
 
-Горизонтальные вкладки: Главная / База работников / Проект «Анализ урока». Сайдбар убран. Ширина контейнера `--container-lg: 1280px`.
+Горизонтальные вкладки: Главная / База работников / Проект «Анализ урока» / Подписка. Сайдбар убран. Ширина контейнера `--container-lg: 1280px`.
 
 ### Главная `/school/cabinet`
 
@@ -59,8 +59,35 @@ npm run dev                   # API :4000, web :5173
 - Session cookie `smad`, store в MySQL `sessions`.
 - Сброс пароля: `/auth/forgot`, `/auth/reset/:token`.
 - При API `401` — очистка пользователя и редирект на `/auth` (`setUnauthorizedHandler` в `frontend/src/api/client.ts`).
+- При истёкшей или ещё не начавшейся подписке школа входит в систему, но сразу попадает на `/school/subscription`. Остальной кабинет закрыт, сессия не сбрасывается. Принудительная блокировка администратором по-прежнему полностью запрещает вход.
+- `/school/subscription`: статус срока и форма продления на физическое лицо. Паспортные данные и ИНН сохраняются в БД только в зашифрованном виде (AES-256-GCM).
+- После отправки школе доступны черновики документов, QR-код и реквизиты. В QR вместо номера договора используется уникальный номер заявки `З-<id>`. Финальные связанные номера вида `Д-2026-09-0001` и `С-2026-09-0001` присваиваются только при подтверждении оплаты: год и месяц подтверждения плюс единый сквозной номер, который не сбрасывается каждый месяц. Стоимость годового доступа — 10 000 ₽.
+- API школы: `GET /api/school/subscription`, `GET|POST /api/school/subscription/renewal`, `GET /api/school/subscription/renewal/:requestId/contract|invoice`. Профиль школы и оформление доступны при ограниченном входе.
+- Действия школы записываются в `audit_logs`: авторизация и выход, запрос/смена пароля, просмотры и продление подписки, скачивание документов, просмотр/создание/изменение работников, экспорт, включение в проекты, просмотр анализа урока и добавление оценки. Пароли, токены, паспортные данные, ИНН и адреса в журнал не попадают.
 
-Кабинет методиста `/methodist/cabinet` — заглушка. Админка не перенесена.
+Кабинет методиста `/methodist/cabinet` — заглушка.
+
+### Администратор `/admin/cabinet`
+
+- Администратор входит через вкладку «Школа»; роль определяется из `users.role`.
+- После входа роль `admin` перенаправляется на `/admin/cabinet`.
+- Дашборд: школы, активные/отключённые кабинеты, учителя, оценки за текущий год и всего, методисты, проекты.
+- Показываются последние 5 школ и диаграмма состояния кабинетов.
+- Подписки хранятся в `school_subscriptions`: начало, окончание, контактный телефон, отмена, источник и примечание; таблица допускает историю периодов.
+- На дашборде: активные подписки, истекающие за 30 дней и истёкшие.
+- `/admin/subscriptions`: все школы платформы с поиском, фильтрами по статусу и району, логинами, телефонами, сроками и пагинацией. Школы без импортированных сроков показываются со статусом «Нет данных» и не блокируются автоматически.
+- Клик по названию школы открывает карточку `/admin/subscriptions/:schoolId`: профиль, статус кабинета, текущая подписка, ручное добавление периода, история, проекты и оценки за 3 года.
+- Excel-экспорт учитывает текущие поиск, статус и район.
+- Администратор может создать одноразовую ссылку для самостоятельной смены пароля школой — из списка и со страницы школы. Ссылка действует 60 минут; пароль хранится только как bcrypt-хеш.
+- По окончании подписки остальные разделы кабинета школы закрываются, но вход на страницу оплаты остаётся. Принудительная блокировка полностью запрещает вход.
+- Со страницы школы можно принудительно заблокировать кабинет или активировать его на выбранный срок. В заявках на продление используются реквизиты ГБУ ДПО «ИРО ЧР» из типового счёта.
+- `/admin/renewals`: очередь заявок на продление. Администратор видит данные заказчика, скачивает черновики и окончательно подтверждает оплату. Подтверждение атомарно резервирует следующий глобальный номер, формирует финальные документы и добавляет годовой период: после действующей подписки либо с даты подтверждения, если срок уже истёк.
+- Данные заявок хранятся в `subscription_renewal_requests`, глобальная последовательность номеров — в `subscription_document_sequences`; ключ шифрования задаётся через `SUBSCRIPTION_DATA_ENCRYPTION_KEY`.
+- `/admin/logs`: журнал действий с категориями «Авторизация», «Пароли», «Подписка», «Работники» и «Анализ урока». Фильтры: тип действия, email, успешность, период дат; пагинация 20/50/100. Подтверждение оплаты фиксируется в журнале в момент ручного подтверждения администратором — банковского webhook пока нет.
+- Исходные сроки и телефоны импортированы локально из Numbers без паролей. Общий импортёр принимает безопасный JSON:
+  `npm run db:import-subscriptions -- /path/to/subscriptions.json`.
+- API: `GET /api/admin/dashboard`, `GET /api/admin/subscriptions`, `GET /api/admin/subscriptions/areas`, `GET /api/admin/subscriptions/export`, `GET /api/admin/subscriptions/:schoolId`, `POST /api/admin/subscriptions/:schoolId/password-reset-link`, `POST /api/admin/subscriptions/:schoolId/block`, `POST /api/admin/subscriptions/:schoolId/activate`, `POST /api/admin/subscriptions/:schoolId/periods`; доступ только роли `admin`.
+- Разделы «Школы», «Проекты» и «Методисты» в новой админке пока заглушки.
 
 ## Важные файлы
 
@@ -68,9 +95,16 @@ npm run dev                   # API :4000, web :5173
 |---|---|
 | Роуты фронта | `frontend/src/App.tsx` |
 | API-клиент | `frontend/src/api/client.ts` |
-| School API | `backend/src/routes/school.routes.ts`, `controllers/school.controller.ts` |
+| School API | `backend/src/routes/school.routes.ts`, `controllers/school.controller.ts`, `services/school-subscription.service.ts` |
+| Оформление продления | `backend/src/services/subscription-renewal.service.ts`, `services/subscription-documents.service.ts`, `database/init/07-subscription-renewal-requests.sql` |
+| Журнал действий | `backend/src/services/audit-log.service.ts`, `controllers/audit-log.controller.ts`, `database/init/08-audit-logs.sql` |
 | Карты/оценки | `backend/src/services/card.service.ts` |
 | Учителя | `backend/src/services/teachers.service.ts` |
+| Admin API | `backend/src/routes/admin.routes.ts`, `services/admin.service.ts`, `services/school-access.service.ts` |
+| Admin UI | `frontend/src/pages/admin/AdminDashboardPage.tsx`, `AdminSubscriptionsPage.tsx`, `AdminSchoolDetailPage.tsx`, `styles/admin.css` |
+| Подписка школы | `frontend/src/pages/school/SchoolSubscriptionPage.tsx`, `styles/school-subscription.css` |
+| Заявки на продление | `frontend/src/pages/admin/AdminRenewalsPage.tsx` |
+| Логи администратора | `frontend/src/pages/admin/AdminLogsPage.tsx` |
 | Критерии | `frontend/src/data/evaluationCriteria.ts` |
 | Форма оценки | `frontend/src/pages/school/EvaluateFormPage.tsx`, `styles/evaluate.css` |
 
@@ -78,8 +112,8 @@ npm run dev                   # API :4000, web :5173
 
 1. **Подсказки по баллам** — вставить тексты из v1 (`prompt` в `tallam_2025_v1/views/card_templates/school_teacher_card_add_mark_*.hbs`) в `hint` критериев; модалка уже есть.
 2. **Просмотр сохранённой карты** — клик по строке оценки: полная карточка, печать, рекомендации (логика в v1 `school_card.js`).
-3. Кабинет методиста и остальные роли.
-4. Не использовать production DB для записи при разработке.
+3. Кабинет методиста и остальные разделы админки.
+5. Не использовать production DB для записи при разработке.
 
 ## Соглашения UI
 

@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { useSchool } from "../context/SchoolContext";
 
 export const SCHOOL_MENU = [
@@ -11,6 +12,12 @@ export const SCHOOL_MENU = [
     to: "/school/lesson-analysis",
   },
 ] as const;
+
+const SUBSCRIPTION_ITEM = {
+  id: "subscription",
+  label: "Подписка",
+  to: "/school/subscription",
+} as const;
 
 interface SchoolCabinetLayoutProps {
   userEmail: string;
@@ -24,9 +31,50 @@ export function SchoolCabinetLayout({
   children,
 }: SchoolCabinetLayoutProps) {
   const { profile } = useSchool();
+  const { user, stopImpersonation } = useAuth();
+  const [stopping, setStopping] = useState(false);
+  const billingOnly =
+    user?.accountType === "school" && user.cabinetAccess === "billing";
+  const impersonating = Boolean(user?.impersonatedBy);
+  const menu = billingOnly
+    ? [SUBSCRIPTION_ITEM]
+    : [...SCHOOL_MENU, SUBSCRIPTION_ITEM];
+
+  async function handleStopImpersonation() {
+    setStopping(true);
+    try {
+      await stopImpersonation();
+    } catch {
+      setStopping(false);
+    }
+  }
 
   return (
     <div className="app-shell">
+      {impersonating ? (
+        <div className="impersonation-banner">
+          <div className="page-container impersonation-banner__inner">
+            <p>
+              Вы вошли как школа
+              {profile?.schoolName ? (
+                <>
+                  {" "}
+                  <strong>{profile.schoolName}</strong>
+                </>
+              ) : null}
+              . Администратор: {user?.impersonatedBy?.email}
+            </p>
+            <button
+              className="btn btn-ghost"
+              type="button"
+              disabled={stopping}
+              onClick={() => void handleStopImpersonation()}
+            >
+              {stopping ? "Возврат..." : "Вернуться в админку"}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <header className="cabinet-header">
         <nav className="cabinet-nav">
           <div className="cabinet-nav__inner page-container">
@@ -37,7 +85,9 @@ export function SchoolCabinetLayout({
                   <p className="cabinet-nav__school">{profile.schoolName}</p>
                 ) : null}
               </div>
-              <span className="cabinet-nav__badge">Школа</span>
+              <span className="cabinet-nav__badge">
+                {billingOnly ? "Продление" : "Школа"}
+              </span>
             </div>
             <div className="cabinet-nav__user">
               <span className="cabinet-nav__email">{userEmail}</span>
@@ -51,7 +101,7 @@ export function SchoolCabinetLayout({
         <nav className="cabinet-tabs" aria-label="Разделы кабинета">
           <div className="cabinet-tabs__inner page-container">
             <ul className="cabinet-menu">
-              {SCHOOL_MENU.map((item) => (
+              {menu.map((item) => (
                 <li key={item.id}>
                   <NavLink
                     to={item.to}

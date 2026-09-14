@@ -33,6 +33,87 @@ export interface SchoolProfile {
   email: string;
 }
 
+export type SchoolSubscriptionPageStatus =
+  | "active"
+  | "expiring"
+  | "expired"
+  | "scheduled"
+  | "missing";
+
+export interface SchoolBankDetails {
+  recipient: string;
+  inn: string;
+  kpp: string;
+  account: string;
+  bankName: string;
+  bik: string;
+  correspondentAccount: string;
+  purpose: string;
+  amount: number;
+  amountLabel: string;
+  paymentNotice: string;
+}
+
+export interface SchoolSubscriptionOverview {
+  schoolId: number;
+  schoolName: string;
+  status: SchoolSubscriptionPageStatus;
+  title: string;
+  description: string;
+  cabinetLocked: boolean;
+  needsPayment: boolean;
+  paymentReady: boolean;
+  startsOn: string | null;
+  endsOn: string | null;
+  daysLeft: number | null;
+  totalDays: number | null;
+  elapsedDays: number | null;
+  progressPercent: number | null;
+  phone: string | null;
+  qrPayload: string | null;
+  qrImage: string | null;
+  bank: SchoolBankDetails | null;
+}
+
+export type RenewalStatus =
+  | "pending"
+  | "documents_ready"
+  | "paid"
+  | "cancelled";
+
+export interface RenewalCustomerData {
+  fullName: string;
+  phone: string;
+  passportSeries: string;
+  passportNumber: string;
+  passportIssuedBy: string;
+  passportIssuedOn: string;
+  divisionCode: string;
+  residentialAddress: string;
+  inn: string;
+}
+
+export interface SchoolRenewalRequest {
+  id: number;
+  schoolId: number;
+  schoolName: string;
+  status: RenewalStatus;
+  contractNumber: string | null;
+  invoiceNumber: string | null;
+  issuedOn: string | null;
+  startsOn: string | null;
+  endsOn: string | null;
+  consentAt: string;
+  paidAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  customer: RenewalCustomerData;
+}
+
+export interface SubmitRenewalPayload extends RenewalCustomerData {
+  consent: boolean;
+}
+
 export interface WorkerFormOptions {
   genders: Array<{ id: number; title: string }>;
   educationLevels: Array<{ id: number; title: string }>;

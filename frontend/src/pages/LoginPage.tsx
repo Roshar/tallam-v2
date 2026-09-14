@@ -1,5 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { schoolLandingPath } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 type Tab = "school" | "methodist";
@@ -14,8 +15,11 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
 
   if (!loading && user) {
-    if (user.accountType === "school" || user.accountType === "admin") {
-      return <Navigate to="/school/cabinet" replace />;
+    if (user.accountType === "admin") {
+      return <Navigate to="/admin/cabinet" replace />;
+    }
+    if (user.accountType === "school") {
+      return <Navigate to={schoolLandingPath(user)} replace />;
     }
     if (user.accountType === "methodist") {
       return <Navigate to="/methodist/cabinet" replace />;

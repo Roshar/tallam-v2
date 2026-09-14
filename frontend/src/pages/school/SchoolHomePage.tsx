@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { api } from "../../api/client";
-import type { SchoolDashboard } from "../../types/school";
+import type { SchoolDashboard, SchoolSubscriptionOverview } from "../../types/school";
 
 export function SchoolHomePage() {
   const [dashboard, setDashboard] = useState<SchoolDashboard | null>(null);
+  const [subscription, setSubscription] =
+    useState<SchoolSubscriptionOverview | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -11,6 +14,12 @@ export function SchoolHomePage() {
       .schoolDashboard()
       .then(setDashboard)
       .catch((err: Error) => setError(err.message));
+    api
+      .schoolSubscription()
+      .then(setSubscription)
+      .catch(() => {
+        /* баннер необязателен */
+      });
   }, []);
 
   const yearsDesc = dashboard
@@ -28,6 +37,17 @@ export function SchoolHomePage() {
         </p>
 
         {error ? <div className="alert alert-error">{error}</div> : null}
+
+        {subscription?.status === "expiring" ? (
+          <div className="alert alert-warning school-home-sub-alert">
+            Подписка действует до{" "}
+            {subscription.endsOn
+              ? subscription.endsOn.split("-").reverse().join(".")
+              : "конца текущего срока"}
+            .{" "}
+            <Link to="/school/subscription">Перейти к продлению</Link>
+          </div>
+        ) : null}
 
         <div className="cabinet-welcome">
           <p className="cabinet-welcome__title">

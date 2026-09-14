@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
+import { AdminCabinetShell } from "./components/AdminCabinetShell";
 import { SchoolCabinetShell } from "./components/SchoolCabinetShell";
 import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
@@ -13,6 +14,13 @@ import { LessonAnalysisMembersPage } from "./pages/school/LessonAnalysisMembersP
 import { ProjectTeacherPage } from "./pages/school/ProjectTeacherPage";
 import { EvaluateChoosePage } from "./pages/school/EvaluateChoosePage";
 import { EvaluateFormPage } from "./pages/school/EvaluateFormPage";
+import { SchoolSubscriptionPage } from "./pages/school/SchoolSubscriptionPage";
+import { AdminDashboardPage } from "./pages/admin/AdminDashboardPage";
+import { AdminSchoolDetailPage } from "./pages/admin/AdminSchoolDetailPage";
+import { AdminSchoolsPage } from "./pages/admin/AdminSchoolsPage";
+import { AdminSubscriptionsPage } from "./pages/admin/AdminSubscriptionsPage";
+import { AdminRenewalsPage } from "./pages/admin/AdminRenewalsPage";
+import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
 import "./styles/variables.css";
 import "./styles/components.css";
 import "./styles/auth.css";
@@ -23,6 +31,8 @@ import "./styles/teacher-profile.css";
 import "./styles/project-members.css";
 import "./styles/project-teacher.css";
 import "./styles/evaluate.css";
+import "./styles/admin.css";
+import "./styles/school-subscription.css";
 
 export default function App() {
   return (
@@ -35,6 +45,7 @@ export default function App() {
           <Route path="/auth/reset/:token" element={<ResetPasswordPage />} />
 
           <Route path="/school" element={<SchoolCabinetShell />}>
+            <Route path="subscription" element={<SchoolSubscriptionPage />} />
             <Route path="cabinet" element={<SchoolHomePage />} />
             <Route path="workers" element={<WorkersPage />} />
             <Route path="workers/:teacherId" element={<TeacherProfilePage />} />
@@ -58,6 +69,20 @@ export default function App() {
           </Route>
 
           <Route path="/methodist/cabinet" element={<MethodistCabinetPage />} />
+
+          <Route path="/admin" element={<AdminCabinetShell />}>
+            <Route path="cabinet" element={<AdminDashboardPage />} />
+            <Route path="schools" element={<AdminSchoolsPage />} />
+            <Route path="schools/:schoolId" element={<AdminSchoolDetailPage />} />
+            <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
+            <Route path="renewals" element={<AdminRenewalsPage />} />
+            <Route path="logs" element={<AdminLogsPage />} />
+            <Route
+              path="subscriptions/:schoolId"
+              element={<AdminSchoolDetailPage />}
+            />
+          </Route>
+
           <Route path="*" element={<Navigate to="/auth" replace />} />
         </Routes>
       </BrowserRouter>

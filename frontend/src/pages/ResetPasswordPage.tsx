@@ -10,6 +10,7 @@ export function ResetPasswordPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tokenValid, setTokenValid] = useState(false);
+  const [schoolName, setSchoolName] = useState("");
   const [tokenError, setTokenError] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
@@ -25,7 +26,10 @@ export function ResetPasswordPage() {
 
     api
       .validateResetToken(token)
-      .then(() => setTokenValid(true))
+      .then((result) => {
+        setSchoolName(result.schoolName);
+        setTokenValid(true);
+      })
       .catch((err: Error) => {
         setTokenValid(false);
         setTokenError(err.message);
@@ -55,7 +59,10 @@ export function ResetPasswordPage() {
       <aside className="auth-brand">
         <h1 className="auth-brand__logo">Tallam</h1>
         <div className="auth-brand__line" />
-        <p className="auth-brand__tagline">Создание нового пароля для школы</p>
+        <p className="auth-brand__tagline">
+          Создание нового пароля для школы
+          {schoolName ? `: ${schoolName}` : ""}
+        </p>
       </aside>
 
       <section className="auth-panel">
@@ -66,6 +73,12 @@ export function ResetPasswordPage() {
         <div className="auth-card">
           <h2 className="auth-card__title">Новый пароль</h2>
           <p className="auth-card__subtitle">
+            {schoolName ? (
+              <>
+                Школа: <strong>{schoolName}</strong>
+                <br />
+              </>
+            ) : null}
             Придумайте новый пароль для входа в личный кабинет
           </p>
 
@@ -83,57 +96,70 @@ export function ResetPasswordPage() {
           ) : null}
 
           {!checking && tokenValid ? (
-            <form onSubmit={handleSubmit}>
-              {error ? <div className="alert alert-error">{error}</div> : null}
-              {message ? <div className="alert alert-success">{message}</div> : null}
+            <>
+              <p className="auth-card__support">
+                Открытие страницы не аннулирует ссылку. Она станет
+                недействительной только после успешной смены пароля или
+                истечения срока.
+              </p>
+              <form onSubmit={handleSubmit}>
+                {error ? <div className="alert alert-error">{error}</div> : null}
+                {message ? (
+                  <div className="alert alert-success">{message}</div>
+                ) : null}
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="password">
-                  Новый пароль
-                </label>
-                <div className="form-input-wrap">
+                <div className="form-group">
+                  <label className="form-label" htmlFor="password">
+                    Новый пароль
+                  </label>
+                  <div className="form-input-wrap">
+                    <input
+                      id="password"
+                      className="form-input"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="Минимум 6 символов"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="new-password"
+                      minLength={6}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="form-input-toggle"
+                      onClick={() => setShowPassword((v) => !v)}
+                    >
+                      {showPassword ? "Скрыть" : "Показать"}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label" htmlFor="confirmPassword">
+                    Подтверждение пароля
+                  </label>
                   <input
-                    id="password"
+                    id="confirmPassword"
                     className="form-input"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Минимум 6 символов"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Повторите пароль"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     autoComplete="new-password"
                     minLength={6}
                     required
                   />
-                  <button
-                    type="button"
-                    className="form-input-toggle"
-                    onClick={() => setShowPassword((v) => !v)}
-                  >
-                    {showPassword ? "Скрыть" : "Показать"}
-                  </button>
                 </div>
-              </div>
 
-              <div className="form-group">
-                <label className="form-label" htmlFor="confirmPassword">
-                  Подтверждение пароля
-                </label>
-                <input
-                  id="confirmPassword"
-                  className="form-input"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Повторите пароль"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </div>
-
-              <button className="btn btn-primary" type="submit" disabled={submitting}>
-                {submitting ? "Сохранение..." : "Сохранить пароль"}
-              </button>
-            </form>
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  disabled={submitting}
+                >
+                  {submitting ? "Сохранение..." : "Сохранить пароль"}
+                </button>
+              </form>
+            </>
           ) : null}
 
           {!checking && tokenValid && !message ? (

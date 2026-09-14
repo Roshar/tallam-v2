@@ -5,13 +5,29 @@ import type {
   ProjectTeacherProfileResponse,
   SchoolDashboard,
   SchoolProfile,
+  SchoolRenewalRequest,
+  SchoolSubscriptionOverview,
+  SubmitRenewalPayload,
   TeacherDetailResponse,
   UpdateTeacherPayload,
   WorkerFormOptions,
   WorkersResponse,
 } from "../types/school";
+import type {
+  AdminDashboard,
+  AdminAuditLogOptions,
+  AdminAuditLogsResponse,
+  AdminPasswordResetLink,
+  AdminRenewalRequest,
+  AdminRenewalsResponse,
+  AdminSchoolDetail,
+  AdminSchoolsResponse,
+  AdminSubscriptionArea,
+  AdminSubscriptionsResponse,
+} from "../types/admin";
 
 export type AccountType = "school" | "methodist" | "admin";
+export type SchoolCabinetAccess = "full" | "billing";
 
 export interface User {
   id: number;
@@ -21,9 +37,20 @@ export interface User {
   schoolId: number;
   status: "on" | "off";
   accountType: AccountType;
+  cabinetAccess?: SchoolCabinetAccess;
   firstname?: string;
   surname?: string;
   patronymic?: string;
+  impersonatedBy?: {
+    id: number;
+    email: string;
+  };
+}
+
+export function schoolLandingPath(user: User): string {
+  return user.accountType === "school" && user.cabinetAccess === "billing"
+    ? "/school/subscription"
+    : "/school/cabinet";
 }
 
 let onUnauthorized: (() => void) | null = null;
@@ -47,6 +74,15 @@ function handleUnauthorizedResponse(path: string) {
   }
 }
 
+function handleSubscriptionRequired(data: { code?: string }) {
+  if (
+    data.code === "SUBSCRIPTION_REQUIRED" &&
+    !window.location.pathname.startsWith("/school/subscription")
+  ) {
+    window.location.assign("/school/subscription");
+  }
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(path, {
     credentials: "include",
@@ -63,6 +99,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     if (response.status === 401) {
       handleUnauthorizedResponse(path);
     }
+    if (response.status === 403) {
+      handleSubscriptionRequired(data);
+    }
 
     throw new Error(
       typeof data.error === "string" ? data.error : "Ошибка запроса",
@@ -70,6 +109,28 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   return data as T;
+}
+
+async function downloadFile(path: string, fallbackFilename: string) {
+  const response = await fetch(path, { credentials: "include" });
+  if (!response.ok) {
+    if (response.status === 401) handleUnauthorizedResponse(path);
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 403) handleSubscriptionRequired(data);
+    throw new Error(
+      typeof data.error === "string" ? data.error : "Ошибка скачивания",
+    );
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename\*=UTF-8''(.+)/);
+  const filename = match ? decodeURIComponent(match[1]) : fallbackFilename;
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
 }
 
 export const api = {
@@ -88,12 +149,265 @@ export const api = {
     return request<{ user: User }>("/api/auth/me");
   },
 
+  stopImpersonation() {
+    return request<{ user: User; schoolId: number }>(
+      "/api/auth/stop-impersonation",
+      { method: "POST" },
+    );
+  },
+
+  adminDashboard() {
+    return request<AdminDashboard>("/api/admin/dashboard");
+  },
+
+  adminAuditLogOptions() {
+    return request<AdminAuditLogOptions>("/api/admin/logs/options");
+  },
+
+  adminAuditLogs(params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    action?: string;
+    email?: string;
+    status?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.category) search.set("category", params.category);
+    if (params?.action) search.set("action", params.action);
+    if (params?.email) search.set("email", params.email);
+    if (params?.status) search.set("status", params.status);
+    if (params?.dateFrom) search.set("dateFrom", params.dateFrom);
+    if (params?.dateTo) search.set("dateTo", params.dateTo);
+    const query = search.toString();
+    return request<AdminAuditLogsResponse>(
+      `/api/admin/logs${query ? `?${query}` : ""}`,
+    );
+  },
+
+  adminSchools(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    areaId?: number;
+    cabinetStatus?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.search) search.set("search", params.search);
+    if (params?.areaId) search.set("areaId", String(params.areaId));
+    if (params?.cabinetStatus) search.set("cabinetStatus", params.cabinetStatus);
+    const query = search.toString();
+    return request<AdminSchoolsResponse>(
+      `/api/admin/schools${query ? `?${query}` : ""}`,
+    );
+  },
+
+  impersonateSchool(schoolId: number) {
+    return request<{ user: User }>(
+      `/api/admin/schools/${schoolId}/impersonate`,
+      { method: "POST" },
+    );
+  },
+
+  adminSubscriptions(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    status?: string;
+    areaId?: number;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.search) search.set("search", params.search);
+    if (params?.status) search.set("status", params.status);
+    if (params?.areaId) search.set("areaId", String(params.areaId));
+
+    const query = search.toString();
+    return request<AdminSubscriptionsResponse>(
+      `/api/admin/subscriptions${query ? `?${query}` : ""}`,
+    );
+  },
+
+  adminSubscriptionAreas() {
+    return request<{ items: AdminSubscriptionArea[] }>(
+      "/api/admin/subscriptions/areas",
+    );
+  },
+
+  adminSchoolDetail(schoolId: number) {
+    return request<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}`,
+    );
+  },
+
+  async downloadAdminSubscriptions(params?: {
+    search?: string;
+    status?: string;
+    areaId?: number;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.search) search.set("search", params.search);
+    if (params?.status) search.set("status", params.status);
+    if (params?.areaId) search.set("areaId", String(params.areaId));
+    const query = search.toString();
+    const path = `/api/admin/subscriptions/export${query ? `?${query}` : ""}`;
+    const response = await fetch(path, { credentials: "include" });
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        handleUnauthorizedResponse(path);
+      }
+      const data = await response.json().catch(() => ({}));
+      throw new Error(
+        typeof data.error === "string" ? data.error : "Ошибка скачивания",
+      );
+    }
+
+    const blob = await response.blob();
+    const disposition = response.headers.get("Content-Disposition") ?? "";
+    const match = disposition.match(/filename\*=UTF-8''(.+)/);
+    const filename = match
+      ? decodeURIComponent(match[1])
+      : `Подписки-школ-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  },
+
+  createAdminPasswordResetLink(schoolId: number) {
+    return request<AdminPasswordResetLink>(
+      `/api/admin/subscriptions/${schoolId}/password-reset-link`,
+      { method: "POST" },
+    );
+  },
+
+  blockAdminSchool(schoolId: number) {
+    return request<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}/block`,
+      { method: "POST" },
+    );
+  },
+
+  activateAdminSchool(
+    schoolId: number,
+    payload: { startsOn: string; endsOn: string; note?: string },
+  ) {
+    return request<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}/activate`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  createAdminSchoolSubscription(
+    schoolId: number,
+    payload: {
+      startsOn: string;
+      endsOn: string;
+      phone?: string;
+      note?: string;
+    },
+  ) {
+    return request<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}/periods`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
   schoolDashboard() {
     return request<SchoolDashboard>("/api/school/dashboard");
   },
 
   schoolProfile() {
     return request<SchoolProfile>("/api/school/profile");
+  },
+
+  schoolSubscription() {
+    return request<SchoolSubscriptionOverview>("/api/school/subscription");
+  },
+
+  schoolRenewal() {
+    return request<{ request: SchoolRenewalRequest | null }>(
+      "/api/school/subscription/renewal",
+    );
+  },
+
+  submitSchoolRenewal(payload: SubmitRenewalPayload) {
+    return request<{ request: SchoolRenewalRequest }>(
+      "/api/school/subscription/renewal",
+      { method: "POST", body: JSON.stringify(payload) },
+    );
+  },
+
+  downloadSchoolRenewalDocument(
+    requestId: number,
+    kind: "contract" | "invoice",
+  ) {
+    return downloadFile(
+      `/api/school/subscription/renewal/${requestId}/${kind}`,
+      kind === "contract" ? "Договор-Таллам.pdf" : "Счет-Таллам.pdf",
+    );
+  },
+
+  adminRenewalQueueCount() {
+    return request<{ awaitingConfirmation: number }>(
+      "/api/admin/renewals/pending-count",
+    );
+  },
+
+  adminRenewals(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+    search?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.status) search.set("status", params.status);
+    if (params?.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<AdminRenewalsResponse>(
+      `/api/admin/renewals${query ? `?${query}` : ""}`,
+    );
+  },
+
+  adminRenewal(requestId: number) {
+    return request<{ request: AdminRenewalRequest }>(
+      `/api/admin/renewals/${requestId}`,
+    );
+  },
+
+  payAdminRenewal(requestId: number) {
+    return request<{ request: AdminRenewalRequest }>(
+      `/api/admin/renewals/${requestId}/pay`,
+      { method: "POST" },
+    );
+  },
+
+  downloadAdminRenewalDocument(
+    requestId: number,
+    kind: "contract" | "invoice",
+  ) {
+    return downloadFile(
+      `/api/admin/renewals/${requestId}/${kind}`,
+      kind === "contract" ? "Договор-Таллам.pdf" : "Счет-Таллам.pdf",
+    );
   },
 
   schoolWorkers(params?: { page?: number; limit?: number }) {
@@ -224,7 +538,9 @@ export const api = {
   },
 
   validateResetToken(token: string) {
-    return request<{ valid: boolean }>(`/api/auth/reset-password/${token}`);
+    return request<{ valid: boolean; schoolName: string }>(
+      `/api/auth/reset-password/${token}`,
+    );
   },
 
   resetPassword(token: string, password: string, confirmPassword: string) {

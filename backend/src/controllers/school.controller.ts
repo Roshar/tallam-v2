@@ -17,6 +17,15 @@ import {
   type UpdateTeacherInput,
 } from "../services/teachers.service.js";
 import { getProjectTeacherEvaluations, createProjectTeacherEvaluation, getSchoolEvaluationYearStats } from "../services/card.service.js";
+import { getSchoolSubscriptionOverview } from "../services/school-subscription.service.js";
+import {
+  buildRenewalDocument,
+  RenewalDocumentUnavailableError,
+} from "../services/subscription-documents.service.js";
+import {
+  getLatestSchoolRenewal,
+  submitSchoolRenewal,
+} from "../services/subscription-renewal.service.js";
 
 function getSchoolId(req: Request): number | null {
   const user = req.session.user;
@@ -432,4 +441,109 @@ export async function removeWorkerFromProject(req: Request, res: Response) {
     console.error("Remove worker from project error:", error);
     return res.status(500).json({ error: "Не удалось исключить работника из проекта" });
   }
+}
+
+export async function schoolSubscription(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    const overview = await getSchoolSubscriptionOverview(schoolId);
+    if (!overview) {
+      return res.status(404).json({ error: "Школа не найдена" });
+    }
+    return res.json(overview);
+  } catch (error) {
+    console.error("School subscription error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить данные подписки" });
+  }
+}
+
+export async function schoolRenewal(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    return res.json({ request: await getLatestSchoolRenewal(schoolId) });
+  } catch (error) {
+    console.error("School renewal error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить заявку" });
+  }
+}
+
+export async function submitRenewal(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    const request = await submitSchoolRenewal(schoolId, req.body);
+    return res.status(201).json({ request });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось отправить заявку";
+    if (
+      message.includes("поле") ||
+      message.includes("паспорт") ||
+      message.includes("подразделения") ||
+      message.includes("ИНН") ||
+      message.includes("согласие") ||
+      message.includes("Статус заявки")
+    ) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("Submit school renewal error:", error);
+    return res.status(500).json({ error: "Не удалось отправить заявку" });
+  }
+}
+
+async function downloadRenewalDocument(
+  req: Request,
+  res: Response,
+  kind: "contract" | "invoice",
+) {
+  const schoolId = getSchoolId(req);
+  const requestId = Number(req.params.requestId);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!Number.isInteger(requestId) || requestId <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор заявки" });
+  }
+
+  try {
+    const document = await buildRenewalDocument({
+      requestId,
+      kind,
+      schoolId,
+    });
+    if (!document) {
+      return res.status(404).json({ error: "Документ не найден" });
+    }
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(document.filename)}`,
+    );
+    return res.send(document.buffer);
+  } catch (error) {
+    if (error instanceof RenewalDocumentUnavailableError) {
+      return res.status(409).json({ error: error.message });
+    }
+    console.error(`School renewal ${kind} error:`, error);
+    return res.status(500).json({ error: "Не удалось сформировать документ" });
+  }
+}
+
+export async function schoolRenewalContract(req: Request, res: Response) {
+  return downloadRenewalDocument(req, res, "contract");
+}
+
+export async function schoolRenewalInvoice(req: Request, res: Response) {
+  return downloadRenewalDocument(req, res, "invoice");
 }

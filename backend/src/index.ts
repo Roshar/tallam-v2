@@ -5,8 +5,11 @@ import session from "express-session";
 import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 import { config } from "./config.js";
+import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
+import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
+import { ensureAuditLogSchema } from "./services/audit-log.service.js";
 
 const MySQLStore = MySQLStoreFactory(session);
 
@@ -68,6 +71,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
 app.use("/api/school", schoolRoutes);
 
 app.use((_req, res) => {
@@ -76,4 +80,22 @@ app.use((_req, res) => {
 
 app.listen(config.port, () => {
   console.log(`Tallam API listening on http://localhost:${config.port}`);
+  void ensureAuditLogSchema().catch((error) => {
+    console.error("Failed to initialize audit log schema:", error);
+  });
+  void syncSchoolCabinetAccess()
+    .then((count) => {
+      if (count) {
+        console.log(`Blocked ${count} school cabinets with expired subscriptions`);
+      }
+    })
+    .catch((error) => {
+      console.error("Failed to sync expired school cabinets:", error);
+    });
 });
+
+setInterval(() => {
+  void syncSchoolCabinetAccess().catch((error) => {
+    console.error("Failed to sync expired school cabinets:", error);
+  });
+}, 15 * 60 * 1000);

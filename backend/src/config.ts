@@ -30,6 +30,8 @@ export const config = {
     secret: requireEnv("SESSION_SECRET"),
     lifetime: Number(process.env.SESSION_LIFETIME ?? 7_200_000),
   },
+  subscriptionDataEncryptionKey:
+    process.env.SUBSCRIPTION_DATA_ENCRYPTION_KEY ?? requireEnv("SESSION_SECRET"),
   smtp: {
     host: process.env.SMTP_HOST ?? "",
     port: Number(process.env.SMTP_PORT ?? 465),

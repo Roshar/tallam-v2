@@ -1,0 +1,494 @@
+.school-sub {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.school-sub__header .page-title,
+.school-sub__header .page-subtitle {
+  margin-bottom: 0;
+}
+
+.school-sub__eyebrow {
+  margin: 0 0 0.35rem;
+  color: var(--color-darkblue);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.school-sub__banner {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.25rem 1.4rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.school-sub__banner h3 {
+  margin: 0 0 0.4rem;
+  font-size: 1.25rem;
+}
+
+.school-sub__banner p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.school-sub__banner-kicker {
+  margin: 0 0 0.35rem !important;
+  color: var(--color-darkblue) !important;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.school-sub__banner--active {
+  border-color: #b7e0c2;
+  background: #f3fbf5;
+}
+
+.school-sub__banner--expiring,
+.school-sub__banner--scheduled {
+  border-color: #f0d48a;
+  background: #fff8e8;
+}
+
+.school-sub__banner--expired {
+  border-color: #f0b6b6;
+  background: #fff5f5;
+}
+
+.school-sub__banner--missing {
+  background: #f7fafe;
+}
+
+.school-sub__lock {
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(46, 96, 154, 0.12);
+  color: var(--color-text) !important;
+  font-weight: 600;
+}
+
+.school-sub__facts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.school-sub__facts article {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.school-sub__facts span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.school-sub__facts strong {
+  font-size: 1.05rem;
+}
+
+.school-sub__progress {
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.school-sub__progress-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.6rem;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.school-sub__bar {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: #e7eef7;
+}
+
+.school-sub__bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-darkblue);
+}
+
+.school-sub__pay {
+  display: grid;
+  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.school-sub__payment-target {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  scroll-margin-top: 1rem;
+}
+
+.school-sub__payment-target .alert {
+  margin: 0;
+}
+
+.school-sub__payment-check {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.25rem 1.5rem;
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f7fafe;
+}
+
+.school-sub__payment-check-copy {
+  min-width: 0;
+}
+
+.school-sub__payment-check h3 {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+}
+
+.school-sub__payment-check p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.school-sub__payment-check .alert {
+  margin-top: 0.75rem;
+}
+
+.school-sub__payment-check-btn {
+  width: auto;
+  min-width: 13.5rem;
+  padding-inline: 1.4rem;
+  white-space: nowrap;
+}
+
+.school-sub__qr,
+.school-sub__bank,
+.school-sub__contract {
+  padding: 1.2rem 1.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.school-sub__qr h3,
+.school-sub__bank h3,
+.school-sub__contract h3 {
+  margin: 0 0 0.45rem;
+  font-size: 1.05rem;
+}
+
+.school-sub__qr p,
+.school-sub__contract p {
+  margin: 0 0 1rem;
+  color: var(--color-text-muted);
+}
+
+.school-sub__qr img {
+  display: block;
+  width: 220px;
+  height: 220px;
+  margin: 0 auto 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.school-sub__amount {
+  margin: 0 !important;
+  text-align: center;
+  color: var(--color-text) !important;
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.school-sub__test {
+  margin-top: 0.65rem !important;
+  font-size: 0.8rem;
+}
+
+.school-sub__bank-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.school-sub__bank-head h3 {
+  margin: 0;
+}
+
+.school-sub__bank dl {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0;
+}
+
+.school-sub__bank dl div {
+  display: grid;
+  grid-template-columns: 160px minmax(0, 1fr);
+  gap: 0.75rem;
+  padding-bottom: 0.7rem;
+  border-bottom: 1px solid #edf3fa;
+}
+
+.school-sub__bank dl div:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.school-sub__bank dt {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.school-sub__bank dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.school-sub__contract {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.25rem;
+}
+
+.school-sub__contract p {
+  margin-bottom: 0;
+}
+
+.school-renewal {
+  padding: 1.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.school-renewal--inactive {
+  background: #f7fafe;
+}
+
+.school-renewal h3,
+.school-renewal h4,
+.school-renewal p {
+  margin-top: 0;
+}
+
+.school-renewal__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.school-renewal__heading h3 {
+  margin-bottom: 0.35rem;
+}
+
+.school-renewal__heading p {
+  margin-bottom: 0;
+  color: var(--color-text-muted);
+}
+
+.school-renewal__secure {
+  flex-shrink: 0;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-full);
+  background: #edf7ea;
+  color: var(--color-success);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.school-renewal__status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 0.8fr);
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #f0d48a;
+  border-radius: var(--radius-sm);
+  background: #fff8e8;
+}
+
+.school-renewal__status--documents_ready {
+  border-color: #b7d3f2;
+  background: #f1f7fd;
+}
+
+.school-renewal__status--paid {
+  border-color: #b7e0c2;
+  background: #f3fbf5;
+}
+
+.school-renewal__status--cancelled {
+  border-color: #f0b6b6;
+  background: #fff5f5;
+}
+
+.school-renewal__status p {
+  margin: 0.3rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+}
+
+.school-renewal__status dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0;
+}
+
+.school-renewal__status dt {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.school-renewal__status dd {
+  margin: 0.1rem 0 0;
+  font-weight: 700;
+}
+
+.school-renewal__form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.school-renewal__field--wide,
+.school-renewal__consent,
+.school-renewal__actions {
+  grid-column: 1 / -1;
+}
+
+.school-renewal__field .form-label {
+  display: block;
+}
+
+.school-renewal__consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  padding: 0.85rem;
+  border-radius: var(--radius-sm);
+  background: #f7fafe;
+  font-size: 0.88rem;
+}
+
+.school-renewal__consent input {
+  flex: 0 0 auto;
+  margin-top: 0.25rem;
+}
+
+.school-renewal__actions,
+.school-renewal__documents,
+.school-renewal__documents > div:last-child {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.school-renewal__actions p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.school-renewal__documents {
+  justify-content: space-between;
+  margin-top: 1.2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.school-renewal__documents h4 {
+  margin-bottom: 0.2rem;
+}
+
+.school-renewal__documents p {
+  margin-bottom: 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 960px) {
+  .school-sub__facts,
+  .school-sub__pay {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .school-sub__contract {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .school-renewal__status {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .school-sub__facts,
+  .school-sub__pay {
+    grid-template-columns: 1fr;
+  }
+
+  .school-sub__bank dl div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .school-renewal__heading,
+  .school-renewal__actions,
+  .school-renewal__documents,
+  .school-renewal__documents > div:last-child {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .school-sub__payment-check {
+    grid-template-columns: 1fr;
+  }
+
+  .school-sub__payment-check-btn {
+    width: auto;
+    justify-self: start;
+  }
+
+  .school-renewal__form {
+    grid-template-columns: 1fr;
+  }
+
+  .school-renewal__field--wide,
+  .school-renewal__consent,
+  .school-renewal__actions {
+    grid-column: auto;
+  }
+}
