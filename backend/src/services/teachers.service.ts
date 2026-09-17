@@ -584,6 +584,14 @@ interface ExcelTeacherRow {
 export async function getWorkerFormOptions(
   schoolId: number,
 ): Promise<WorkerFormOptions> {
+  await query(
+    `INSERT INTO discipline_title (title_discipline)
+     SELECT 'Администрация' FROM DUAL
+     WHERE NOT EXISTS (
+       SELECT 1 FROM discipline_title WHERE title_discipline = 'Администрация'
+     )`,
+  );
+
   const [genders, educationLevels, positions, categories, disciplines, projects] =
     await Promise.all([
       query<{ id_gender: number; gender_title: string }[]>(
@@ -625,10 +633,16 @@ export async function getWorkerFormOptions(
       id: c.id_category,
       title: c.title_category,
     })),
-    disciplines: disciplines.map((d) => ({
-      id: d.id_discipline,
-      title: d.title_discipline,
-    })),
+    disciplines: disciplines
+      .map((d) => ({
+        id: d.id_discipline,
+        title: d.title_discipline,
+      }))
+      .sort((a, b) => {
+        if (a.title === "Администрация") return -1;
+        if (b.title === "Администрация") return 1;
+        return a.title.localeCompare(b.title, "ru");
+      }),
     projects: projects.map((p) => ({
       id: p.id_project,
       name: p.name_project,

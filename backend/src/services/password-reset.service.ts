@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { sendPasswordResetEmail } from "./email.service.js";
+import { appendSchoolPasswordNote } from "./password-notebook.service.js";
 import { getSchoolAccessState, syncSchoolCabinetAccess } from "./school-access.service.js";
 
 interface SchoolUserRow {
@@ -239,10 +240,75 @@ export async function resetSchoolPassword(
     [row.user_id],
   );
 
+  try {
+    await appendSchoolPasswordNote({
+      action: "reset",
+      schoolId: row.school_id,
+      schoolName: row.school_name,
+      email: row.email,
+      password,
+      actor: `reset-link:${row.email}`,
+    });
+  } catch (error) {
+    console.error("School password notebook write failed:", error);
+  }
+
   return {
     ok: true,
     email: row.email,
     userId: row.user_id,
     schoolId: row.school_id,
   };
+}
+
+export async function changeSchoolCabinetPassword(
+  schoolId: number,
+  password: string,
+  confirmPassword: string,
+  actor: string,
+): Promise<{ email: string; schoolName: string }> {
+  if (!password || !confirmPassword) {
+    throw new Error("Укажите пароль и подтверждение");
+  }
+  if (password !== confirmPassword) {
+    throw new Error("Пароли не совпадают");
+  }
+
+  const passwordError = validatePassword(password);
+  if (passwordError) {
+    throw new Error(passwordError);
+  }
+
+  const rows = await query<
+    Array<SchoolUserRow & { school_name: string }>
+  >(
+    `SELECT u.id, u.email, u.status, u.role, u.school_id, s.school_name
+     FROM users u
+     JOIN schools s ON s.id_school = u.school_id
+     WHERE u.school_id = ? AND u.role = 'school_admin'
+     LIMIT 1`,
+    [schoolId],
+  );
+  const user = rows[0];
+  if (!user) {
+    throw new Error("Кабинет школы не найден");
+  }
+
+  const hash = await bcrypt.hash(password, 10);
+  await query("UPDATE users SET password = ? WHERE id = ?", [hash, user.id]);
+
+  try {
+    await appendSchoolPasswordNote({
+      action: "changed",
+      schoolId,
+      schoolName: user.school_name,
+      email: user.email,
+      password,
+      actor,
+    });
+  } catch (error) {
+    console.error("School password notebook write failed:", error);
+  }
+
+  return { email: user.email, schoolName: user.school_name };
 }

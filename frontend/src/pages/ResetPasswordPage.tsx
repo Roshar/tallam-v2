@@ -90,7 +90,7 @@ export function ResetPasswordPage() {
             <>
               <div className="alert alert-error">{tokenError}</div>
               <p className="auth-card__support">
-                <Link to="/auth/forgot">Запросить новую ссылку</Link>
+                <Link to="/auth/forgot">Оставить обращение</Link>
               </p>
             </>
           ) : null}

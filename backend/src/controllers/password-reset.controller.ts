@@ -1,10 +1,14 @@
 import type { Request, Response } from "express";
 import {
-  requestSchoolPasswordReset,
   resetSchoolPassword,
   validateResetToken,
 } from "../services/password-reset.service.js";
 import { recordAuditLog } from "../services/audit-log.service.js";
+import {
+  createRecoveryCaptcha,
+  RecoveryRequestError,
+  submitRecoveryRequest,
+} from "../services/password-recovery.service.js";
 
 function logPasswordChange(
   req: Request,
@@ -42,24 +46,48 @@ function logPasswordFailureForToken(
     });
 }
 
-export async function forgotPassword(req: Request, res: Response) {
-  const { email } = req.body as { email?: string };
-
-  if (!email?.trim()) {
-    return res.status(400).json({ error: "Укажите email" });
+export async function recoveryCaptcha(req: Request, res: Response) {
+  try {
+    const captcha = createRecoveryCaptcha(
+      req.ip || req.socket.remoteAddress || "unknown",
+    );
+    res.setHeader("Cache-Control", "no-store");
+    return res.json(captcha);
+  } catch (error) {
+    if (error instanceof RecoveryRequestError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    console.error("Recovery captcha error:", error);
+    return res.status(500).json({ error: "Не удалось получить код" });
   }
+}
+
+export async function forgotPassword(req: Request, res: Response) {
+  const body = req.body as {
+    email?: string;
+    phone?: string;
+    captchaId?: string;
+    captchaAnswer?: string;
+    website?: string;
+  };
 
   try {
-    await requestSchoolPasswordReset(email.trim());
-
-    return res.json({
-      ok: true,
-      message:
-        "Если аккаунт школы с таким email существует, мы отправили инструкцию по восстановлению пароля.",
+    const result = await submitRecoveryRequest({
+      email: String(body.email ?? ""),
+      phone: String(body.phone ?? ""),
+      captchaId: String(body.captchaId ?? ""),
+      captchaAnswer: String(body.captchaAnswer ?? ""),
+      honeypot: String(body.website ?? ""),
+      ipAddress: req.ip || req.socket.remoteAddress || null,
+      userAgent: req.get("user-agent") ?? null,
     });
+    return res.json(result);
   } catch (error) {
+    if (error instanceof RecoveryRequestError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     console.error("Forgot password error:", error);
-    return res.status(500).json({ error: "Не удалось отправить письмо" });
+    return res.status(500).json({ error: "Не удалось отправить обращение" });
   }
 }
 

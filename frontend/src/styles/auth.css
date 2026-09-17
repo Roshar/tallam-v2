@@ -163,6 +163,48 @@
   text-transform: uppercase;
 }
 
+.auth-honeypot {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.auth-captcha {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.auth-captcha__image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 168px;
+  height: 52px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #eef5fd;
+  overflow: hidden;
+}
+
+.auth-captcha__image img {
+  display: block;
+}
+
+.auth-captcha__image span {
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+}
+
+.auth-captcha__reload {
+  width: auto;
+  padding: 0.55rem 0.85rem;
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .auth-page {
     grid-template-columns: 1fr;

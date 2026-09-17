@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import type { Request, Response } from "express";
 import {
+  countOnlineSchools,
   getAdminDashboard,
   getAdminSchoolDetail,
   getAdminSchools,
@@ -13,6 +14,14 @@ import {
 import { getSchoolSessionUser, getSchoolName } from "../services/auth.service.js";
 import { recordAuditLog } from "../services/audit-log.service.js";
 import { createSchoolPasswordResetLink } from "../services/password-reset.service.js";
+import {
+  createSchoolWithCabinet,
+  getAllAreas,
+  isUserEmailAvailable,
+  isValidEmail,
+  normalizeEmail,
+  SchoolRegisterError,
+} from "../services/school-register.service.js";
 import {
   activateSchoolCabinet,
   blockSchoolCabinet,
@@ -32,6 +41,18 @@ import {
   markRenewalPaid,
   type RenewalStatus,
 } from "../services/subscription-renewal.service.js";
+import {
+  countAdminUnreadConversations,
+  getAdminSupportThread,
+  listAdminSupportConversations,
+  postAdminSupportMessage,
+} from "../services/school-feedback.service.js";
+import {
+  countNewRecoveryRequests,
+  listRecoveryRequests,
+  markRecoveryRequestDone,
+  RecoveryRequestError,
+} from "../services/password-recovery.service.js";
 
 const SUBSCRIPTION_STATUSES = new Set<SubscriptionStatusFilter>([
   "all",
@@ -69,6 +90,15 @@ export async function dashboard(_req: Request, res: Response) {
     return res
       .status(500)
       .json({ error: "Не удалось загрузить данные администратора" });
+  }
+}
+
+export async function onlineSchools(_req: Request, res: Response) {
+  try {
+    return res.json({ onlineSchools: await countOnlineSchools() });
+  } catch (error) {
+    console.error("Admin online schools error:", error);
+    return res.status(500).json({ error: "Не удалось посчитать школы онлайн" });
   }
 }
 
@@ -138,6 +168,65 @@ export async function schools(req: Request, res: Response) {
   } catch (error) {
     console.error("Admin schools error:", error);
     return res.status(500).json({ error: "Не удалось загрузить школы" });
+  }
+}
+
+export async function schoolAreas(_req: Request, res: Response) {
+  try {
+    return res.json({ items: await getAllAreas() });
+  } catch (error) {
+    console.error("Admin school areas error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить районы" });
+  }
+}
+
+export async function schoolEmailAvailability(req: Request, res: Response) {
+  const email = normalizeEmail(String(req.query.email ?? ""));
+  if (!email) {
+    return res.status(400).json({ error: "Укажите email" });
+  }
+  if (!isValidEmail(email)) {
+    return res.json({ email, available: false, reason: "invalid" });
+  }
+
+  try {
+    const available = await isUserEmailAvailable(email);
+    return res.json({
+      email,
+      available,
+      reason: available ? null : "taken",
+    });
+  } catch (error) {
+    console.error("Admin email availability error:", error);
+    return res.status(500).json({ error: "Не удалось проверить email" });
+  }
+}
+
+export async function createSchool(req: Request, res: Response) {
+  const body = req.body as {
+    schoolName?: string;
+    areaId?: number;
+    email?: string;
+    password?: string;
+    confirmPassword?: string;
+  };
+
+  try {
+    const school = await createSchoolWithCabinet({
+      schoolName: String(body.schoolName ?? ""),
+      areaId: Number(body.areaId ?? 0),
+      email: String(body.email ?? ""),
+      password: String(body.password ?? ""),
+      confirmPassword: String(body.confirmPassword ?? ""),
+      actor: `admin:${req.session.user?.email ?? "unknown"}`,
+    });
+    return res.status(201).json(school);
+  } catch (error) {
+    if (error instanceof SchoolRegisterError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    console.error("Admin create school error:", error);
+    return res.status(500).json({ error: "Не удалось зарегистрировать школу" });
   }
 }
 
@@ -550,4 +639,115 @@ export async function adminRenewalContract(req: Request, res: Response) {
 
 export async function adminRenewalInvoice(req: Request, res: Response) {
   return downloadAdminRenewalDocument(req, res, "invoice");
+}
+
+export async function adminFeedbackUnread(_req: Request, res: Response) {
+  try {
+    const unread = await countAdminUnreadConversations();
+    return res.json({ unread });
+  } catch (error) {
+    console.error("Admin feedback unread error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить отзывы" });
+  }
+}
+
+export async function adminFeedbackList(_req: Request, res: Response) {
+  try {
+    const items = await listAdminSupportConversations();
+    return res.json({ items });
+  } catch (error) {
+    console.error("Admin feedback list error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить отзывы" });
+  }
+}
+
+export async function adminFeedbackThread(req: Request, res: Response) {
+  const schoolId = Number(req.params.schoolId);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор школы" });
+  }
+
+  try {
+    const thread = await getAdminSupportThread(schoolId);
+    return res.json(thread);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось загрузить переписку";
+    if (message.includes("не найдена")) {
+      return res.status(404).json({ error: message });
+    }
+    console.error("Admin feedback thread error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить переписку" });
+  }
+}
+
+export async function adminFeedbackReply(req: Request, res: Response) {
+  const schoolId = Number(req.params.schoolId);
+  if (!Number.isInteger(schoolId) || schoolId <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор школы" });
+  }
+
+  const body = req.body as { message?: string };
+  try {
+    const thread = await postAdminSupportMessage({
+      schoolId,
+      actorEmail: req.session.user!.email,
+      message: String(body.message ?? ""),
+    });
+    return res.json(thread);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось отправить ответ";
+    if (message.includes("сообщение") || message.includes("длинное")) {
+      return res.status(400).json({ error: message });
+    }
+    if (message.includes("не найдена")) {
+      return res.status(404).json({ error: message });
+    }
+    console.error("Admin feedback reply error:", error);
+    return res.status(500).json({ error: "Не удалось отправить ответ" });
+  }
+}
+
+export async function recoveryUnread(_req: Request, res: Response) {
+  try {
+    return res.json({ unread: await countNewRecoveryRequests() });
+  } catch (error) {
+    console.error("Admin recovery unread error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить обращения" });
+  }
+}
+
+export async function recoveryList(req: Request, res: Response) {
+  const requested = String(req.query.status ?? "all");
+  const status =
+    requested === "new" || requested === "done" ? requested : "all";
+
+  try {
+    return res.json({ items: await listRecoveryRequests(status) });
+  } catch (error) {
+    console.error("Admin recovery list error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить обращения" });
+  }
+}
+
+export async function recoveryMarkDone(req: Request, res: Response) {
+  const id = Number(req.params.requestId);
+  if (!Number.isInteger(id) || id <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор обращения" });
+  }
+
+  try {
+    const item = await markRecoveryRequestDone(
+      id,
+      req.session.user?.email ?? "unknown",
+    );
+    return res.json(item);
+  } catch (error) {
+    if (error instanceof RecoveryRequestError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    console.error("Admin recovery mark done error:", error);
+    return res.status(500).json({ error: "Не удалось обновить обращение" });
+  }
 }

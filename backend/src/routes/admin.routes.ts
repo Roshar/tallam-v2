@@ -10,6 +10,23 @@ router.use(requireAuth, requireRole("admin"));
 router.get("/logs/options", auditLogController.options);
 router.get("/logs", auditLogController.logs);
 router.get("/dashboard", adminController.dashboard);
+router.get("/online-schools", adminController.onlineSchools);
+router.get("/schools/areas", adminController.schoolAreas);
+router.get("/schools/email-availability", adminController.schoolEmailAvailability);
+router.post(
+  "/schools",
+  auditHttpAction({
+    category: "cabinet",
+    action: "school.created",
+    entityType: "school",
+    details: (req) => ({
+      schoolName: String(req.body?.schoolName ?? "").slice(0, 255),
+      email: String(req.body?.email ?? "").slice(0, 150),
+      areaId: Number(req.body?.areaId ?? 0) || null,
+    }),
+  }),
+  adminController.createSchool,
+);
 router.get("/schools", adminController.schools);
 router.post(
   "/schools/:schoolId/impersonate",
@@ -21,6 +38,31 @@ router.get("/subscriptions/export", adminController.exportSubscriptions);
 router.get("/subscriptions", adminController.subscriptions);
 router.get("/renewals", adminController.renewalRequests);
 router.get("/renewals/pending-count", adminController.renewalQueueCount);
+router.get("/feedback/unread-count", adminController.adminFeedbackUnread);
+router.get("/feedback", adminController.adminFeedbackList);
+router.get("/feedback/:schoolId", adminController.adminFeedbackThread);
+router.post(
+  "/feedback/:schoolId",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.feedback_reply",
+    entityType: "school",
+    entityId: (req) => req.params.schoolId,
+  }),
+  adminController.adminFeedbackReply,
+);
+router.get("/recovery/unread-count", adminController.recoveryUnread);
+router.get("/recovery", adminController.recoveryList);
+router.post(
+  "/recovery/:requestId/done",
+  auditHttpAction({
+    category: "password",
+    action: "password.recovery_processed",
+    entityType: "recovery_request",
+    entityId: (req) => req.params.requestId,
+  }),
+  adminController.recoveryMarkDone,
+);
 router.get("/renewals/:requestId", adminController.renewalRequestDetail);
 router.post(
   "/renewals/:requestId/pay",

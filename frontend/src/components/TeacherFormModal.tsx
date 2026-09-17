@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState, type ReactNode } from "react";
 import { api } from "../api/client";
 import type {
   CreateTeacherPayload,
@@ -43,7 +43,7 @@ const emptyForm: TeacherFormState = {
   surname: "",
   firstname: "",
   patronymic: "",
-  birthday: "1980-01-01",
+  birthday: "",
   snils: "",
   genderId: "",
   specialty: "",
@@ -58,8 +58,29 @@ const emptyForm: TeacherFormState = {
   disciplineIds: [],
   kpkPlace: "",
   kpkYear: "",
-  projectId: "1",
+  projectId: "",
 };
+
+function FieldLabel({
+  htmlFor,
+  required,
+  children,
+}: {
+  htmlFor?: string;
+  required?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <label className="form-label" htmlFor={htmlFor}>
+      {children}
+      {required ? (
+        <span className="form-required" title="Обязательное поле">
+          *
+        </span>
+      ) : null}
+    </label>
+  );
+}
 
 function mapTeacherToForm(teacher: TeacherDetail): TeacherFormState {
   return {
@@ -124,6 +145,7 @@ export function TeacherFormModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const formTopRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open) {
@@ -149,12 +171,28 @@ export function TeacherFormModal({
         if (teacher) {
           setForm(mapTeacherToForm(teacher));
         } else {
-          setForm(emptyForm);
+          setForm({
+            ...emptyForm,
+            projectId: formOptions.projects[0]
+              ? String(formOptions.projects[0].id)
+              : "",
+          });
         }
       })
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [open, mode, teacherId]);
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+
+    const card = formTopRef.current?.closest(".modal-card");
+    if (card instanceof HTMLElement) {
+      card.scrollTop = 0;
+    }
+  }, [error]);
 
   if (!open) {
     return null;
@@ -185,6 +223,14 @@ export function TeacherFormModal({
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError("");
+
+    if (form.disciplineIds.length === 0) {
+      setError(
+        "Выберите хотя бы один предмет. Без предмета нельзя добавить оценку урока. Если это не учитель, отметьте «Администрация».",
+      );
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = buildPayload(form);
@@ -234,40 +280,61 @@ export function TeacherFormModal({
           </div>
         ) : (
           <form className="modal-form" onSubmit={handleSubmit}>
+            <div ref={formTopRef} />
             {error ? <div className="alert alert-error">{error}</div> : null}
+
+            <p className="form-legend">
+              <span className="form-required">*</span> обязательные поля
+            </p>
 
             <section className="modal-section">
               <h3 className="modal-section__title">Личные данные</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Фамилия *</label>
+                  <FieldLabel htmlFor="teacher-surname" required>
+                    Фамилия
+                  </FieldLabel>
                   <input
+                    id="teacher-surname"
                     className="form-input"
                     value={form.surname}
                     onChange={(e) => updateField("surname", e.target.value)}
+                    placeholder="Ахмедов"
+                    autoComplete="family-name"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Имя *</label>
+                  <FieldLabel htmlFor="teacher-firstname" required>
+                    Имя
+                  </FieldLabel>
                   <input
+                    id="teacher-firstname"
                     className="form-input"
                     value={form.firstname}
                     onChange={(e) => updateField("firstname", e.target.value)}
+                    placeholder="Ахмед"
+                    autoComplete="given-name"
                     required
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Отчество</label>
+                  <FieldLabel htmlFor="teacher-patronymic">Отчество</FieldLabel>
                   <input
+                    id="teacher-patronymic"
                     className="form-input"
                     value={form.patronymic}
                     onChange={(e) => updateField("patronymic", e.target.value)}
+                    placeholder="Ахмедович"
+                    autoComplete="additional-name"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Дата рождения *</label>
+                  <FieldLabel htmlFor="teacher-birthday" required>
+                    Дата рождения
+                  </FieldLabel>
                   <input
+                    id="teacher-birthday"
                     className="form-input"
                     type="date"
                     value={form.birthday}
@@ -276,23 +343,28 @@ export function TeacherFormModal({
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">СНИЛС</label>
+                  <FieldLabel htmlFor="teacher-snils">СНИЛС</FieldLabel>
                   <input
+                    id="teacher-snils"
                     className="form-input"
                     value={form.snils}
                     onChange={(e) => updateField("snils", e.target.value)}
-                    placeholder="Только цифры"
+                    placeholder="123-456-789 00"
+                    inputMode="numeric"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Пол *</label>
+                  <FieldLabel htmlFor="teacher-gender" required>
+                    Пол
+                  </FieldLabel>
                   <select
+                    id="teacher-gender"
                     className="form-input"
                     value={form.genderId}
                     onChange={(e) => updateField("genderId", e.target.value)}
                     required
                   >
-                    <option value="">Выбрать</option>
+                    <option value="">Выберите пол</option>
                     {options?.genders.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.title}
@@ -307,14 +379,17 @@ export function TeacherFormModal({
               <h3 className="modal-section__title">Образование</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Уровень образования *</label>
+                  <FieldLabel htmlFor="teacher-education" required>
+                    Уровень образования
+                  </FieldLabel>
                   <select
+                    id="teacher-education"
                     className="form-input"
                     value={form.educationLevelId}
                     onChange={(e) => updateField("educationLevelId", e.target.value)}
                     required
                   >
-                    <option value="">Выбрать</option>
+                    <option value="">Выберите уровень образования</option>
                     {options?.educationLevels.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.title}
@@ -323,19 +398,25 @@ export function TeacherFormModal({
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Специальность</label>
+                  <FieldLabel htmlFor="teacher-specialty">Специальность</FieldLabel>
                   <input
+                    id="teacher-specialty"
                     className="form-input"
                     value={form.specialty}
                     onChange={(e) => updateField("specialty", e.target.value)}
+                    placeholder="Учитель математики"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Серия и номер диплома</label>
+                  <FieldLabel htmlFor="teacher-diploma">
+                    Серия и номер диплома
+                  </FieldLabel>
                   <input
+                    id="teacher-diploma"
                     className="form-input"
                     value={form.diploma}
                     onChange={(e) => updateField("diploma", e.target.value)}
+                    placeholder="123456 0000000"
                   />
                 </div>
               </div>
@@ -345,14 +426,17 @@ export function TeacherFormModal({
               <h3 className="modal-section__title">Профессиональные данные</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Должность *</label>
+                  <FieldLabel htmlFor="teacher-position" required>
+                    Должность
+                  </FieldLabel>
                   <select
+                    id="teacher-position"
                     className="form-input"
                     value={form.positionId}
                     onChange={(e) => updateField("positionId", e.target.value)}
                     required
                   >
-                    <option value="">Выбрать</option>
+                    <option value="">Выберите должность</option>
                     {options?.positions.map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.title}
@@ -361,18 +445,23 @@ export function TeacherFormModal({
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Общий стаж</label>
+                  <FieldLabel htmlFor="teacher-total-exp">Общий стаж</FieldLabel>
                   <input
+                    id="teacher-total-exp"
                     className="form-input"
                     type="number"
                     min="0"
                     value={form.totalExperience}
                     onChange={(e) => updateField("totalExperience", e.target.value)}
+                    placeholder="Например, 12"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Педагогический стаж</label>
+                  <FieldLabel htmlFor="teacher-teach-exp">
+                    Педагогический стаж
+                  </FieldLabel>
                   <input
+                    id="teacher-teach-exp"
                     className="form-input"
                     type="number"
                     min="0"
@@ -380,11 +469,13 @@ export function TeacherFormModal({
                     onChange={(e) =>
                       updateField("teachingExperience", e.target.value)
                     }
+                    placeholder="Например, 8"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Категория</label>
+                  <FieldLabel htmlFor="teacher-category">Категория</FieldLabel>
                   <select
+                    id="teacher-category"
                     className="form-input"
                     value={form.categoryId}
                     onChange={(e) => updateField("categoryId", e.target.value)}
@@ -401,8 +492,13 @@ export function TeacherFormModal({
 
               {options?.disciplines.length ? (
                 <div className="form-group">
-                  <label className="form-label">Преподаваемые дисциплины</label>
-                  <div className="discipline-list">
+                  <FieldLabel required>Преподаваемые дисциплины</FieldLabel>
+                  <p className="form-field-hint">
+                    Нужно выбрать хотя бы один предмет. Если это замдиректора
+                    или другой административный работник, отметьте
+                    «Администрация». Можно выбрать несколько.
+                  </p>
+                  <div className="discipline-list" role="group">
                     {options.disciplines.map((item) => (
                       <label key={item.id} className="discipline-item">
                         <input
@@ -422,20 +518,27 @@ export function TeacherFormModal({
               <h3 className="modal-section__title">Контактные данные</h3>
               <div className="form-grid">
                 <div className="form-group">
-                  <label className="form-label">Телефон</label>
+                  <FieldLabel htmlFor="teacher-phone">Телефон</FieldLabel>
                   <input
+                    id="teacher-phone"
                     className="form-input"
+                    type="tel"
                     value={form.phone}
                     onChange={(e) => updateField("phone", e.target.value)}
+                    placeholder="+7 900 000-00-00"
+                    autoComplete="tel"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Email</label>
+                  <FieldLabel htmlFor="teacher-email">Email</FieldLabel>
                   <input
+                    id="teacher-email"
                     className="form-input"
                     type="email"
                     value={form.email}
                     onChange={(e) => updateField("email", e.target.value)}
+                    placeholder="teacher@school.ru"
+                    autoComplete="email"
                   />
                 </div>
               </div>
@@ -445,30 +548,43 @@ export function TeacherFormModal({
               <h3 className="modal-section__title">Повышение квалификации</h3>
               <div className="form-grid">
                 <div className="form-group form-group--wide">
-                  <label className="form-label">Место, программа (тема) КПК</label>
+                  <FieldLabel htmlFor="teacher-kpk-place">
+                    Место, программа (тема) КПК
+                  </FieldLabel>
                   <input
+                    id="teacher-kpk-place"
                     className="form-input"
                     value={form.kpkPlace}
                     onChange={(e) => updateField("kpkPlace", e.target.value)}
+                    placeholder="ГБУ ДПО «ИРО ЧР», название программы"
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Год прохождения КПК</label>
+                  <FieldLabel htmlFor="teacher-kpk-year">
+                    Год прохождения КПК
+                  </FieldLabel>
                   <input
+                    id="teacher-kpk-year"
                     className="form-input"
                     value={form.kpkYear}
                     onChange={(e) => updateField("kpkYear", e.target.value)}
+                    placeholder="2025"
+                    inputMode="numeric"
                   />
                 </div>
                 {isCreate ? (
                   <div className="form-group">
-                    <label className="form-label">Добавить в проект *</label>
+                    <FieldLabel htmlFor="teacher-project" required>
+                      Добавить в проект
+                    </FieldLabel>
                     <select
+                      id="teacher-project"
                       className="form-input"
                       value={form.projectId}
                       onChange={(e) => updateField("projectId", e.target.value)}
                       required
                     >
+                      <option value="">Выберите проект</option>
                       {options?.projects.map((item) => (
                         <option key={item.id} value={item.id}>
                           {item.name}

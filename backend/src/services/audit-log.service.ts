@@ -20,7 +20,12 @@ export const AUDIT_ACTIONS = [
   {
     category: "password",
     action: "password.reset_requested",
-    label: "Запрос смены пароля",
+    label: "Обращение о восстановлении доступа",
+  },
+  {
+    category: "password",
+    action: "password.recovery_processed",
+    label: "Обращение обработано",
   },
   {
     category: "password",
@@ -127,6 +132,46 @@ export const AUDIT_ACTIONS = [
     action: "lesson_analysis.evaluation_create",
     label: "Добавление оценки урока",
   },
+  {
+    category: "lesson_analysis",
+    action: "lesson_analysis.evaluation_view",
+    label: "Просмотр оценки урока",
+  },
+  {
+    category: "lesson_analysis",
+    action: "lesson_analysis.recommendations_download",
+    label: "Скачивание методических рекомендаций",
+  },
+  {
+    category: "lesson_analysis",
+    action: "lesson_analysis.evaluation_email",
+    label: "Отправка оценки учителю",
+  },
+  {
+    category: "lesson_analysis",
+    action: "lesson_analysis.evaluation_comment_update",
+    label: "Изменение комментария к оценке",
+  },
+  {
+    category: "lesson_analysis",
+    action: "lesson_analysis.evaluation_delete",
+    label: "Удаление оценки урока",
+  },
+  {
+    category: "cabinet",
+    action: "school.created",
+    label: "Регистрация школы",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.feedback_submit",
+    label: "Сообщение из кабинета школы",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.feedback_reply",
+    label: "Ответ администрации на отзыв школы",
+  },
 ] as const;
 
 export const AUDIT_CATEGORIES = [
@@ -135,6 +180,7 @@ export const AUDIT_CATEGORIES = [
   { value: "subscription", label: "Подписка" },
   { value: "teachers", label: "Работники" },
   { value: "lesson_analysis", label: "Анализ урока" },
+  { value: "cabinet", label: "Кабинет школы" },
 ] as const;
 
 export interface AuditLogItem {

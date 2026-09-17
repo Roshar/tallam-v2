@@ -8,8 +8,16 @@ interface TeachersTableProps {
   rowOffset?: number;
   viewBasePath?: string;
   viewLabel?: string;
+  userInfoBasePath?: string;
+  userInfoLabel?: string;
   showProjectStatus?: boolean;
   compact?: boolean;
+  headers?: {
+    number?: string;
+    name?: string;
+    userInfo?: string;
+    action?: string;
+  };
 }
 
 export function TeachersTable({
@@ -18,8 +26,11 @@ export function TeachersTable({
   rowOffset = 0,
   viewBasePath,
   viewLabel = "Просмотреть",
+  userInfoBasePath,
+  userInfoLabel = "Просмотр",
   showProjectStatus = false,
   compact = false,
+  headers,
 }: TeachersTableProps) {
   if (teachers.length === 0) {
     return <p className="table-empty">{emptyMessage}</p>;
@@ -30,8 +41,8 @@ export function TeachersTable({
       <table className="data-table">
         <thead>
           <tr>
-            <th>#</th>
-            <th>ФИО</th>
+            <th>{headers?.number ?? "#"}</th>
+            <th>{headers?.name ?? "ФИО"}</th>
             <th>Должность</th>
             {showProjectStatus ? <th>Проект</th> : null}
             {!compact ? (
@@ -40,7 +51,12 @@ export function TeachersTable({
                 <th>Email</th>
               </>
             ) : null}
-            {viewBasePath ? <th>Действие</th> : null}
+            {userInfoBasePath ? (
+              <th>{headers?.userInfo ?? "Информация о пользователе"}</th>
+            ) : null}
+            {viewBasePath ? (
+              <th>{headers?.action ?? "Действие"}</th>
+            ) : null}
           </tr>
         </thead>
         <tbody>
@@ -59,6 +75,16 @@ export function TeachersTable({
                   <td>{teacher.phone ?? "—"}</td>
                   <td>{teacher.email ?? "—"}</td>
                 </>
+              ) : null}
+              {userInfoBasePath ? (
+                <td>
+                  <Link
+                    className="table-action-link"
+                    to={`${userInfoBasePath}/${teacher.id}`}
+                  >
+                    {userInfoLabel}
+                  </Link>
+                </td>
               ) : null}
               {viewBasePath ? (
                 <td>

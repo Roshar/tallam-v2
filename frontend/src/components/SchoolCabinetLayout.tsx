@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from "react";
-import { NavLink } from "react-router-dom";
+import { useEffect, useState, type ReactNode } from "react";
+import { NavLink, useLocation } from "react-router-dom";
+import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useSchool } from "../context/SchoolContext";
 
@@ -11,6 +12,7 @@ export const SCHOOL_MENU = [
     label: "Проект «Анализ урока»",
     to: "/school/lesson-analysis",
   },
+  { id: "feedback", label: "Отзывы и пожелания", to: "/school/feedback" },
 ] as const;
 
 const SUBSCRIPTION_ITEM = {
@@ -32,13 +34,65 @@ export function SchoolCabinetLayout({
 }: SchoolCabinetLayoutProps) {
   const { profile } = useSchool();
   const { user, stopImpersonation } = useAuth();
+  const location = useLocation();
   const [stopping, setStopping] = useState(false);
+  const [unreadFeedback, setUnreadFeedback] = useState(0);
   const billingOnly =
     user?.accountType === "school" && user.cabinetAccess === "billing";
   const impersonating = Boolean(user?.impersonatedBy);
   const menu = billingOnly
     ? [SUBSCRIPTION_ITEM]
     : [...SCHOOL_MENU, SUBSCRIPTION_ITEM];
+
+  useEffect(() => {
+    if (impersonating) {
+      return;
+    }
+
+    function ping() {
+      if (document.visibilityState === "hidden") {
+        return;
+      }
+      api.schoolPresence().catch(() => {
+        /* счётчик онлайна необязателен */
+      });
+    }
+
+    ping();
+    const timer = window.setInterval(ping, 60_000);
+    document.addEventListener("visibilitychange", ping);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", ping);
+    };
+  }, [impersonating]);
+
+  useEffect(() => {
+    if (billingOnly) {
+      setUnreadFeedback(0);
+      return;
+    }
+
+    let cancelled = false;
+
+    function loadUnread() {
+      api
+        .schoolFeedbackUnread()
+        .then(({ unread }) => {
+          if (!cancelled) setUnreadFeedback(unread);
+        })
+        .catch(() => {
+          if (!cancelled) setUnreadFeedback(0);
+        });
+    }
+
+    loadUnread();
+    window.addEventListener("school-feedback-updated", loadUnread);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("school-feedback-updated", loadUnread);
+    };
+  }, [billingOnly, location.pathname]);
 
   async function handleStopImpersonation() {
     setStopping(true);
@@ -111,6 +165,14 @@ export function SchoolCabinetLayout({
                     }
                   >
                     {item.label}
+                    {item.id === "feedback" && unreadFeedback > 0 ? (
+                      <span
+                        className="cabinet-menu__badge"
+                        aria-label={`${unreadFeedback} новых сообщений`}
+                      >
+                        {unreadFeedback > 99 ? "99+" : unreadFeedback}
+                      </span>
+                    ) : null}
                   </NavLink>
                 </li>
               ))}

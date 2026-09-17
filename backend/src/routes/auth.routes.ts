@@ -27,12 +27,16 @@ router.post(
   requireAuth,
   authController.stopImpersonation,
 );
+router.get("/recovery-captcha", passwordResetController.recoveryCaptcha);
 router.post(
   "/forgot-password",
   auditHttpAction({
     category: "password",
     action: "password.reset_requested",
     actorEmail: (req) => String(req.body?.email ?? ""),
+    details: (req) => ({
+      email: String(req.body?.email ?? "").slice(0, 150),
+    }),
   }),
   passwordResetController.forgotPassword,
 );

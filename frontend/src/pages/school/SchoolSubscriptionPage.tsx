@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
+import { SchoolPasswordForm } from "../../components/SchoolPasswordForm";
 import { SchoolRenewalPanel } from "../../components/SchoolRenewalPanel";
 import { useAuth } from "../../context/AuthContext";
 import type { SchoolSubscriptionOverview } from "../../types/school";
@@ -144,6 +145,8 @@ export function SchoolSubscriptionPage() {
       </header>
 
       {error ? <div className="alert alert-error">{error}</div> : null}
+
+      <SchoolPasswordForm idPrefix="sub-password" />
 
       {!data ? (
         <p className="page-subtitle">Загрузка данных подписки...</p>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Tallam">
+  <rect width="32" height="32" rx="8" fill="#1a4474"/>
+  <rect x="2.5" y="2.5" width="27" height="27" rx="7" fill="#2e609a"/>
+  <path fill="#fff" d="M8.2 7.4h15.6v4.4h-5.6v12.4h-4.4V11.8H8.2z"/>
+  <rect x="10" y="23.4" width="12" height="2.8" rx="1.4" fill="#52a1ff"/>
+</svg>

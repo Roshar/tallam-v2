@@ -23,6 +23,22 @@ export function AdminDashboardPage() {
     });
   }, []);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      api
+        .adminOnlineSchools()
+        .then(({ onlineSchools }) => {
+          setDashboard((current) =>
+            current ? { ...current, onlineSchools } : current,
+          );
+        })
+        .catch(() => {
+          /* счётчик онлайна необязателен */
+        });
+    }, 20_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const activeShare = useMemo(() => {
     if (!dashboard?.schools) {
       return 0;
@@ -72,6 +88,19 @@ export function AdminDashboardPage() {
                 <p className="admin-stat-card__value">{dashboard.schools}</p>
                 <p className="admin-stat-card__note">
                   {dashboard.activeSchoolAccounts} активных кабинетов
+                </p>
+              </div>
+            </article>
+
+            <article className="admin-stat-card admin-stat-card--online">
+              <span className="admin-stat-card__icon" aria-hidden="true">
+                <span className="admin-online-dot" />
+              </span>
+              <div>
+                <p className="admin-stat-card__label">Сейчас в кабинетах</p>
+                <p className="admin-stat-card__value">{dashboard.onlineSchools}</p>
+                <p className="admin-stat-card__note">
+                  Школы с активностью за 5 минут
                 </p>
               </div>
             </article>

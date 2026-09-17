@@ -21,6 +21,7 @@ export interface AdminDashboard {
   methodists: number;
   projects: number;
   currentYear: number;
+  onlineSchools: number;
   recentSchools: AdminRecentSchool[];
   subscriptions: {
     total: number;
@@ -65,6 +66,20 @@ export interface AdminSubscriptionsResponse {
 export interface AdminSubscriptionArea {
   id: number;
   title: string;
+}
+
+export interface AdminEmailAvailability {
+  email: string;
+  available: boolean;
+  reason: "invalid" | "taken" | null;
+}
+
+export interface AdminCreatedSchool {
+  schoolId: number;
+  schoolName: string;
+  email: string;
+  areaId: number;
+  areaTitle: string;
 }
 
 export type AdminSchoolCabinetStatus = "active" | "blocked" | "none";
@@ -231,4 +246,28 @@ export interface AdminAuditLogsResponse {
 export interface AdminAuditLogOptions {
   categories: Array<{ value: string; label: string }>;
   actions: Array<{ category: string; action: string; label: string }>;
+}
+
+export interface AdminSupportConversation {
+  schoolId: number;
+  schoolName: string;
+  lastMessage: string;
+  lastAuthorRole: "school" | "admin";
+  lastAt: string;
+  unreadCount: number;
+}
+
+export type AdminRecoveryStatus = "new" | "done";
+
+export interface AdminRecoveryRequest {
+  id: number;
+  email: string;
+  phone: string;
+  schoolId: number | null;
+  schoolName: string | null;
+  status: AdminRecoveryStatus;
+  ipAddress: string | null;
+  createdAt: string;
+  processedAt: string | null;
+  processedByEmail: string | null;
 }

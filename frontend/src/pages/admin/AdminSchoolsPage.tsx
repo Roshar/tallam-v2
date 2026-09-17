@@ -102,9 +102,14 @@ export function AdminSchoolsPage() {
             Все школы платформы: район, логин кабинета и состояние доступа
           </p>
         </div>
-        <span className="admin-subscriptions__total">
-          {total} {schoolCountLabel(total)}
-        </span>
+        <div className="admin-subscriptions__header-actions">
+          <Link className="btn btn-primary" to="/admin/schools/new">
+            Добавить школу
+          </Link>
+          <span className="admin-subscriptions__total">
+            {total} {schoolCountLabel(total)}
+          </span>
+        </div>
       </div>
 
       <section className="admin-subscriptions__filters">

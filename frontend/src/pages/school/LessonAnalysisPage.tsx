@@ -62,7 +62,15 @@ export function LessonAnalysisPage() {
             emptyMessage="В проекте пока нет участников. Добавьте учителей через «Добавить учителя в проект»."
             viewBasePath="/school/lesson-analysis/teachers"
             viewLabel="Профиль в проекте"
+            userInfoBasePath="/school/workers"
+            userInfoLabel="Просмотр"
             compact
+            headers={{
+              number: "№",
+              name: "ФИО (учителя)",
+              userInfo: "Информация о пользователе",
+              action: "Данные пользователя (в проекте)",
+            }}
           />
         ) : null}
       </div>

@@ -1,4 +1,5 @@
 import { query } from "../db/pool.js";
+import { config } from "../config.js";
 import { ensureAuditLogSchema } from "./audit-log.service.js";
 import {
   findLessonAnalysisProject,
@@ -93,6 +94,29 @@ async function count(sql: string, params: unknown[] = []): Promise<number> {
   return Number(rows[0]?.count ?? 0);
 }
 
+const ONLINE_WINDOW_SECONDS = 5 * 60;
+
+export async function countOnlineSchools(): Promise<number> {
+  const lifetimeSec = Math.max(1, Math.round(config.session.lifetime / 1000));
+  const minRemaining = Math.max(lifetimeSec - ONLINE_WINDOW_SECONDS, 0);
+
+  try {
+    return await count(
+      `SELECT COUNT(DISTINCT CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.schoolId')) AS UNSIGNED)) AS count
+       FROM sessions
+       WHERE expires >= UNIX_TIMESTAMP() + ?
+         AND JSON_VALID(data)
+         AND JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.accountType')) = 'school'
+         AND JSON_EXTRACT(data, '$.impersonator') IS NULL
+         AND CAST(JSON_UNQUOTE(JSON_EXTRACT(data, '$.user.schoolId')) AS UNSIGNED) > 0`,
+      [minRemaining],
+    );
+  } catch (error) {
+    console.error("Online schools count error:", error);
+    return 0;
+  }
+}
+
 export async function getAdminDashboard() {
   const currentYear = new Date().getFullYear();
   await syncSchoolCabinetAccess();
@@ -108,6 +132,7 @@ export async function getAdminDashboard() {
     projects,
     recentSchools,
     subscriptionRows,
+    onlineSchools,
   ] = await Promise.all([
     count("SELECT COUNT(*) AS count FROM schools"),
     count(
@@ -175,6 +200,7 @@ export async function getAdminDashboard() {
          WHERE subscription_rank = 1
        ) latest`,
     ),
+    countOnlineSchools(),
   ]);
 
   const subscriptionStats = subscriptionRows[0];
@@ -189,6 +215,7 @@ export async function getAdminDashboard() {
     methodists,
     projects,
     currentYear,
+    onlineSchools,
     recentSchools,
     subscriptions: {
       total: Number(subscriptionStats?.total ?? 0),

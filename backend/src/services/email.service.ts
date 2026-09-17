@@ -23,6 +23,32 @@ function getTransporter() {
   return transporter;
 }
 
+export async function sendMail(input: {
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+    contentType: string;
+  }>;
+}): Promise<void> {
+  const mailer = getTransporter();
+  if (!mailer) {
+    throw new Error("Почтовый сервер не настроен");
+  }
+
+  await mailer.sendMail({
+    from: config.smtp.from,
+    to: input.to,
+    subject: input.subject,
+    text: input.text,
+    html: input.html,
+    attachments: input.attachments,
+  });
+}
+
 export async function sendPasswordResetEmail(
   to: string,
   resetUrl: string,

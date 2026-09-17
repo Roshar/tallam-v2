@@ -26,6 +26,23 @@ export interface SchoolDashboard {
   };
 }
 
+export type SupportAuthorRole = "school" | "admin";
+
+export interface SupportMessage {
+  id: number;
+  schoolId: number;
+  authorRole: SupportAuthorRole;
+  authorEmail: string;
+  message: string;
+  createdAt: string;
+}
+
+export interface SupportThread {
+  schoolId: number;
+  schoolName: string;
+  messages: SupportMessage[];
+}
+
 export interface SchoolProfile {
   schoolId: number;
   schoolName: string;
@@ -201,6 +218,7 @@ export interface EvaluationListItem {
   id: number;
   date: string;
   dateLabel: string;
+  academicYearStart: number;
   disciplineId: number;
   disciplineTitle: string;
   classLabel: string;
@@ -209,6 +227,13 @@ export interface EvaluationListItem {
   cardType: number;
   cardTypeLabel: string;
   cardLinkType: "full" | "method";
+}
+
+export type EvaluationCardType = "full" | "method";
+
+export interface AcademicYearTab {
+  startYear: number;
+  label: string;
 }
 
 export interface ProjectTeacherProfileResponse {
@@ -222,10 +247,45 @@ export interface ProjectTeacherProfileResponse {
     sources: Array<{ id: number; title: string }>;
     disciplines: Array<{ id: number; title: string }>;
   };
+  academicYears: AcademicYearTab[];
+  currentAcademicYearStart: number;
+  schoolName: string;
   evaluations: EvaluationListItem[];
 }
 
-export type EvaluationCardType = "method" | "full";
+export interface EvaluationBlockResult {
+  id: string;
+  title: string;
+  percent: number;
+  level: string;
+  levelStyle: "success" | "good" | "danger";
+}
+
+export interface EvaluationDetail {
+  id: number;
+  cardType: EvaluationCardType;
+  cardTypeLabel: string;
+  date: string;
+  dateLabel: string;
+  thema: string;
+  disciplineTitle: string;
+  classLabel: string;
+  sourceId: number;
+  sourceLabel: string;
+  evaluatorLabel: string;
+  teacher: {
+    id: string;
+    fullName: string;
+    position: string | null;
+    email: string | null;
+  };
+  schoolName: string;
+  areaName: string | null;
+  scores: Record<string, number>;
+  displayedScores: Record<string, string>;
+  blocks: EvaluationBlockResult[];
+  commentHtml: string | null;
+}
 
 export interface CreateEvaluationPayload {
   cardType: EvaluationCardType;
@@ -238,5 +298,6 @@ export interface CreateEvaluationPayload {
   sourceFio?: string;
   positionName?: string;
   sourceWorkplace?: string;
+  commentHtml?: string;
   scores: Record<string, number>;
 }

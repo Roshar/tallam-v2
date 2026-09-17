@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { config } from "../config.js";
 import { getSchoolName, countTeachers } from "../services/auth.service.js";
 import { getSchoolProfile } from "../services/school.service.js";
 import {
@@ -17,6 +18,18 @@ import {
   type UpdateTeacherInput,
 } from "../services/teachers.service.js";
 import { getProjectTeacherEvaluations, createProjectTeacherEvaluation, getSchoolEvaluationYearStats } from "../services/card.service.js";
+import {
+  buildRecommendationsPdf,
+  deleteEvaluation,
+  getEvaluationDetail,
+  sendEvaluationToTeacher,
+} from "../services/card-view.service.js";
+import { upsertEvaluationComment } from "../services/evaluation-comment.service.js";
+import {
+  countSchoolUnread,
+  getSchoolSupportThread,
+  postSchoolSupportMessage,
+} from "../services/school-feedback.service.js";
 import { getSchoolSubscriptionOverview } from "../services/school-subscription.service.js";
 import {
   buildRenewalDocument,
@@ -26,6 +39,7 @@ import {
   getLatestSchoolRenewal,
   submitSchoolRenewal,
 } from "../services/subscription-renewal.service.js";
+import { changeSchoolCabinetPassword } from "../services/password-reset.service.js";
 
 function getSchoolId(req: Request): number | null {
   const user = req.session.user;
@@ -77,6 +91,65 @@ export async function schoolDashboard(req: Request, res: Response) {
   }
 }
 
+export async function schoolPresence(_req: Request, res: Response) {
+  return res.json({ ok: true });
+}
+
+export async function schoolFeedbackUnread(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    const unread = await countSchoolUnread(schoolId);
+    return res.json({ unread });
+  } catch (error) {
+    console.error("School feedback unread error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить отзывы" });
+  }
+}
+
+export async function schoolFeedbackThread(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    const thread = await getSchoolSupportThread(schoolId);
+    return res.json(thread);
+  } catch (error) {
+    console.error("School feedback thread error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить переписку" });
+  }
+}
+
+export async function sendSchoolFeedback(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  const body = req.body as { message?: string };
+  try {
+    const thread = await postSchoolSupportMessage({
+      schoolId,
+      actorEmail: req.session.user!.email,
+      message: String(body.message ?? ""),
+    });
+    return res.json(thread);
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось отправить сообщение";
+    if (message.includes("сообщение") || message.includes("длинное")) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("School feedback error:", error);
+    return res.status(500).json({ error: "Не удалось отправить сообщение" });
+  }
+}
+
 export async function listWorkers(req: Request, res: Response) {
   const schoolId = getSchoolId(req);
   if (!schoolId) {
@@ -118,6 +191,13 @@ function parseWorkerBody(body: Partial<CreateTeacherInput & UpdateTeacherInput>)
   if (!body.genderId || !body.educationLevelId || !body.positionId) {
     return {
       error: "Укажите пол, уровень образования и должность" as const,
+    };
+  }
+
+  if (!body.disciplineIds?.length) {
+    return {
+      error:
+        "Выберите хотя бы один предмет. Без предмета нельзя добавить оценку урока. Если это не учитель, отметьте «Администрация»." as const,
     };
   }
 
@@ -334,6 +414,7 @@ export async function createLessonAnalysisEvaluation(req: Request, res: Response
     sourceFio?: string;
     positionName?: string;
     sourceWorkplace?: string;
+    commentHtml?: string;
     scores?: Record<string, number>;
   };
 
@@ -357,6 +438,7 @@ export async function createLessonAnalysisEvaluation(req: Request, res: Response
       sourceFio: body.sourceFio,
       positionName: body.positionName,
       sourceWorkplace: body.sourceWorkplace,
+      commentHtml: body.commentHtml,
       scores: Object.fromEntries(
         Object.entries(body.scores).map(([key, value]) => [key, Number(value)]),
       ),
@@ -388,6 +470,157 @@ export async function createLessonAnalysisEvaluation(req: Request, res: Response
     }
 
     return res.status(500).json({ error: "Не удалось сохранить оценку" });
+  }
+}
+
+function parseCardParams(req: Request) {
+  const schoolId = getSchoolId(req);
+  const teacherId = String(req.params.teacherId ?? "").trim();
+  const cardId = Number(req.params.cardId);
+  return { schoolId, teacherId, cardId };
+}
+
+export async function getLessonAnalysisEvaluation(req: Request, res: Response) {
+  const { schoolId, teacherId, cardId } = parseCardParams(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректные параметры оценки" });
+  }
+
+  try {
+    const detail = await getEvaluationDetail(schoolId, teacherId, cardId);
+    if (!detail) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+    return res.json(detail);
+  } catch (error) {
+    console.error("Get evaluation error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить оценку" });
+  }
+}
+
+export async function downloadEvaluationRecommendations(
+  req: Request,
+  res: Response,
+) {
+  const { schoolId, teacherId, cardId } = parseCardParams(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректные параметры оценки" });
+  }
+
+  try {
+    const detail = await getEvaluationDetail(schoolId, teacherId, cardId);
+    if (!detail) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+    const buffer = await buildRecommendationsPdf(detail);
+    const filename = `rekomendacii-${detail.teacher.fullName.replace(/\s+/g, "-")}.pdf`;
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+    );
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Evaluation recommendations error:", error);
+    return res.status(500).json({
+      error: "Не удалось сформировать методические рекомендации",
+    });
+  }
+}
+
+export async function updateLessonAnalysisEvaluationComment(
+  req: Request,
+  res: Response,
+) {
+  const { schoolId, teacherId, cardId } = parseCardParams(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректные параметры оценки" });
+  }
+
+  try {
+    const detail = await getEvaluationDetail(schoolId, teacherId, cardId);
+    if (!detail) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+
+    const commentHtml = await upsertEvaluationComment(
+      cardId,
+      schoolId,
+      (req.body as { commentHtml?: unknown })?.commentHtml,
+    );
+
+    return res.json({ commentHtml });
+  } catch (error) {
+    console.error("Update evaluation comment error:", error);
+    return res.status(500).json({
+      error: "Не удалось сохранить комментарий",
+    });
+  }
+}
+
+export async function emailLessonAnalysisEvaluation(req: Request, res: Response) {
+  const { schoolId, teacherId, cardId } = parseCardParams(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректные параметры оценки" });
+  }
+
+  const email = String((req.body as { email?: string })?.email ?? "")
+    .trim()
+    .toLowerCase();
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ error: "Укажите корректный адрес электронной почты" });
+  }
+
+  try {
+    const detail = await getEvaluationDetail(schoolId, teacherId, cardId);
+    if (!detail) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+    await sendEvaluationToTeacher(detail, email);
+    return res.json({ ok: true });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("Почтовый сервер не настроен")) {
+      return res.status(503).json({ error: message });
+    }
+    console.error("Email evaluation error:", error);
+    return res.status(500).json({ error: "Не удалось отправить письмо" });
+  }
+}
+
+export async function deleteLessonAnalysisEvaluation(
+  req: Request,
+  res: Response,
+) {
+  const { schoolId, teacherId, cardId } = parseCardParams(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректные параметры оценки" });
+  }
+
+  try {
+    const deleted = await deleteEvaluation(schoolId, teacherId, cardId);
+    if (!deleted) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error("Delete evaluation error:", error);
+    return res.status(500).json({ error: "Не удалось удалить оценку" });
   }
 }
 
@@ -440,6 +673,53 @@ export async function removeWorkerFromProject(req: Request, res: Response) {
   } catch (error) {
     console.error("Remove worker from project error:", error);
     return res.status(500).json({ error: "Не удалось исключить работника из проекта" });
+  }
+}
+
+export async function changeSchoolPassword(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  if (req.session.impersonator) {
+    return res.status(403).json({
+      error: "Смену пароля нельзя выполнять из режима входа как школа",
+    });
+  }
+
+  const body = req.body as { password?: string; confirmPassword?: string };
+
+  try {
+    const result = await changeSchoolCabinetPassword(
+      schoolId,
+      String(body.password ?? ""),
+      String(body.confirmPassword ?? ""),
+      `school:${req.session.user?.email ?? "unknown"}`,
+    );
+
+    req.session.destroy((err) => {
+      if (err) {
+        console.error("School session destroy after password change:", err);
+      }
+      res.clearCookie(config.session.name);
+      return res.json({
+        ok: true,
+        message: "Пароль обновлён. Войдите с новым паролем.",
+        email: result.email,
+      });
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось изменить пароль";
+    if (
+      message.includes("парол") ||
+      message.includes("Парол") ||
+      message.includes("не найден")
+    ) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("School password change error:", error);
+    return res.status(500).json({ error: "Не удалось изменить пароль" });
   }
 }
 

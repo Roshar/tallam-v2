@@ -42,6 +42,9 @@ export const config = {
   passwordReset: {
     expiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 60),
   },
+  schoolPasswordLog:
+    process.env.SCHOOL_PASSWORD_LOG ??
+    path.resolve(__dirname, "../data/school-passwords.log"),
 } as const;
 
 export function isSmtpConfigured(): boolean {

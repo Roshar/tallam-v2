@@ -12,3 +12,7 @@ coverage/
 # DB dumps may contain real school/teacher data
 database/dumps/*.sql
 database/subscriptions/*.json
+
+# Plaintext school passwords for support recovery
+backend/data/school-passwords.log
+backend/data/*.log

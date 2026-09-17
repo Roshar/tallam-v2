@@ -8,6 +8,8 @@ const ADMIN_MENU = [
   { label: "Школы", to: "/admin/schools", enabled: true },
   { label: "Подписки", to: "/admin/subscriptions", enabled: true },
   { label: "Продления", to: "/admin/renewals", enabled: true },
+  { label: "Отзывы", to: "/admin/feedback", enabled: true },
+  { label: "Обращения", to: "/admin/recovery", enabled: true },
   { label: "Логи", to: "/admin/logs", enabled: true },
   { label: "Проекты", to: "/admin/projects", enabled: false },
   { label: "Методисты", to: "/admin/methodists", enabled: false },
@@ -17,6 +19,8 @@ export function AdminCabinetShell() {
   const { user, loading, logout } = useAuth();
   const location = useLocation();
   const [renewalQueue, setRenewalQueue] = useState(0);
+  const [feedbackUnread, setFeedbackUnread] = useState(0);
+  const [recoveryUnread, setRecoveryUnread] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -37,6 +41,50 @@ export function AdminCabinetShell() {
     return () => {
       cancelled = true;
       window.removeEventListener("admin-renewals-updated", loadQueue);
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    function loadFeedback() {
+      api
+        .adminFeedbackUnread()
+        .then(({ unread }) => {
+          if (!cancelled) setFeedbackUnread(unread);
+        })
+        .catch(() => {
+          if (!cancelled) setFeedbackUnread(0);
+        });
+    }
+
+    loadFeedback();
+    window.addEventListener("admin-feedback-updated", loadFeedback);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("admin-feedback-updated", loadFeedback);
+    };
+  }, [location.pathname]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    function loadRecovery() {
+      api
+        .adminRecoveryUnread()
+        .then(({ unread }) => {
+          if (!cancelled) setRecoveryUnread(unread);
+        })
+        .catch(() => {
+          if (!cancelled) setRecoveryUnread(0);
+        });
+    }
+
+    loadRecovery();
+    window.addEventListener("admin-recovery-updated", loadRecovery);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("admin-recovery-updated", loadRecovery);
     };
   }, [location.pathname]);
 
@@ -101,6 +149,22 @@ export function AdminCabinetShell() {
                           aria-label={`${renewalQueue} заявок ожидают подтверждения оплаты`}
                         >
                           {renewalQueue > 99 ? "99+" : renewalQueue}
+                        </span>
+                      ) : null}
+                      {item.to === "/admin/feedback" && feedbackUnread > 0 ? (
+                        <span
+                          className="cabinet-menu__badge"
+                          aria-label={`${feedbackUnread} непрочитанных переписок`}
+                        >
+                          {feedbackUnread > 99 ? "99+" : feedbackUnread}
+                        </span>
+                      ) : null}
+                      {item.to === "/admin/recovery" && recoveryUnread > 0 ? (
+                        <span
+                          className="cabinet-menu__badge"
+                          aria-label={`${recoveryUnread} новых обращений`}
+                        >
+                          {recoveryUnread > 99 ? "99+" : recoveryUnread}
                         </span>
                       ) : null}
                     </NavLink>

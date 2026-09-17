@@ -59,9 +59,54 @@
 }
 
 .project-teacher__section-title {
-  margin: 0;
+  margin: 0 0 1rem;
   font-size: 1.1rem;
   color: var(--color-darkblue);
+}
+
+.project-teacher__years {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f6f9fd;
+}
+
+.project-teacher__year {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.7rem 1rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-darkblue);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.project-teacher__year span {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.project-teacher__year:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.project-teacher__year.active {
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.project-teacher__year.active span {
+  color: var(--color-blue);
 }
 
 @media (max-width: 768px) {
@@ -72,5 +117,9 @@
 
   .project-teacher__filters-grid {
     grid-template-columns: 1fr;
+  }
+
+  .project-teacher__years {
+    flex-direction: column;
   }
 }

@@ -1,5 +1,5 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import type {
   EvaluationListItem,
@@ -8,9 +8,11 @@ import type {
 
 export function ProjectTeacherPage() {
   const { teacherId = "" } = useParams();
+  const navigate = useNavigate();
   const [data, setData] = useState<ProjectTeacherProfileResponse | null>(null);
   const [source, setSource] = useState("");
   const [discipline, setDiscipline] = useState("");
+  const [academicYear, setAcademicYear] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -39,6 +41,12 @@ export function ProjectTeacherPage() {
   );
 
   useEffect(() => {
+    setAcademicYear(null);
+    setSource("");
+    setDiscipline("");
+  }, [teacherId]);
+
+  useEffect(() => {
     void loadProfile();
   }, [loadProfile]);
 
@@ -49,6 +57,11 @@ export function ProjectTeacherPage() {
       discipline: discipline || undefined,
     });
   }
+
+  const selectedYear = academicYear ?? data?.currentAcademicYearStart ?? null;
+  const selectedYearLabel =
+    data?.academicYears.find((year) => year.startYear === selectedYear)?.label ??
+    "";
 
   return (
     <div className="card">
@@ -137,11 +150,40 @@ export function ProjectTeacherPage() {
             </form>
 
             <section className="project-teacher__section">
+              <div className="project-teacher__years" role="tablist" aria-label="Учебный год">
+                {data.academicYears.map((year) => {
+                  const selected = selectedYear === year.startYear;
+                  return (
+                    <button
+                      key={year.startYear}
+                      type="button"
+                      role="tab"
+                      aria-selected={selected}
+                      className={`project-teacher__year${selected ? " active" : ""}`}
+                      onClick={() => setAcademicYear(year.startYear)}
+                    >
+                      {year.label}
+                      <span>учебный год</span>
+                    </button>
+                  );
+                })}
+              </div>
+
               <h3 className="project-teacher__section-title">
-                Список оценок (оценки уроков)
+                Список оценок · {selectedYearLabel} учебный год
               </h3>
 
-              <EvaluationsTable evaluations={data.evaluations} />
+              <EvaluationsTable
+                evaluations={data.evaluations.filter(
+                  (item) => Number(item.academicYearStart) === selectedYear,
+                )}
+                emptyLabel={`Нет оценок за ${selectedYearLabel} учебный год.`}
+                onOpen={(cardId) =>
+                  navigate(
+                    `/school/lesson-analysis/teachers/${teacherId}/cards/${cardId}`,
+                  )
+                }
+              />
             </section>
           </>
         ) : null}
@@ -150,13 +192,17 @@ export function ProjectTeacherPage() {
   );
 }
 
-function EvaluationsTable({ evaluations }: { evaluations: EvaluationListItem[] }) {
+function EvaluationsTable({
+  evaluations,
+  emptyLabel,
+  onOpen,
+}: {
+  evaluations: EvaluationListItem[];
+  emptyLabel: string;
+  onOpen: (cardId: number) => void;
+}) {
   if (evaluations.length === 0) {
-    return (
-      <p className="table-empty">
-        Нет оценок по выбранным условиям.
-      </p>
-    );
+    return <p className="table-empty">{emptyLabel}</p>;
   }
 
   return (
@@ -174,7 +220,11 @@ function EvaluationsTable({ evaluations }: { evaluations: EvaluationListItem[] }
         </thead>
         <tbody>
           {evaluations.map((item, index) => (
-            <tr key={item.id}>
+            <tr
+              key={item.id}
+              className="evaluation-row"
+              onClick={() => onOpen(item.id)}
+            >
               <td>{index + 1}</td>
               <td>{item.dateLabel}</td>
               <td>{item.disciplineTitle}</td>

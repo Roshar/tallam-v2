@@ -1,5 +1,10 @@
 import { pool, query } from "../db/pool.js";
 import type { ResultSetHeader } from "mysql2";
+import { getSchoolName } from "./auth.service.js";
+import {
+  ensureEvaluationCommentSchema,
+  insertEvaluationComment,
+} from "./evaluation-comment.service.js";
 import {
   findLessonAnalysisProject,
   resolveProjectMiddlewareTable,
@@ -9,6 +14,7 @@ export interface EvaluationListItem {
   id: number;
   date: string;
   dateLabel: string;
+  academicYearStart: number;
   disciplineId: number;
   disciplineTitle: string;
   classLabel: string;
@@ -17,6 +23,11 @@ export interface EvaluationListItem {
   cardType: number;
   cardTypeLabel: string;
   cardLinkType: "full" | "method";
+}
+
+export interface AcademicYearTab {
+  startYear: number;
+  label: string;
 }
 
 export interface ProjectTeacherProfile {
@@ -30,6 +41,9 @@ export interface ProjectTeacherProfile {
     sources: Array<{ id: number; title: string }>;
     disciplines: Array<{ id: number; title: string }>;
   };
+  academicYears: AcademicYearTab[];
+  currentAcademicYearStart: number;
+  schoolName: string;
   evaluations: EvaluationListItem[];
 }
 
@@ -43,6 +57,40 @@ interface CardRow {
   source_id: number;
   name_source: string;
   card_type: number;
+}
+
+const ACADEMIC_YEAR_COUNT = 2;
+
+export function academicYearStartFromDate(date: Date): number {
+  return date.getMonth() >= 8 ? date.getFullYear() : date.getFullYear() - 1;
+}
+
+export function formatAcademicYearLabel(startYear: number): string {
+  return `${startYear}–${startYear + 1}`;
+}
+
+export function visibleAcademicYears(
+  count = ACADEMIC_YEAR_COUNT,
+  now = new Date(),
+): AcademicYearTab[] {
+  const current = academicYearStartFromDate(now);
+  return Array.from({ length: count }, (_, index) => {
+    const startYear = current - (count - 1 - index);
+    return {
+      startYear,
+      label: formatAcademicYearLabel(startYear),
+    };
+  });
+}
+
+function displayAcademicYearStart(date: Date, oldestStart: number): number {
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  if (month >= 9) return year;
+  // Январь–август первого отображаемого года относим к его вкладке,
+  // иначе оценки весны 2025 пропадают с вкладки 2025–2026.
+  if (year === oldestStart) return oldestStart;
+  return year - 1;
 }
 
 const MONTHS_RU = [
@@ -105,7 +153,7 @@ function getCardLinkType(cardType: number): "full" | "method" {
   return cardType === 2 ? "method" : "full";
 }
 
-function mapCard(row: CardRow): EvaluationListItem {
+function mapCard(row: CardRow, oldestStart: number): EvaluationListItem {
   const liter = row.liter_class?.trim();
   const classLabel = liter
     ? `${row.class_id}${liter}`
@@ -115,6 +163,12 @@ function mapCard(row: CardRow): EvaluationListItem {
     id: Number(row.id_card),
     date: formatIsoDate(row.create_mark_date),
     dateLabel: formatDateLabel(row.create_mark_date),
+    academicYearStart: displayAcademicYearStart(
+      row.create_mark_date instanceof Date
+        ? row.create_mark_date
+        : new Date(row.create_mark_date),
+      oldestStart,
+    ),
     disciplineId: row.discipline_id,
     disciplineTitle: row.title_discipline,
     classLabel,
@@ -204,8 +258,16 @@ export async function getProjectTeacherEvaluations(
     return null;
   }
 
-  const params: unknown[] = [teacherId, schoolId];
-  let where = "WHERE cftm.teacher_id = ? AND cftm.school_id = ?";
+  const academicYears = visibleAcademicYears();
+  const oldestStart = academicYears[0]?.startYear ?? academicYearStartFromDate(new Date());
+  const nextYearStart =
+    (academicYears[academicYears.length - 1]?.startYear ?? oldestStart) + 1;
+  const rangeFrom = `${oldestStart}-01-01`;
+  const rangeTo = `${nextYearStart}-09-01`;
+
+  const params: unknown[] = [teacherId, schoolId, rangeFrom, rangeTo];
+  let where =
+    "WHERE cftm.teacher_id = ? AND cftm.school_id = ? AND cftm.create_mark_date >= ? AND cftm.create_mark_date < ?";
 
   if (filters.sourceId) {
     where += " AND cftm.source_id = ?";
@@ -217,7 +279,7 @@ export async function getProjectTeacherEvaluations(
     params.push(filters.disciplineId);
   }
 
-  const [cards, disciplines, sources] = await Promise.all([
+  const [cards, disciplines, sources, schoolName] = await Promise.all([
     query<CardRow[]>(
       `SELECT
          cftm.id_card,
@@ -248,11 +310,13 @@ export async function getProjectTeacherEvaluations(
     query<{ id_source: number; name_source: string }[]>(
       "SELECT id_source, name_source FROM source_tbl ORDER BY id_source",
     ),
+    getSchoolName(schoolId),
   ]);
 
   return {
     project: context.project,
     teacher: context.teacher,
+    schoolName: schoolName?.trim() || "",
     filters: {
       sources: sources.map((item) => ({
         id: Number(item.id_source),
@@ -263,7 +327,9 @@ export async function getProjectTeacherEvaluations(
         title: item.title_discipline,
       })),
     },
-    evaluations: cards.map(mapCard),
+    academicYears,
+    currentAcademicYearStart: academicYearStartFromDate(new Date()),
+    evaluations: cards.map((row) => mapCard(row, oldestStart)),
   };
 }
 
@@ -327,6 +393,7 @@ export interface CreateEvaluationInput {
   sourceFio?: string;
   positionName?: string;
   sourceWorkplace?: string;
+  commentHtml?: string;
   scores: Record<string, number>;
 }
 
@@ -370,6 +437,8 @@ export async function createProjectTeacherEvaluation(
   const cardType = input.cardType === "full" ? 1 : 2;
   const keys = input.cardType === "full" ? FULL_KEYS : METHOD_KEYS;
   const scoreValues = keys.map((key) => requireScore(input.scores, key));
+
+  await ensureEvaluationCommentSchema();
 
   const connection = await pool.getConnection();
 
@@ -429,18 +498,30 @@ export async function createProjectTeacherEvaluation(
       throw new Error("Failed to create card");
     }
 
+    const schoolName = (await getSchoolName(schoolId))?.trim() || "Школа";
     const outsideFio =
-      input.sourceId === 1 ? input.sourceFio!.trim() : "Школа";
+      input.sourceId === 1
+        ? input.sourceFio!.trim()
+        : input.sourceFio?.trim() || "Школа";
     const outsidePosition =
-      input.sourceId === 1 ? input.positionName!.trim() : "Школа";
+      input.sourceId === 1
+        ? input.positionName!.trim()
+        : input.positionName?.trim() || "Школа";
     const outsideWorkplace =
-      input.sourceId === 1 ? input.sourceWorkplace!.trim() : "Школа";
+      input.sourceId === 1 ? input.sourceWorkplace!.trim() : schoolName;
 
     await connection.execute(
       `INSERT INTO outside_card2
         (card_id, source_fio, position_name, source_workplace, source_id)
        VALUES (?, ?, ?, ?, ?)`,
       [cardId, outsideFio, outsidePosition, outsideWorkplace, input.sourceId],
+    );
+
+    await insertEvaluationComment(
+      connection,
+      cardId,
+      schoolId,
+      input.commentHtml,
     );
 
     await connection.commit();

@@ -1,6 +1,7 @@
 import type {
   CreateEvaluationPayload,
   CreateTeacherPayload,
+  EvaluationDetail,
   LessonAnalysisResponse,
   ProjectTeacherProfileResponse,
   SchoolDashboard,
@@ -8,6 +9,7 @@ import type {
   SchoolRenewalRequest,
   SchoolSubscriptionOverview,
   SubmitRenewalPayload,
+  SupportThread,
   TeacherDetailResponse,
   UpdateTeacherPayload,
   WorkerFormOptions,
@@ -17,13 +19,18 @@ import type {
   AdminDashboard,
   AdminAuditLogOptions,
   AdminAuditLogsResponse,
+  AdminCreatedSchool,
+  AdminEmailAvailability,
   AdminPasswordResetLink,
+  AdminRecoveryRequest,
+  AdminRecoveryStatus,
   AdminRenewalRequest,
   AdminRenewalsResponse,
   AdminSchoolDetail,
   AdminSchoolsResponse,
   AdminSubscriptionArea,
   AdminSubscriptionsResponse,
+  AdminSupportConversation,
 } from "../types/admin";
 
 export type AccountType = "school" | "methodist" | "admin";
@@ -64,6 +71,7 @@ function shouldRedirectOnUnauthorized(path: string): boolean {
   return !(
     path.startsWith("/api/auth/login") ||
     path.startsWith("/api/auth/forgot-password") ||
+    path.startsWith("/api/auth/recovery-captcha") ||
     path.startsWith("/api/auth/reset-password")
   );
 }
@@ -160,6 +168,10 @@ export const api = {
     return request<AdminDashboard>("/api/admin/dashboard");
   },
 
+  adminOnlineSchools() {
+    return request<{ onlineSchools: number }>("/api/admin/online-schools");
+  },
+
   adminAuditLogOptions() {
     return request<AdminAuditLogOptions>("/api/admin/logs/options");
   },
@@ -187,6 +199,32 @@ export const api = {
     return request<AdminAuditLogsResponse>(
       `/api/admin/logs${query ? `?${query}` : ""}`,
     );
+  },
+
+  adminSchoolAreas() {
+    return request<{ items: AdminSubscriptionArea[] }>(
+      "/api/admin/schools/areas",
+    );
+  },
+
+  adminSchoolEmailAvailability(email: string) {
+    const search = new URLSearchParams({ email });
+    return request<AdminEmailAvailability>(
+      `/api/admin/schools/email-availability?${search.toString()}`,
+    );
+  },
+
+  createAdminSchool(payload: {
+    schoolName: string;
+    areaId: number;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) {
+    return request<AdminCreatedSchool>("/api/admin/schools", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   adminSchools(params?: {
@@ -333,8 +371,37 @@ export const api = {
     return request<SchoolDashboard>("/api/school/dashboard");
   },
 
+  schoolFeedbackUnread() {
+    return request<{ unread: number }>("/api/school/feedback/unread");
+  },
+
+  schoolFeedbackThread() {
+    return request<SupportThread>("/api/school/feedback");
+  },
+
+  sendSchoolFeedback(payload: { message: string }) {
+    return request<SupportThread>("/api/school/feedback", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
   schoolProfile() {
     return request<SchoolProfile>("/api/school/profile");
+  },
+
+  schoolPresence() {
+    return request<{ ok: boolean }>("/api/school/presence");
+  },
+
+  changeSchoolPassword(password: string, confirmPassword: string) {
+    return request<{ ok: boolean; message: string; email: string }>(
+      "/api/school/password",
+      {
+        method: "POST",
+        body: JSON.stringify({ password, confirmPassword }),
+      },
+    );
   },
 
   schoolSubscription() {
@@ -368,6 +435,47 @@ export const api = {
     return request<{ awaitingConfirmation: number }>(
       "/api/admin/renewals/pending-count",
     );
+  },
+
+  adminFeedbackUnread() {
+    return request<{ unread: number }>("/api/admin/feedback/unread-count");
+  },
+
+  adminRecoveryUnread() {
+    return request<{ unread: number }>("/api/admin/recovery/unread-count");
+  },
+
+  adminRecoveryRequests(status: "all" | AdminRecoveryStatus = "all") {
+    const search = new URLSearchParams();
+    if (status !== "all") search.set("status", status);
+    const query = search.toString();
+    return request<{ items: AdminRecoveryRequest[] }>(
+      `/api/admin/recovery${query ? `?${query}` : ""}`,
+    );
+  },
+
+  markAdminRecoveryDone(requestId: number) {
+    return request<AdminRecoveryRequest>(
+      `/api/admin/recovery/${requestId}/done`,
+      { method: "POST" },
+    );
+  },
+
+  adminFeedbackConversations() {
+    return request<{ items: AdminSupportConversation[] }>(
+      "/api/admin/feedback",
+    );
+  },
+
+  adminFeedbackThread(schoolId: number) {
+    return request<SupportThread>(`/api/admin/feedback/${schoolId}`);
+  },
+
+  replyAdminFeedback(schoolId: number, payload: { message: string }) {
+    return request<SupportThread>(`/api/admin/feedback/${schoolId}`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   adminRenewals(params?: {
@@ -530,11 +638,71 @@ export const api = {
     );
   },
 
-  forgotPassword(email: string) {
+  schoolLessonAnalysisEvaluation(teacherId: string, cardId: number) {
+    return request<EvaluationDetail>(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}`,
+    );
+  },
+
+  downloadEvaluationRecommendations(teacherId: string, cardId: number) {
+    return downloadFile(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/recommendations`,
+      "rekomendacii.pdf",
+    );
+  },
+
+  updateLessonAnalysisEvaluationComment(
+    teacherId: string,
+    cardId: number,
+    commentHtml: string,
+  ) {
+    return request<{ commentHtml: string | null }>(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/comment`,
+      {
+        method: "PATCH",
+        body: JSON.stringify({ commentHtml }),
+      },
+    );
+  },
+
+  emailLessonAnalysisEvaluation(
+    teacherId: string,
+    cardId: number,
+    email: string,
+  ) {
+    return request<{ ok: boolean }>(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/email`,
+      {
+        method: "POST",
+        body: JSON.stringify({ email }),
+      },
+    );
+  },
+
+  deleteLessonAnalysisEvaluation(teacherId: string, cardId: number) {
+    return request<{ ok: boolean }>(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}`,
+      { method: "DELETE" },
+    );
+  },
+
+  forgotPassword(payload: {
+    email: string;
+    phone: string;
+    captchaId: string;
+    captchaAnswer: string;
+    website?: string;
+  }) {
     return request<{ ok: boolean; message: string }>("/api/auth/forgot-password", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(payload),
     });
+  },
+
+  recoveryCaptcha() {
+    return request<{ captchaId: string; imageSvg: string }>(
+      "/api/auth/recovery-captcha",
+    );
   },
 
   validateResetToken(token: string) {

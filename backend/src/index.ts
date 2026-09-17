@@ -10,6 +10,9 @@ import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
+import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
+import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
+import { ensureRecoverySchema } from "./services/password-recovery.service.js";
 
 const MySQLStore = MySQLStoreFactory(session);
 
@@ -56,6 +59,7 @@ app.use(session({
   name: config.session.name,
   secret: config.session.secret,
   resave: false,
+  rolling: true,
   saveUninitialized: false,
   store: sessionStore,
   cookie: {
@@ -82,6 +86,15 @@ app.listen(config.port, () => {
   console.log(`Tallam API listening on http://localhost:${config.port}`);
   void ensureAuditLogSchema().catch((error) => {
     console.error("Failed to initialize audit log schema:", error);
+  });
+  void ensureEvaluationCommentSchema().catch((error) => {
+    console.error("Failed to initialize evaluation comments schema:", error);
+  });
+  void ensureSchoolFeedbackSchema().catch((error) => {
+    console.error("Failed to initialize school feedback schema:", error);
+  });
+  void ensureRecoverySchema().catch((error) => {
+    console.error("Failed to initialize recovery requests schema:", error);
   });
   void syncSchoolCabinetAccess()
     .then((count) => {

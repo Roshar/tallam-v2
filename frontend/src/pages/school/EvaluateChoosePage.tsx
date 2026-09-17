@@ -1,4 +1,5 @@
 import { Link, useParams } from "react-router-dom";
+import { IRO_CARDS_NOTICE } from "../../data/cabinetNews";
 
 export function EvaluateChoosePage() {
   const { teacherId = "" } = useParams();
@@ -42,6 +43,8 @@ export function EvaluateChoosePage() {
             </span>
           </Link>
         </div>
+
+        <p className="evaluate-choose__legal">{IRO_CARDS_NOTICE}</p>
       </div>
     </div>
   );

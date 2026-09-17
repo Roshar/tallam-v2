@@ -1,6 +1,7 @@
 import { FormEvent, Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
+import { MinimalEditor } from "../../components/MinimalEditor";
 import {
   FULL_GROUPS,
   METHOD_GROUPS,
@@ -51,6 +52,7 @@ export function EvaluateFormPage() {
   const [sourceFio, setSourceFio] = useState("");
   const [positionName, setPositionName] = useState("");
   const [sourceWorkplace, setSourceWorkplace] = useState("");
+  const [commentHtml, setCommentHtml] = useState("");
   const [scores, setScores] = useState<Record<string, string>>(() =>
     emptyScores(criteria),
   );
@@ -70,6 +72,7 @@ export function EvaluateFormPage() {
       .schoolLessonAnalysisTeacher(teacherId)
       .then((data) => {
         setProfile(data);
+        setSourceWorkplace(data.schoolName);
         if (data.filters.disciplines[0]) {
           setDisciplineId(String(data.filters.disciplines[0].id));
         }
@@ -100,9 +103,12 @@ export function EvaluateFormPage() {
         sourceId: Number(sourceId),
         dateCreate,
         thema: thema.trim(),
-        sourceFio: isExternal ? sourceFio.trim() : undefined,
-        positionName: isExternal ? positionName.trim() : undefined,
-        sourceWorkplace: isExternal ? sourceWorkplace.trim() : undefined,
+        sourceFio: sourceFio.trim() || undefined,
+        positionName: positionName.trim() || undefined,
+        sourceWorkplace: isExternal
+          ? sourceWorkplace.trim()
+          : profile?.schoolName,
+        commentHtml: commentHtml.trim() || undefined,
         scores: Object.fromEntries(
           Object.entries(scores).map(([key, value]) => [key, Number(value)]),
         ),
@@ -144,6 +150,14 @@ export function EvaluateFormPage() {
             <h3 className="evaluate-meta__fio">
               ФИО: {profile.teacher.fullName}
             </h3>
+          ) : null}
+
+          {profile && profile.filters.disciplines.length === 0 ? (
+            <div className="alert alert-error">
+              У этого работника не выбран предмет. Откройте карточку в базе и
+              отметьте предмет или «Администрация». Без предмета оценку добавить
+              нельзя.
+            </div>
           ) : null}
 
           <div className="evaluate-meta__fields">
@@ -203,7 +217,15 @@ export function EvaluateFormPage() {
                 <select
                   className="form-input"
                   value={sourceId}
-                  onChange={(e) => setSourceId(e.target.value)}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    setSourceId(next);
+                    if (next === "2") {
+                      setSourceWorkplace(profile?.schoolName ?? "");
+                    } else if (sourceWorkplace === (profile?.schoolName ?? "")) {
+                      setSourceWorkplace("");
+                    }
+                  }}
                   required
                   aria-label="Тип оценки"
                 >
@@ -237,37 +259,48 @@ export function EvaluateFormPage() {
               />
             </div>
 
-            {isExternal ? (
-              <div className="evaluate-meta__external">
-                <div className="form-group">
-                  <input
-                    className="form-input"
-                    value={sourceFio}
-                    onChange={(e) => setSourceFio(e.target.value)}
-                    placeholder="ФИО эксперта"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <input
-                    className="form-input"
-                    value={positionName}
-                    onChange={(e) => setPositionName(e.target.value)}
-                    placeholder="Должность"
-                    required
-                  />
-                </div>
-                <div className="form-group">
-                  <input
-                    className="form-input"
-                    value={sourceWorkplace}
-                    onChange={(e) => setSourceWorkplace(e.target.value)}
-                    placeholder="Место работы"
-                    required
-                  />
-                </div>
+            <div className="evaluate-meta__external">
+              <div className="form-group">
+                <label className="form-label" htmlFor="source-fio">
+                  ФИО оценивающего
+                </label>
+                <input
+                  id="source-fio"
+                  className="form-input"
+                  value={sourceFio}
+                  onChange={(e) => setSourceFio(e.target.value)}
+                  placeholder="ФИО оценивающего"
+                  required={isExternal}
+                />
               </div>
-            ) : null}
+              <div className="form-group">
+                <label className="form-label" htmlFor="source-position">
+                  Должность
+                </label>
+                <input
+                  id="source-position"
+                  className="form-input"
+                  value={positionName}
+                  onChange={(e) => setPositionName(e.target.value)}
+                  placeholder="Должность"
+                  required={isExternal}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label" htmlFor="source-workplace">
+                  Место работы
+                </label>
+                <input
+                  id="source-workplace"
+                  className="form-input"
+                  value={sourceWorkplace}
+                  onChange={(e) => setSourceWorkplace(e.target.value)}
+                  placeholder={isExternal ? "Место работы" : "Название школы"}
+                  required={isExternal}
+                  readOnly={!isExternal}
+                />
+              </div>
+            </div>
           </div>
         </section>
 
@@ -354,6 +387,22 @@ export function EvaluateFormPage() {
             </tbody>
           </table>
         </div>
+
+        <section className="evaluate-extras">
+          <h3 id="evaluate-comment-title" className="evaluate-extras__title">
+            Комментарий оценивающего
+          </h3>
+          <p className="evaluate-extras__hint">
+            Необязательно. Можно кратко отметить особенности урока. Комментарий
+            также будет включён в методические рекомендации к этому уроку.
+          </p>
+          <MinimalEditor
+            value={commentHtml}
+            onChange={setCommentHtml}
+            labelledBy="evaluate-comment-title"
+            placeholder="Введите комментарий или дополнение к оценке"
+          />
+        </section>
 
         <div className="evaluate-form__actions">
           <Link
