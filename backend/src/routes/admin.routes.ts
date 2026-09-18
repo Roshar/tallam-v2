@@ -110,6 +110,21 @@ router.post(
   }),
   adminController.createSubscription,
 );
+router.patch(
+  "/subscriptions/:schoolId/periods/:periodId",
+  auditHttpAction({
+    category: "subscription",
+    action: "subscription.period_updated",
+    entityType: "school",
+    entityId: (req) => req.params.schoolId,
+    details: (req) => ({
+      periodId: Number(req.params.periodId) || null,
+      startsOn: String(req.body?.startsOn ?? ""),
+      endsOn: String(req.body?.endsOn ?? ""),
+    }),
+  }),
+  adminController.updateSubscription,
+);
 router.post(
   "/subscriptions/:schoolId/password-reset-link",
   auditHttpAction({

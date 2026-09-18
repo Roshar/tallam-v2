@@ -19,7 +19,9 @@ CREATE TABLE IF NOT EXISTS `subscription_renewal_requests` (
     ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `idx_renewal_school_created` (`school_id`, `created_at`),
-  KEY `idx_renewal_status_created` (`status`, `created_at`)
+  KEY `idx_renewal_status_created` (`status`, `created_at`),
+  UNIQUE KEY `uq_renewal_contract_number` (`contract_number`),
+  UNIQUE KEY `uq_renewal_invoice_number` (`invoice_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `subscription_document_sequences` (

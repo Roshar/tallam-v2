@@ -71,8 +71,13 @@ export function SchoolSubscriptionPage() {
       `БИК: ${data.bank.bik}`,
       `Корр. счёт: ${data.bank.correspondentAccount}`,
       `Сумма: ${data.bank.amountLabel}`,
+      data.bank.contractNumber
+        ? `Номер договора: ${data.bank.contractNumber}`
+        : "",
       `Назначение: ${data.bank.purpose}`,
-    ].join("\n");
+    ]
+      .filter(Boolean)
+      .join("\n");
 
     try {
       await copyText(text);
@@ -236,7 +241,8 @@ export function SchoolSubscriptionPage() {
               {renewalSubmitted ? (
                 <div className="alert alert-success">
                   <strong>Заявка отправлена.</strong> Для оплаты используйте
-                  QR-код или банковские реквизиты ниже. Договор и счёт появятся
+                  QR-код или банковские реквизиты ниже. Номер договора уже
+                  указан в назначении платежа. PDF договора и счёта появятся
                   после подтверждения оплаты администратором.
                 </div>
               ) : null}
@@ -244,15 +250,16 @@ export function SchoolSubscriptionPage() {
                 <div className="school-sub__qr">
                   <h3>Оплата по QR-коду</h3>
                   <p>
-                    Отсканируйте код в приложении банка. Сумма и назначение
-                    платежа уже заполнены.
+                    Наведите камеру телефона на код. Если оплата не открылась,
+                    отсканируйте его в приложении банка. Сумма, назначение и
+                    реквизиты платежа в бюджет уже заполнены.
                   </p>
                   {data.qrImage ? (
                     <img
                       src={data.qrImage}
                       alt="QR-код для оплаты подписки"
-                      width={220}
-                      height={220}
+                      width={240}
+                      height={240}
                     />
                   ) : null}
                   <p className="school-sub__amount">{data.bank.amountLabel}</p>
@@ -299,6 +306,12 @@ export function SchoolSubscriptionPage() {
                       <dt>Корр. счёт</dt>
                       <dd>{data.bank.correspondentAccount}</dd>
                     </div>
+                    {data.bank.contractNumber ? (
+                      <div>
+                        <dt>Номер договора</dt>
+                        <dd>{data.bank.contractNumber}</dd>
+                      </div>
+                    ) : null}
                     <div>
                       <dt>Назначение платежа</dt>
                       <dd>{data.bank.purpose}</dd>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
+import { MaintenanceNotice } from "../../components/MaintenanceNotice";
 import { CABINET_NEWS, IRO_CARDS_NOTICE } from "../../data/cabinetNews";
 import type { SchoolDashboard, SchoolSubscriptionOverview } from "../../types/school";
 
@@ -33,6 +34,8 @@ export function SchoolHomePage() {
     <div className="card school-home">
       <div className="card-body">
         {error ? <div className="alert alert-error">{error}</div> : null}
+
+        <MaintenanceNotice variant="page" />
 
         {subscription?.status === "expiring" ? (
           <div className="alert alert-warning school-home-sub-alert">

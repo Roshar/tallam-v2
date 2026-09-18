@@ -66,6 +66,7 @@ export interface SchoolBankDetails {
   bik: string;
   correspondentAccount: string;
   purpose: string;
+  contractNumber: string | null;
   amount: number;
   amountLabel: string;
   paymentNotice: string;

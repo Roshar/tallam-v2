@@ -220,6 +220,8 @@ export const api = {
     email: string;
     password: string;
     confirmPassword: string;
+    startsOn: string;
+    endsOn: string;
   }) {
     return request<AdminCreatedSchool>("/api/admin/schools", {
       method: "POST",
@@ -362,6 +364,25 @@ export const api = {
       `/api/admin/subscriptions/${schoolId}/periods`,
       {
         method: "POST",
+        body: JSON.stringify(payload),
+      },
+    );
+  },
+
+  updateAdminSchoolSubscription(
+    schoolId: number,
+    periodId: number,
+    payload: {
+      startsOn: string;
+      endsOn: string;
+      phone?: string;
+      note?: string;
+    },
+  ) {
+    return request<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}/periods/${periodId}`,
+      {
+        method: "PATCH",
         body: JSON.stringify(payload),
       },
     );

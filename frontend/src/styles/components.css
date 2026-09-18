@@ -220,6 +220,54 @@ input[type="number"].form-input::-webkit-inner-spin-button {
   text-decoration: underline;
 }
 
+.maintenance-notice {
+  color: #6b4a00;
+  background: #fff6e0;
+  border: 1px solid #f0d48a;
+}
+
+.maintenance-notice__title {
+  margin: 0 0 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.maintenance-notice p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.maintenance-notice p + p {
+  margin-top: 0.25rem;
+}
+
+.maintenance-notice a {
+  color: var(--color-darkblue);
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.maintenance-notice a:hover {
+  color: var(--color-darkblue-hover);
+}
+
+.maintenance-notice--banner {
+  grid-column: 1 / -1;
+  padding: 0.9rem 1.25rem;
+  text-align: center;
+  border: none;
+  border-bottom: 1px solid #f0d48a;
+}
+
+.maintenance-notice--page {
+  margin: 0 0 var(--space-lg);
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-md);
+}
+
 /* Cards */
 .card {
   background: var(--color-surface);

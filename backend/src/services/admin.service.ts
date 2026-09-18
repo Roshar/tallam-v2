@@ -528,6 +528,23 @@ async function getSchoolLastLoginAt(
   return rows[0]?.lastLoginAt ?? null;
 }
 
+function pickCurrentSubscription(
+  subscriptions: AdminSchoolSubscriptionRow[],
+) {
+  const live = subscriptions.filter(
+    (subscription) => Number(subscription.isCancelled) === 0,
+  );
+  return (
+    live.find(
+      (subscription) =>
+        subscription.status === "active" || subscription.status === "expiring",
+    ) ??
+    live.find((subscription) => subscription.status === "scheduled") ??
+    live[0] ??
+    null
+  );
+}
+
 export async function getAdminSchoolDetail(schoolId: number) {
   await syncSchoolCabinetAccess(schoolId);
 
@@ -651,9 +668,7 @@ export async function getAdminSchoolDetail(schoolId: number) {
       projects: projects.length,
       currentYear,
     },
-    currentSubscription:
-      subscriptions.find((subscription) => Number(subscription.isCancelled) === 0) ??
-      null,
+    currentSubscription: pickCurrentSubscription(subscriptions),
     subscriptions,
     projects,
     yearlyActivity,

@@ -5,6 +5,19 @@ import type { AdminSubscriptionArea } from "../../types/admin";
 
 type EmailStatus = "idle" | "checking" | "available" | "taken" | "invalid";
 
+function isoDate(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00`);
+  date.setDate(date.getDate() + days);
+  return isoDate(date);
+}
+
 export function AdminCreateSchoolPage() {
   const navigate = useNavigate();
   const [areas, setAreas] = useState<AdminSubscriptionArea[]>([]);
@@ -14,6 +27,8 @@ export function AdminCreateSchoolPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [startsOn, setStartsOn] = useState(isoDate(new Date()));
+  const [endsOn, setEndsOn] = useState(addDays(isoDate(new Date()), 365));
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -76,6 +91,14 @@ export function AdminCreateSchoolPage() {
       setError("Пароли не совпадают");
       return;
     }
+    if (!startsOn || !endsOn) {
+      setError("Укажите срок подписки");
+      return;
+    }
+    if (endsOn < startsOn) {
+      setError("Дата окончания не может быть раньше даты начала");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -85,6 +108,8 @@ export function AdminCreateSchoolPage() {
         email,
         password,
         confirmPassword,
+        startsOn,
+        endsOn,
       });
       navigate(`/admin/schools/${school.schoolId}`);
     } catch (err) {
@@ -106,7 +131,7 @@ export function AdminCreateSchoolPage() {
         <p className="admin-dashboard__eyebrow">Регистрация</p>
         <h2 className="page-title">Новая школа</h2>
         <p className="page-subtitle">
-          Создаёт образовательную организацию и кабинет с логином для входа
+          Создаёт образовательную организацию, кабинет и срок подписки
         </p>
       </header>
 
@@ -214,6 +239,78 @@ export function AdminCreateSchoolPage() {
             />
           </div>
         </div>
+
+        <fieldset className="admin-create-school__subscription">
+          <legend>
+            Срок подписки <span className="form-required">*</span>
+          </legend>
+          <p className="admin-create-school__hint">
+            Укажите даты доступа к кабинету. Позже их можно изменить в карточке
+            школы.
+          </p>
+          <div className="admin-activate-form__presets">
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                const start = isoDate(new Date());
+                setStartsOn(start);
+                setEndsOn(addDays(start, 6));
+              }}
+            >
+              7 дней
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                const start = isoDate(new Date());
+                setStartsOn(start);
+                setEndsOn(addDays(start, 29));
+              }}
+            >
+              30 дней
+            </button>
+            <button
+              type="button"
+              className="btn btn-ghost"
+              onClick={() => {
+                const start = isoDate(new Date());
+                setStartsOn(start);
+                setEndsOn(addDays(start, 364));
+              }}
+            >
+              1 год
+            </button>
+          </div>
+          <div className="admin-activate-form__dates">
+            <label>
+              <span>
+                Начало <span className="form-required">*</span>
+              </span>
+              <input
+                className="form-input"
+                type="date"
+                value={startsOn}
+                onChange={(event) => setStartsOn(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              <span>
+                Окончание <span className="form-required">*</span>
+              </span>
+              <input
+                className="form-input"
+                type="date"
+                value={endsOn}
+                min={startsOn}
+                onChange={(event) => setEndsOn(event.target.value)}
+                required
+              />
+            </label>
+          </div>
+        </fieldset>
 
         <button
           className="btn btn-primary admin-create-school__submit"

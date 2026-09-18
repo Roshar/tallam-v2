@@ -1,5 +1,6 @@
 import crypto from "node:crypto";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type { PoolConnection } from "mysql2/promise";
 import { config } from "../config.js";
 import { pool, query } from "../db/pool.js";
 import { getSchoolName } from "./auth.service.js";
@@ -114,6 +115,119 @@ function addOneDay(value: string): string {
     String(date.getMonth() + 1).padStart(2, "0"),
     String(date.getDate()).padStart(2, "0"),
   ].join("-");
+}
+
+interface DocumentNumbers {
+  contractNumber: string;
+  invoiceNumber: string;
+  issuedOn: string;
+}
+
+async function allocateDocumentNumbers(
+  connection: PoolConnection,
+  issuedOn = todayIso(),
+): Promise<DocumentNumbers> {
+  const periodLabel = issuedOn.slice(0, 7);
+  await connection.query(
+    `INSERT IGNORE INTO subscription_document_sequences (
+       period_key, last_number
+     ) VALUES ('global', 0)`,
+  );
+  const [sequenceRows] = await connection.query<
+    (RowDataPacket & { last_number: number })[]
+  >(
+    `SELECT last_number
+     FROM subscription_document_sequences
+     WHERE period_key = 'global'
+     FOR UPDATE`,
+  );
+  const nextNumber = Number(sequenceRows[0]?.last_number ?? 0) + 1;
+  await connection.query(
+    `UPDATE subscription_document_sequences
+     SET last_number = ?
+     WHERE period_key = 'global'`,
+    [nextNumber],
+  );
+  const serial = String(nextNumber).padStart(4, "0");
+  return {
+    contractNumber: `Д-${periodLabel}-${serial}`,
+    invoiceNumber: `С-${periodLabel}-${serial}`,
+    issuedOn,
+  };
+}
+
+export async function ensureRequestHasDocumentNumbers(
+  requestId: number,
+): Promise<void> {
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+    const [rows] = await connection.query<
+      (RowDataPacket & {
+        status: RenewalStatus;
+        contractNumber: string | null;
+        invoiceNumber: string | null;
+        issuedOn: string | null;
+      })[]
+    >(
+      `SELECT
+         status,
+         contract_number AS contractNumber,
+         invoice_number AS invoiceNumber,
+         DATE_FORMAT(issued_on, '%Y-%m-%d') AS issuedOn
+       FROM subscription_renewal_requests
+       WHERE id = ?
+       FOR UPDATE`,
+      [requestId],
+    );
+    const row = rows[0];
+    if (
+      !row ||
+      row.status === "cancelled" ||
+      (row.contractNumber && row.invoiceNumber)
+    ) {
+      await connection.commit();
+      return;
+    }
+
+    const numbers = await allocateDocumentNumbers(
+      connection,
+      row.issuedOn || todayIso(),
+    );
+    await connection.query(
+      `UPDATE subscription_renewal_requests
+       SET contract_number = COALESCE(contract_number, ?),
+           invoice_number = COALESCE(invoice_number, ?),
+           issued_on = COALESCE(issued_on, ?)
+       WHERE id = ?`,
+      [numbers.contractNumber, numbers.invoiceNumber, numbers.issuedOn, requestId],
+    );
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
+async function ensureUniqueDocumentIndexes() {
+  const indexes = await query<{ Key_name: string }[]>(
+    `SHOW INDEX FROM subscription_renewal_requests`,
+  );
+  const names = new Set(indexes.map((item) => item.Key_name));
+  if (!names.has("uq_renewal_contract_number")) {
+    await query(
+      `ALTER TABLE subscription_renewal_requests
+       ADD UNIQUE KEY uq_renewal_contract_number (contract_number)`,
+    );
+  }
+  if (!names.has("uq_renewal_invoice_number")) {
+    await query(
+      `ALTER TABLE subscription_renewal_requests
+       ADD UNIQUE KEY uq_renewal_invoice_number (invoice_number)`,
+    );
+  }
 }
 
 function validIsoDate(value: string): boolean {
@@ -294,7 +408,9 @@ export async function ensureSubscriptionRenewalSchema(): Promise<void> {
             ON UPDATE CURRENT_TIMESTAMP,
           PRIMARY KEY (id),
           KEY idx_renewal_school_created (school_id, created_at),
-          KEY idx_renewal_status_created (status, created_at)
+          KEY idx_renewal_status_created (status, created_at),
+          UNIQUE KEY uq_renewal_contract_number (contract_number),
+          UNIQUE KEY uq_renewal_invoice_number (invoice_number)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
       await query(`
@@ -306,6 +422,7 @@ export async function ensureSubscriptionRenewalSchema(): Promise<void> {
           PRIMARY KEY (period_key)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
+      await ensureUniqueDocumentIndexes();
     })().catch((error) => {
       schemaReady = null;
       throw error;
@@ -400,44 +517,98 @@ export async function submitSchoolRenewal(
 
   const customer = validateRenewalCustomerData(input);
   const encrypted = encryptCustomer(customer);
-  const editableRows = await query<{ id: number; status: RenewalStatus }[]>(
-    `SELECT id, status
-     FROM subscription_renewal_requests
-     WHERE school_id = ? AND status IN ('pending', 'documents_ready')
-     ORDER BY id DESC
-     LIMIT 1`,
-    [schoolId],
-  );
+  const connection = await pool.getConnection();
+  let requestId = 0;
 
-  let requestId = Number(editableRows[0]?.id ?? 0);
-  if (requestId) {
-    const update = await query<ResultSetHeader>(
-      `UPDATE subscription_renewal_requests
-       SET customer_ciphertext = ?,
-           customer_iv = ?,
-           customer_auth_tag = ?,
-           status = 'pending',
-           contract_number = NULL,
-           invoice_number = NULL,
-           issued_on = NULL,
-           starts_on = NULL,
-           ends_on = NULL,
-           consent_at = NOW()
-       WHERE id = ? AND status IN ('pending', 'documents_ready')`,
-      [encrypted.ciphertext, encrypted.iv, encrypted.authTag, requestId],
+  try {
+    await connection.beginTransaction();
+    await connection.query(
+      `SELECT id_school FROM schools WHERE id_school = ? FOR UPDATE`,
+      [schoolId],
     );
-    if (!update.affectedRows) {
-      throw new Error("Статус заявки изменился. Обновите страницу");
+    const [editableRows] = await connection.query<
+      (RowDataPacket & {
+        id: number;
+        status: RenewalStatus;
+        contractNumber: string | null;
+        invoiceNumber: string | null;
+        issuedOn: string | null;
+      })[]
+    >(
+      `SELECT
+         id,
+         status,
+         contract_number AS contractNumber,
+         invoice_number AS invoiceNumber,
+         DATE_FORMAT(issued_on, '%Y-%m-%d') AS issuedOn
+       FROM subscription_renewal_requests
+       WHERE school_id = ? AND status IN ('pending', 'documents_ready')
+       ORDER BY id DESC
+       LIMIT 1
+       FOR UPDATE`,
+      [schoolId],
+    );
+    const existing = editableRows[0];
+    const numbers =
+      existing?.contractNumber && existing?.invoiceNumber
+        ? {
+            contractNumber: existing.contractNumber,
+            invoiceNumber: existing.invoiceNumber,
+            issuedOn: existing.issuedOn || todayIso(),
+          }
+        : await allocateDocumentNumbers(connection);
+
+    if (existing) {
+      const [update] = await connection.query<ResultSetHeader>(
+        `UPDATE subscription_renewal_requests
+         SET customer_ciphertext = ?,
+             customer_iv = ?,
+             customer_auth_tag = ?,
+             status = 'pending',
+             contract_number = ?,
+             invoice_number = ?,
+             issued_on = ?,
+             consent_at = NOW()
+         WHERE id = ? AND status IN ('pending', 'documents_ready')`,
+        [
+          encrypted.ciphertext,
+          encrypted.iv,
+          encrypted.authTag,
+          numbers.contractNumber,
+          numbers.invoiceNumber,
+          numbers.issuedOn,
+          existing.id,
+        ],
+      );
+      if (!update.affectedRows) {
+        throw new Error("Статус заявки изменился. Обновите страницу");
+      }
+      requestId = Number(existing.id);
+    } else {
+      const [result] = await connection.query<ResultSetHeader>(
+        `INSERT INTO subscription_renewal_requests (
+           school_id, customer_ciphertext, customer_iv, customer_auth_tag,
+           status, contract_number, invoice_number, issued_on, consent_at
+         ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, NOW())`,
+        [
+          schoolId,
+          encrypted.ciphertext,
+          encrypted.iv,
+          encrypted.authTag,
+          numbers.contractNumber,
+          numbers.invoiceNumber,
+          numbers.issuedOn,
+        ],
+      );
+      requestId = Number(result.insertId);
     }
-  } else {
-    const result = await query<ResultSetHeader>(
-      `INSERT INTO subscription_renewal_requests (
-         school_id, customer_ciphertext, customer_iv, customer_auth_tag,
-         status, consent_at
-       ) VALUES (?, ?, ?, ?, 'pending', NOW())`,
-      [schoolId, encrypted.ciphertext, encrypted.iv, encrypted.authTag],
-    );
-    requestId = Number(result.insertId);
+
+    await connection.commit();
+  } catch (error) {
+    await connection.rollback();
+    throw error;
+  } finally {
+    connection.release();
   }
 
   const request = await getRenewalRequest(requestId, schoolId);
@@ -477,28 +648,17 @@ export async function markRenewalPaid(
     }
 
     const customer = decryptCustomer(row);
-    const issuedOn = todayIso();
-    const periodLabel = issuedOn.slice(0, 7);
-    await connection.query(
-      `INSERT IGNORE INTO subscription_document_sequences (
-         period_key, last_number
-       ) VALUES ('global', 0)`,
-    );
-    const [sequenceRows] = await connection.query<
-      (RowDataPacket & { last_number: number })[]
-    >(
-      `SELECT last_number
-       FROM subscription_document_sequences
-       WHERE period_key = 'global'
-       FOR UPDATE`,
-    );
-    const nextNumber = Number(sequenceRows[0]?.last_number ?? 0) + 1;
-    await connection.query(
-      `UPDATE subscription_document_sequences
-       SET last_number = ?
-       WHERE period_key = 'global'`,
-      [nextNumber],
-    );
+    const numbers =
+      row.contractNumber && row.invoiceNumber
+        ? {
+            contractNumber: row.contractNumber,
+            invoiceNumber: row.invoiceNumber,
+            issuedOn: row.issuedOn || todayIso(),
+          }
+        : await allocateDocumentNumbers(connection);
+    const contractNumber = numbers.contractNumber;
+    const invoiceNumber = numbers.invoiceNumber;
+    const issuedOn = numbers.issuedOn;
 
     const [periodRows] = await connection.query<
       (RowDataPacket & PeriodEndRow)[]
@@ -512,11 +672,8 @@ export async function markRenewalPaid(
     );
     const startsOn = periodRows[0]?.latestEnd
       ? addOneDay(periodRows[0].latestEnd)
-      : issuedOn;
+      : todayIso();
     const endsOn = addYearsMinusOneDay(startsOn);
-    const serial = String(nextNumber).padStart(4, "0");
-    const contractNumber = `Д-${periodLabel}-${serial}`;
-    const invoiceNumber = `С-${periodLabel}-${serial}`;
 
     await connection.query(
       `INSERT INTO school_subscriptions (

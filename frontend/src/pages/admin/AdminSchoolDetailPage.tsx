@@ -76,7 +76,7 @@ function accountLabel(reason: AdminSchoolAccessReason) {
     case "blocked":
       return "Принудительно заблокирован";
     case "expired":
-      return "Подписка истекла";
+      return "Подписка истекла, доступно продление";
     case "scheduled":
       return "Ожидает начала подписки";
     case "no_account":
@@ -109,6 +109,8 @@ export function AdminSchoolDetailPage() {
   const [periodEndsOn, setPeriodEndsOn] = useState(addDays(isoDate(new Date()), 365));
   const [periodPhone, setPeriodPhone] = useState("");
   const [periodNote, setPeriodNote] = useState("");
+  const [addingNewPeriod, setAddingNewPeriod] = useState(false);
+  const [editingPeriodId, setEditingPeriodId] = useState<number | null>(null);
 
   useEffect(() => {
     if (!Number.isInteger(numericSchoolId) || numericSchoolId <= 0) {
@@ -134,6 +136,17 @@ export function AdminSchoolDetailPage() {
       active = false;
     };
   }, [numericSchoolId]);
+
+  useEffect(() => {
+    if (!detail || addingNewPeriod || editingPeriodId) return;
+    const current = detail.currentSubscription;
+    if (!current) return;
+    setEditingPeriodId(current.id);
+    setPeriodStartsOn(current.startsOn);
+    setPeriodEndsOn(current.endsOn);
+    setPeriodPhone(current.phone ?? "");
+    setPeriodNote(current.note ?? "");
+  }, [detail, addingNewPeriod, editingPeriodId]);
 
   const maxYearEvaluations = useMemo(
     () =>
@@ -212,20 +225,51 @@ export function AdminSchoolDetailPage() {
     setPeriodEndsOn(addDays(start, days));
   }
 
+  function fillPeriodForm(subscription: AdminSchoolSubscription) {
+    setAddingNewPeriod(false);
+    setEditingPeriodId(subscription.id);
+    setPeriodStartsOn(subscription.startsOn);
+    setPeriodEndsOn(subscription.endsOn);
+    setPeriodPhone(subscription.phone ?? "");
+    setPeriodNote(subscription.note ?? "");
+  }
+
+  function startAddPeriod() {
+    const start = isoDate(new Date());
+    setAddingNewPeriod(true);
+    setEditingPeriodId(null);
+    setPeriodStartsOn(start);
+    setPeriodEndsOn(addDays(start, 365));
+    setPeriodPhone("");
+    setPeriodNote("");
+  }
+
   async function saveSubscription() {
     if (!detail) return;
     setActionLoading(true);
     setError("");
     try {
-      setDetail(
-        await api.createAdminSchoolSubscription(detail.school.id, {
-          startsOn: periodStartsOn,
-          endsOn: periodEndsOn,
-          phone: periodPhone.trim() || undefined,
-          note: periodNote.trim() || undefined,
-        }),
-      );
-      setPeriodNote("");
+      const payload = {
+        startsOn: periodStartsOn,
+        endsOn: periodEndsOn,
+        phone: periodPhone.trim() || undefined,
+        note: periodNote.trim() || undefined,
+      };
+      const next =
+        editingPeriodId && !addingNewPeriod
+          ? await api.updateAdminSchoolSubscription(
+              detail.school.id,
+              editingPeriodId,
+              payload,
+            )
+          : await api.createAdminSchoolSubscription(detail.school.id, payload);
+      setDetail(next);
+      setAddingNewPeriod(false);
+      if (next.currentSubscription) {
+        fillPeriodForm(next.currentSubscription);
+      } else {
+        setEditingPeriodId(null);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось сохранить подписку");
     } finally {
@@ -295,7 +339,13 @@ export function AdminSchoolDetailPage() {
           <div className="admin-school-detail__account-line">
             <span
               className={`admin-status admin-status--${
-                access.reason === "active" ? "active" : access.hasAccount ? "blocked" : "empty"
+                access.reason === "active"
+                  ? "active"
+                  : access.reason === "expired"
+                    ? "expired"
+                    : access.hasAccount
+                      ? "blocked"
+                      : "empty"
               }`}
             >
               {accountLabel(access.reason)}
@@ -423,7 +473,7 @@ export function AdminSchoolDetailPage() {
                 <h3>Подписка</h3>
                 <p>
                   {currentSubscription
-                    ? `${formatDate(currentSubscription.startsOn)} — ${formatDate(currentSubscription.endsOn)}`
+                    ? `${formatDate(currentSubscription.startsOn)} - ${formatDate(currentSubscription.endsOn)}`
                     : "Период доступа не указан"}
                 </p>
               </div>
@@ -548,12 +598,16 @@ export function AdminSchoolDetailPage() {
           >
             <div>
               <h4 className="admin-school-detail__form-title">
-                {currentSubscription
-                  ? "Добавить период вручную"
-                  : "Указать подписку вручную"}
+                {addingNewPeriod
+                  ? "Добавить ещё один период"
+                  : editingPeriodId
+                    ? "Изменить выбранный срок"
+                    : "Указать подписку"}
               </h4>
               <p className="admin-school-detail__form-hint">
-                Заполните даты доступа. Телефон и примечание необязательны.
+                {editingPeriodId && !addingNewPeriod
+                  ? "Сохранение меняет выбранный период. Если срок уже не действует, кабинет перейдёт в продление."
+                  : "Заполните даты доступа. Телефон и примечание необязательны."}
               </p>
             </div>
             <div className="admin-activate-form__presets">
@@ -620,13 +674,37 @@ export function AdminSchoolDetailPage() {
                 placeholder="Необязательно"
               />
             </label>
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={actionLoading || !periodStartsOn || !periodEndsOn}
-            >
-              {actionLoading ? "Сохранение..." : "Сохранить подписку"}
-            </button>
+            <div className="admin-school-detail__form-actions">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={actionLoading || !periodStartsOn || !periodEndsOn}
+              >
+                {actionLoading
+                  ? "Сохранение..."
+                  : editingPeriodId && !addingNewPeriod
+                    ? "Сохранить срок"
+                    : "Сохранить подписку"}
+              </button>
+              {currentSubscription && !addingNewPeriod ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={startAddPeriod}
+                >
+                  Добавить ещё один период
+                </button>
+              ) : null}
+              {addingNewPeriod && currentSubscription ? (
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => fillPeriodForm(currentSubscription)}
+                >
+                  Вернуться к текущему сроку
+                </button>
+              ) : null}
+            </div>
           </form>
         </section>
 
@@ -689,13 +767,14 @@ export function AdminSchoolDetailPage() {
                 <th>Телефон</th>
                 <th>Источник</th>
                 <th>Примечание</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {detail.subscriptions.map((subscription) => (
                 <tr key={subscription.id}>
                   <td className="admin-subscriptions__period">
-                    {formatDate(subscription.startsOn)} —{" "}
+                    {formatDate(subscription.startsOn)} -{" "}
                     {formatDate(subscription.endsOn)}
                   </td>
                   <td>
@@ -708,11 +787,22 @@ export function AdminSchoolDetailPage() {
                   <td>{subscription.phone ?? "—"}</td>
                   <td>{subscription.sourceLabel ?? "—"}</td>
                   <td>{subscription.note ?? "—"}</td>
+                  <td>
+                    {Number(subscription.isCancelled) === 0 ? (
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() => fillPeriodForm(subscription)}
+                      >
+                        Изменить
+                      </button>
+                    ) : null}
+                  </td>
                 </tr>
               ))}
               {!detail.subscriptions.length ? (
                 <tr>
-                  <td colSpan={5} className="admin-subscriptions__empty">
+                  <td colSpan={6} className="admin-subscriptions__empty">
                     История подписок пуста
                   </td>
                 </tr>

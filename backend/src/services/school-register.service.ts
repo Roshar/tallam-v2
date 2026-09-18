@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 import { pool, query } from "../db/pool.js";
 import { appendSchoolPasswordNote } from "./password-notebook.service.js";
 import { validatePassword } from "./password-reset.service.js";
+import {
+  parseSubscriptionPeriod,
+  syncSchoolCabinetAccess,
+} from "./school-access.service.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_SCHOOL_TYPE_ID = 1;
@@ -67,11 +71,26 @@ export async function createSchoolWithCabinet(input: {
   email: string;
   password: string;
   confirmPassword: string;
+  startsOn: string;
+  endsOn: string;
   actor: string;
 }): Promise<CreatedSchool> {
   const schoolName = input.schoolName.trim().replace(/\s+/g, " ");
   const email = normalizeEmail(input.email);
   const areaId = Number(input.areaId);
+  let startsOn: string;
+  let endsOn: string;
+
+  try {
+    ({ startsOn, endsOn } = parseSubscriptionPeriod(
+      input.startsOn,
+      input.endsOn,
+    ));
+  } catch (error) {
+    throw new SchoolRegisterError(
+      error instanceof Error ? error.message : "Укажите срок подписки",
+    );
+  }
 
   if (schoolName.length < 5) {
     throw new SchoolRegisterError(
@@ -136,8 +155,15 @@ export async function createSchoolWithCabinet(input: {
 
     await connection.execute(
       `INSERT INTO users (id_user, email, password, status, school_id, role)
-       VALUES (?, ?, ?, 'on', ?, 'school_admin')`,
+       VALUES (?, ?, ?, 'off', ?, 'school_admin')`,
       [idUser, email, passwordHash, schoolId],
+    );
+
+    await connection.execute(
+      `INSERT INTO school_subscriptions (
+         school_id, starts_on, ends_on, contact_phone, is_cancelled, source_label, note
+       ) VALUES (?, ?, ?, NULL, 0, 'admin-register', NULL)`,
+      [schoolId, startsOn, endsOn],
     );
 
     await connection.commit();
@@ -146,6 +172,12 @@ export async function createSchoolWithCabinet(input: {
     throw error;
   } finally {
     connection.release();
+  }
+
+  try {
+    await syncSchoolCabinetAccess(schoolId);
+  } catch (error) {
+    console.error("School access sync after register failed:", error);
   }
 
   try {

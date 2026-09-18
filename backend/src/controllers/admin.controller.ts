@@ -29,6 +29,7 @@ import {
   createSchoolSubscription,
   getSchoolAccessState,
   syncSchoolCabinetAccess,
+  updateSchoolSubscription,
 } from "../services/school-access.service.js";
 import {
   buildRenewalDocument,
@@ -209,6 +210,8 @@ export async function createSchool(req: Request, res: Response) {
     email?: string;
     password?: string;
     confirmPassword?: string;
+    startsOn?: string;
+    endsOn?: string;
   };
 
   try {
@@ -218,6 +221,8 @@ export async function createSchool(req: Request, res: Response) {
       email: String(body.email ?? ""),
       password: String(body.password ?? ""),
       confirmPassword: String(body.confirmPassword ?? ""),
+      startsOn: String(body.startsOn ?? ""),
+      endsOn: String(body.endsOn ?? ""),
       actor: `admin:${req.session.user?.email ?? "unknown"}`,
     });
     return res.status(201).json(school);
@@ -520,12 +525,54 @@ export async function createSubscription(req: Request, res: Response) {
       message.includes("даты") ||
       message.includes("окончания") ||
       message.includes("Срок подписки") ||
-      message.includes("не найден")
+      message.includes("не найден") ||
+      message.includes("уже есть")
     ) {
       return res.status(400).json({ error: message });
     }
     console.error("Admin create subscription error:", error);
     return res.status(500).json({ error: "Не удалось сохранить подписку" });
+  }
+}
+
+export async function updateSubscription(req: Request, res: Response) {
+  const schoolId = parseSchoolId(req);
+  const periodId = Number(req.params.periodId);
+  if (!schoolId || !Number.isInteger(periodId) || periodId <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор периода" });
+  }
+
+  const { startsOn, endsOn, phone, note } = req.body as {
+    startsOn?: string;
+    endsOn?: string;
+    phone?: string;
+    note?: string;
+  };
+
+  try {
+    await updateSchoolSubscription({
+      schoolId,
+      periodId,
+      startsOn: String(startsOn ?? ""),
+      endsOn: String(endsOn ?? ""),
+      phone: typeof phone === "string" ? phone : "",
+      note: typeof note === "string" ? note : "",
+    });
+    return res.json(await getAdminSchoolDetail(schoolId));
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось изменить подписку";
+    if (
+      message.includes("даты") ||
+      message.includes("окончания") ||
+      message.includes("Срок подписки") ||
+      message.includes("не найден") ||
+      message.includes("уже есть")
+    ) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("Admin update subscription error:", error);
+    return res.status(500).json({ error: "Не удалось изменить подписку" });
   }
 }
 

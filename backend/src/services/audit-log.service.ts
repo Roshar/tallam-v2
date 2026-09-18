@@ -74,6 +74,11 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "subscription",
+    action: "subscription.period_updated",
+    label: "Изменение периода подписки",
+  },
+  {
+    category: "subscription",
     action: "subscription.cabinet_activated",
     label: "Активация кабинета",
   },

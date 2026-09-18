@@ -128,8 +128,9 @@
 
 .school-sub__pay {
   display: grid;
-  grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
   gap: 1rem;
+  align-items: start;
 }
 
 .school-sub__payment-target {
@@ -184,6 +185,7 @@
 .school-sub__qr,
 .school-sub__bank,
 .school-sub__contract {
+  min-width: 0;
   padding: 1.2rem 1.3rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
@@ -206,9 +208,12 @@
 
 .school-sub__qr img {
   display: block;
-  width: 220px;
-  height: 220px;
+  width: min(100%, 240px);
+  height: auto;
+  aspect-ratio: 1;
+  box-sizing: border-box;
   margin: 0 auto 0.85rem;
+  padding: 0.6rem;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-sm);
   background: #fff;
@@ -441,7 +446,7 @@
 @media (max-width: 960px) {
   .school-sub__facts,
   .school-sub__pay {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .school-sub__contract {

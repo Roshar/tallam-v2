@@ -8,9 +8,13 @@ import {
 import {
   BILLING_RECIPIENT,
   SUBSCRIPTION_PRICE_RUB,
+  buildSubscriptionQrPayload,
   renewalPaymentPurpose,
 } from "./billing-details.js";
-import { getLatestSchoolRenewal } from "./subscription-renewal.service.js";
+import {
+  getLatestSchoolRenewal,
+  ensureRequestHasDocumentNumbers,
+} from "./subscription-renewal.service.js";
 
 export type SchoolSubscriptionPageStatus =
   | "active"
@@ -28,6 +32,7 @@ export interface SchoolBankDetails {
   bik: string;
   correspondentAccount: string;
   purpose: string;
+  contractNumber: string | null;
   amount: number;
   amountLabel: string;
   paymentNotice: string;
@@ -86,30 +91,6 @@ function todayIso(): string {
   const month = String(now.getMonth() + 1).padStart(2, "0");
   const day = String(now.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-function buildQrPayload(
-  purpose: string,
-  documentNumber?: string,
-  documentDate?: string,
-): string {
-  const sumKopecks = SUBSCRIPTION_PRICE_RUB * 100;
-  return [
-    "ST00012",
-    `Name=${BILLING_RECIPIENT.treasury}`,
-    `PersonalAcc=${BILLING_RECIPIENT.account}`,
-    `BankName=${BILLING_RECIPIENT.bankName}`,
-    `BIC=${BILLING_RECIPIENT.bik}`,
-    `CorrespAcc=${BILLING_RECIPIENT.correspondentAccount}`,
-    `PayeeINN=${BILLING_RECIPIENT.inn}`,
-    `KPP=${BILLING_RECIPIENT.kpp}`,
-    `CBC=${BILLING_RECIPIENT.kbk}`,
-    `OKTMO=${BILLING_RECIPIENT.oktmo}`,
-    `Sum=${sumKopecks}`,
-    `Purpose=${purpose}`,
-    ...(documentNumber ? [`DocNo=${documentNumber}`] : []),
-    ...(documentDate ? [`DocDate=${documentDate}`] : []),
-  ].join("|");
 }
 
 async function latestPeriod(schoolId: number): Promise<PeriodRow | null> {
@@ -173,12 +154,22 @@ export async function getSchoolSubscriptionOverview(
   schoolId: number,
 ): Promise<SchoolSubscriptionOverview | null> {
   await syncSchoolCabinetAccess(schoolId);
-  const [access, schoolName, period, renewal] = await Promise.all([
+  const [access, schoolName, period, latestRenewal] = await Promise.all([
     getSchoolAccessState(schoolId),
     getSchoolName(schoolId),
     latestPeriod(schoolId),
     getLatestSchoolRenewal(schoolId),
   ]);
+
+  let renewal = latestRenewal;
+  if (
+    renewal &&
+    (renewal.status === "pending" || renewal.status === "documents_ready") &&
+    !renewal.contractNumber
+  ) {
+    await ensureRequestHasDocumentNumbers(renewal.id);
+    renewal = await getLatestSchoolRenewal(schoolId);
+  }
 
   if (!access.hasAccount || !schoolName) {
     return null;
@@ -246,18 +237,19 @@ export async function getSchoolSubscriptionOverview(
     : null;
   const qrPayload =
     purpose && renewal
-      ? buildQrPayload(
+      ? buildSubscriptionQrPayload({
           purpose,
-          `З-${renewal.id}`,
-          formatDateRu(renewal.createdAt.slice(0, 10)),
-        )
+          contractNumber: renewal.contractNumber,
+          payerInn: renewal.customer.inn,
+          payerFullName: renewal.customer.fullName,
+        })
       : null;
   const qrImage = qrPayload
     ? await QRCode.toDataURL(qrPayload, {
         errorCorrectionLevel: "M",
-        margin: 1,
-        width: 320,
-        color: { dark: "#1a4474", light: "#ffffff" },
+        margin: 4,
+        width: 480,
+        color: { dark: "#000000", light: "#ffffff" },
       })
     : null;
 
@@ -289,6 +281,7 @@ export async function getSchoolSubscriptionOverview(
           bik: BILLING_RECIPIENT.bik,
           correspondentAccount: BILLING_RECIPIENT.correspondentAccount,
           purpose,
+          contractNumber: renewal?.contractNumber ?? null,
           amount: SUBSCRIPTION_PRICE_RUB,
           amountLabel: formatMoney(SUBSCRIPTION_PRICE_RUB),
           paymentNotice:

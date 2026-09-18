@@ -363,14 +363,14 @@ export function AdminRenewalsPage() {
                 <strong>
                   {selected.contractNumber
                     ? `№ ${selected.contractNumber}`
-                    : "финальный номер после подтверждения"}
+                    : "ещё не присвоен"}
                 </strong>
                 <br />
                 Счёт:{" "}
                 <strong>
                   {selected.invoiceNumber
                     ? `№ ${selected.invoiceNumber}`
-                    : "финальный номер после подтверждения"}
+                    : "ещё не присвоен"}
                 </strong>
               </p>
 

@@ -47,6 +47,15 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const MAX_ACTIVATION_DAYS = 366 * 5;
 let blockedByAdminReady: Promise<void> | null = null;
 
+function isDuplicatePeriodError(error: unknown) {
+  return Boolean(
+    error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "ER_DUP_ENTRY",
+  );
+}
+
 export function parseIsoDate(value: string): string | null {
   if (!ISO_DATE.test(value)) return null;
   const date = new Date(`${value}T00:00:00`);
@@ -57,7 +66,7 @@ export function parseIsoDate(value: string): string | null {
   return `${year}-${month}-${day}` === value ? value : null;
 }
 
-function parseSubscriptionPeriod(startsOnRaw: string, endsOnRaw: string) {
+export function parseSubscriptionPeriod(startsOnRaw: string, endsOnRaw: string) {
   const startsOn = parseIsoDate(startsOnRaw);
   const endsOn = parseIsoDate(endsOnRaw);
   if (!startsOn || !endsOn) {
@@ -322,17 +331,73 @@ export async function createSchoolSubscription(input: {
   const phone = input.phone?.trim().slice(0, 100) || phoneRows[0]?.phone || null;
   const note = input.note?.trim().slice(0, 500) || null;
 
-  await query(
-    `INSERT INTO school_subscriptions (
-       school_id, starts_on, ends_on, contact_phone, is_cancelled, source_label, note
-     ) VALUES (?, ?, ?, ?, 0, 'admin-manual', ?)
-     ON DUPLICATE KEY UPDATE
-       is_cancelled = 0,
-       contact_phone = VALUES(contact_phone),
-       source_label = 'admin-manual',
-       note = VALUES(note)`,
-    [input.schoolId, startsOn, endsOn, phone, note],
+  try {
+    await query(
+      `INSERT INTO school_subscriptions (
+         school_id, starts_on, ends_on, contact_phone, is_cancelled, source_label, note
+       ) VALUES (?, ?, ?, ?, 0, 'admin-manual', ?)
+       ON DUPLICATE KEY UPDATE
+         is_cancelled = 0,
+         contact_phone = VALUES(contact_phone),
+         source_label = 'admin-manual',
+         note = VALUES(note)`,
+      [input.schoolId, startsOn, endsOn, phone, note],
+    );
+  } catch (error) {
+    if (isDuplicatePeriodError(error)) {
+      throw new Error("Такой период подписки уже есть у этой школы");
+    }
+    throw error;
+  }
+
+  await syncSchoolCabinetAccess(input.schoolId);
+}
+
+export async function updateSchoolSubscription(input: {
+  schoolId: number;
+  periodId: number;
+  startsOn: string;
+  endsOn: string;
+  phone?: string;
+  note?: string;
+}) {
+  const { startsOn, endsOn } = parseSubscriptionPeriod(
+    input.startsOn,
+    input.endsOn,
   );
+
+  const rows = await query<{ id: number }[]>(
+    `SELECT id
+     FROM school_subscriptions
+     WHERE id = ? AND school_id = ?
+     LIMIT 1`,
+    [input.periodId, input.schoolId],
+  );
+  if (!rows[0]) {
+    throw new Error("Период подписки не найден");
+  }
+
+  const phone = input.phone?.trim().slice(0, 100) || null;
+  const note = input.note?.trim().slice(0, 500) || null;
+
+  try {
+    await query(
+      `UPDATE school_subscriptions
+       SET starts_on = ?,
+           ends_on = ?,
+           contact_phone = COALESCE(?, contact_phone),
+           note = COALESCE(?, note),
+           is_cancelled = 0,
+           source_label = 'admin-manual'
+       WHERE id = ? AND school_id = ?`,
+      [startsOn, endsOn, phone, note, input.periodId, input.schoolId],
+    );
+  } catch (error) {
+    if (isDuplicatePeriodError(error)) {
+      throw new Error("Такой период подписки уже есть у этой школы");
+    }
+    throw error;
+  }
 
   await syncSchoolCabinetAccess(input.schoolId);
 }
