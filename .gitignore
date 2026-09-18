@@ -16,3 +16,6 @@ database/subscriptions/*.json
 # Plaintext school passwords for support recovery
 backend/data/school-passwords.log
 backend/data/*.log
+
+# Offsite copies of production dumps and .env (never commit)
+backups/

@@ -10,7 +10,8 @@
     "db:down": "docker compose down",
     "db:logs": "docker compose logs -f mysql",
     "db:import": "bash database/import-dump.sh",
-    "db:import-subscriptions": "node database/import-subscriptions.mjs"
+    "db:import-subscriptions": "node database/import-subscriptions.mjs",
+    "backup:fetch": "bash scripts/fetch-prod-backup.sh"
   },
   "workspaces": [
     "backend",

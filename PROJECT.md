@@ -2,6 +2,8 @@
 
 Документ для восстановления работы, если чат в Cursor потеряется. Репозиторий: `git@github.com:Roshar/tallam-v2.git`. Старый монолит (Handlebars): `/Users/rasidbatukaev/Projects/tallam_2025_v1`.
 
+Как устроен прод, что делать если удалят VPS, и как делать бэкап: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
+
 ## Что это
 
 Образовательная платформа **Tallam** (анализ урока / наблюдение за учителем). v2 — переписывание на React + Express, с той же MySQL-схемой, что и production (`govzalla_t_25`).
