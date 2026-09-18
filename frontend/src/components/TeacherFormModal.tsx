@@ -39,6 +39,32 @@ interface TeacherFormState {
   projectId: string;
 }
 
+function digitsOnly(value: string, max: number): string {
+  return value.replace(/\D/g, "").slice(0, max);
+}
+
+function formatSnilsInput(value: string): string {
+  const digits = digitsOnly(value, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+  if (digits.length <= 9) {
+    return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+  }
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
+function formatPhoneInput(value: string): string {
+  const digits = digitsOnly(value, 11).replace(/^8/, "7");
+  const local = digits.startsWith("7") ? digits.slice(1) : digits;
+  if (!local) return digits.startsWith("7") ? "+7" : "";
+  if (local.length <= 3) return `+7-${local}`;
+  if (local.length <= 6) return `+7-${local.slice(0, 3)}-${local.slice(3)}`;
+  if (local.length <= 8) {
+    return `+7-${local.slice(0, 3)}-${local.slice(3, 6)}-${local.slice(6)}`;
+  }
+  return `+7-${local.slice(0, 3)}-${local.slice(3, 6)}-${local.slice(6, 8)}-${local.slice(8)}`;
+}
+
 const emptyForm: TeacherFormState = {
   surname: "",
   firstname: "",
@@ -88,7 +114,7 @@ function mapTeacherToForm(teacher: TeacherDetail): TeacherFormState {
     firstname: teacher.firstname,
     patronymic: teacher.patronymic ?? "",
     birthday: teacher.birthday,
-    snils: teacher.snils ?? "",
+    snils: formatSnilsInput(teacher.snils ?? ""),
     genderId: String(teacher.genderId),
     specialty: teacher.specialty ?? "",
     educationLevelId: String(teacher.educationLevelId),
@@ -99,7 +125,7 @@ function mapTeacherToForm(teacher: TeacherDetail): TeacherFormState {
     teachingExperience:
       teacher.teachingExperience != null ? String(teacher.teachingExperience) : "",
     categoryId: teacher.categoryId != null ? String(teacher.categoryId) : "",
-    phone: teacher.phone ?? "",
+    phone: formatPhoneInput(teacher.phone ?? ""),
     email: teacher.email ?? "",
     disciplineIds: teacher.disciplineIds,
     kpkPlace: teacher.kpkPlace ?? "",
@@ -109,12 +135,13 @@ function mapTeacherToForm(teacher: TeacherDetail): TeacherFormState {
 }
 
 function buildPayload(form: TeacherFormState): UpdateTeacherPayload {
+  const snils = digitsOnly(form.snils, 11);
   return {
     surname: form.surname.trim(),
     firstname: form.firstname.trim(),
     patronymic: form.patronymic.trim() || undefined,
     birthday: form.birthday,
-    snils: form.snils.trim() || undefined,
+    snils: snils || undefined,
     genderId: Number(form.genderId),
     specialty: form.specialty.trim() || undefined,
     educationLevelId: Number(form.educationLevelId),
@@ -125,7 +152,7 @@ function buildPayload(form: TeacherFormState): UpdateTeacherPayload {
       ? Number(form.teachingExperience)
       : undefined,
     categoryId: form.categoryId ? Number(form.categoryId) : undefined,
-    phone: form.phone.trim() || undefined,
+    phone: form.phone || undefined,
     email: form.email.trim() || undefined,
     disciplineIds: form.disciplineIds,
     kpkPlace: form.kpkPlace.trim() || undefined,
@@ -228,6 +255,23 @@ export function TeacherFormModal({
       setError(
         "Выберите хотя бы один предмет. Без предмета нельзя добавить оценку урока. Если это не учитель, отметьте «Администрация».",
       );
+      return;
+    }
+
+    const snils = digitsOnly(form.snils, 11);
+    if (snils && snils.length !== 11) {
+      setError("СНИЛС должен содержать 11 цифр");
+      return;
+    }
+
+    const phone = digitsOnly(form.phone, 11);
+    if (phone && phone.length !== 11) {
+      setError("Телефон должен содержать 11 цифр");
+      return;
+    }
+
+    if (form.kpkYear && !/^\d{4}$/.test(form.kpkYear)) {
+      setError("Год КПК должен содержать 4 цифры");
       return;
     }
 
@@ -348,9 +392,13 @@ export function TeacherFormModal({
                     id="teacher-snils"
                     className="form-input"
                     value={form.snils}
-                    onChange={(e) => updateField("snils", e.target.value)}
-                    placeholder="123-456-789 00"
+                    onChange={(e) =>
+                      updateField("snils", formatSnilsInput(e.target.value))
+                    }
+                    placeholder="123-456-789-00"
                     inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={14}
                   />
                 </div>
                 <div className="form-group">
@@ -449,11 +497,14 @@ export function TeacherFormModal({
                   <input
                     id="teacher-total-exp"
                     className="form-input"
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     value={form.totalExperience}
-                    onChange={(e) => updateField("totalExperience", e.target.value)}
+                    onChange={(e) =>
+                      updateField("totalExperience", digitsOnly(e.target.value, 2))
+                    }
                     placeholder="Например, 12"
+                    autoComplete="off"
                   />
                 </div>
                 <div className="form-group">
@@ -463,13 +514,17 @@ export function TeacherFormModal({
                   <input
                     id="teacher-teach-exp"
                     className="form-input"
-                    type="number"
-                    min="0"
+                    type="text"
+                    inputMode="numeric"
                     value={form.teachingExperience}
                     onChange={(e) =>
-                      updateField("teachingExperience", e.target.value)
+                      updateField(
+                        "teachingExperience",
+                        digitsOnly(e.target.value, 2),
+                      )
                     }
                     placeholder="Например, 8"
+                    autoComplete="off"
                   />
                 </div>
                 <div className="form-group">
@@ -524,9 +579,13 @@ export function TeacherFormModal({
                     className="form-input"
                     type="tel"
                     value={form.phone}
-                    onChange={(e) => updateField("phone", e.target.value)}
-                    placeholder="+7 900 000-00-00"
+                    onChange={(e) =>
+                      updateField("phone", formatPhoneInput(e.target.value))
+                    }
+                    placeholder="+7-900-000-00-00"
                     autoComplete="tel"
+                    inputMode="numeric"
+                    maxLength={16}
                   />
                 </div>
                 <div className="form-group">
@@ -536,7 +595,9 @@ export function TeacherFormModal({
                     className="form-input"
                     type="email"
                     value={form.email}
-                    onChange={(e) => updateField("email", e.target.value)}
+                    onChange={(e) =>
+                      updateField("email", e.target.value.replace(/\s/g, ""))
+                    }
                     placeholder="teacher@school.ru"
                     autoComplete="email"
                   />
@@ -567,9 +628,13 @@ export function TeacherFormModal({
                     id="teacher-kpk-year"
                     className="form-input"
                     value={form.kpkYear}
-                    onChange={(e) => updateField("kpkYear", e.target.value)}
+                    onChange={(e) =>
+                      updateField("kpkYear", digitsOnly(e.target.value, 4))
+                    }
                     placeholder="2025"
                     inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={4}
                   />
                 </div>
                 {isCreate ? (
