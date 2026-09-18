@@ -39,7 +39,16 @@ interface TeacherFormState {
   projectId: string;
 }
 
-function digitsOnly(value: string, max: number): string {
+function defaultProjectId(projects: Array<{ id: number; name: string }>): string {
+  const lesson = projects.find(
+    (project) =>
+      Number(project.id) > 1 && /анализ/i.test(project.name),
+  );
+  if (lesson) return String(lesson.id);
+  const real = projects.find((project) => Number(project.id) > 1);
+  if (real) return String(real.id);
+  return "";
+}
   return value.replace(/\D/g, "").slice(0, max);
 }
 
@@ -200,9 +209,7 @@ export function TeacherFormModal({
         } else {
           setForm({
             ...emptyForm,
-            projectId: formOptions.projects[0]
-              ? String(formOptions.projects[0].id)
-              : "",
+            projectId: defaultProjectId(formOptions.projects),
           });
         }
       })
@@ -651,7 +658,7 @@ export function TeacherFormModal({
                     >
                       <option value="">Выберите проект</option>
                       {options?.projects.map((item) => (
-                        <option key={item.id} value={item.id}>
+                        <option key={String(item.id)} value={String(item.id)}>
                           {item.name}
                         </option>
                       ))}

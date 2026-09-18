@@ -663,10 +663,19 @@ export async function getWorkerFormOptions(
         if (b.title === "Администрация") return 1;
         return a.title.localeCompare(b.title, "ru");
       }),
-    projects: projects.map((p) => ({
-      id: p.id_project,
-      name: p.name_project,
-    })),
+    projects: projects
+      .map((p) => ({
+        id: Number(p.id_project),
+        name: p.name_project,
+      }))
+      .sort((a, b) => {
+        const rank = (project: { id: number; name: string }) => {
+          if (project.id <= 1 || /не участвует/i.test(project.name)) return 2;
+          if (/анализ/i.test(project.name)) return 0;
+          return 1;
+        };
+        return rank(a) - rank(b) || a.name.localeCompare(b.name, "ru");
+      }),
   };
 }
 
@@ -709,7 +718,8 @@ export async function createSchoolTeacher(
 
   for (const project of middlewareProjects) {
     const table = sanitizeTableName(project.tbl_name);
-    const inProjectStatus = project.project_id === input.projectId ? 2 : 1;
+    const inProjectStatus =
+      Number(project.project_id) === Number(input.projectId) ? 2 : 1;
     await query(
       `INSERT INTO \`${table}\` (teacher_id, in_project_status, project_id) VALUES (?, ?, ?)`,
       [idTeacher, inProjectStatus, project.project_id],
