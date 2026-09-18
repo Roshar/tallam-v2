@@ -49,6 +49,8 @@ function defaultProjectId(projects: Array<{ id: number; name: string }>): string
   if (real) return String(real.id);
   return "";
 }
+
+function digitsOnly(value: string, max: number): string {
   return value.replace(/\D/g, "").slice(0, max);
 }
 
