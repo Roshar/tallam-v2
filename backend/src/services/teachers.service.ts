@@ -350,6 +350,26 @@ function formatBirthday(value: Date | string): string {
   return `${year}-${month}-${day}`;
 }
 
+function snilsDigits(value: unknown): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+export function normalizeSnils(value: unknown): number | null {
+  const digits = snilsDigits(value);
+  if (!digits) return null;
+  if (digits.length !== 11) {
+    throw new Error("СНИЛС должен содержать 11 цифр");
+  }
+  return Number(digits);
+}
+
+function formatSnils(value: unknown): string | null {
+  const digits = snilsDigits(value);
+  if (!digits) return null;
+  if (digits.length !== 11) return digits;
+  return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6, 9)} ${digits.slice(9)}`;
+}
+
 function mapTeacherDetail(
   row: TeacherDetailRow,
   disciplines: Array<{ id: number; title: string }>,
@@ -371,7 +391,7 @@ function mapTeacherDetail(
     patronymic: row.patronymic,
     fullName,
     birthday: formatBirthday(row.birthday),
-    snils: row.snils != null ? String(row.snils) : null,
+    snils: formatSnils(row.snils),
     genderId: row.gender_id,
     genderTitle: row.gender_title,
     specialty: row.specialty,
@@ -509,7 +529,7 @@ export async function updateSchoolTeacher(
       input.firstname.trim(),
       input.patronymic?.trim() || null,
       input.birthday,
-      input.snils || null,
+      normalizeSnils(input.snils),
       input.genderId,
       input.specialty?.trim() || null,
       input.educationLevelId,
@@ -668,7 +688,7 @@ export async function createSchoolTeacher(
       input.firstname.trim(),
       input.patronymic?.trim() || null,
       input.birthday,
-      input.snils || null,
+      normalizeSnils(input.snils),
       input.genderId,
       input.specialty?.trim() || null,
       input.educationLevelId,
@@ -780,7 +800,7 @@ export async function buildTeachersBankExcel(
     worksheet.addRow({
       fio,
       birthday: `${d}-${m}-${y}`,
-      snils: row.snils ?? "",
+      snils: formatSnils(row.snils) ?? "",
       fullYear: currentYear - y,
       title_area: row.title_area,
       school_name: row.school_name,

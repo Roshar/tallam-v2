@@ -275,6 +275,10 @@ export async function updateWorker(req: Request, res: Response) {
 
     return res.json({ teacher });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("СНИЛС")) {
+      return res.status(400).json({ error: message });
+    }
     console.error("Update worker error:", error);
     return res.status(500).json({ error: "Не удалось обновить данные работника" });
   }
@@ -304,6 +308,10 @@ export async function createWorker(req: Request, res: Response) {
 
     return res.status(201).json({ teacher });
   } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+    if (message.includes("СНИЛС")) {
+      return res.status(400).json({ error: message });
+    }
     console.error("Create worker error:", error);
     return res.status(500).json({ error: "Не удалось добавить работника" });
   }
