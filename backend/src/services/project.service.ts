@@ -1,6 +1,8 @@
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
+import type { PoolConnection } from "mysql2/promise";
 import { query } from "../db/pool.js";
 
-interface ProjectRow {
+interface ProjectRow extends RowDataPacket {
   id_project: number;
   name_project: string;
 }
@@ -323,4 +325,90 @@ export async function findLessonAnalysisProject(
   );
 
   return fallback[0] ?? null;
+}
+
+const LESSON_ANALYSIS_PROJECT_SQL = `
+  SELECT id_project, name_project
+  FROM projects
+  WHERE id_project > ?
+    AND (
+      name_project LIKE '%Анализ%'
+      OR name_project LIKE '%анализ%'
+    )
+  ORDER BY id_project
+  LIMIT 1
+`;
+
+export async function findGlobalLessonAnalysisProject(
+  connection?: PoolConnection,
+): Promise<ProjectRow | null> {
+  if (connection) {
+    const [rows] = await connection.query<ProjectRow[]>(
+      LESSON_ANALYSIS_PROJECT_SQL,
+      [NO_PROJECT_ID],
+    );
+    return rows[0] ?? null;
+  }
+  const rows = await query<ProjectRow[]>(LESSON_ANALYSIS_PROJECT_SQL, [
+    NO_PROJECT_ID,
+  ]);
+  return rows[0] ?? null;
+}
+
+export async function attachSchoolToLessonAnalysisProject(
+  schoolId: number,
+  connection?: PoolConnection,
+): Promise<number | null> {
+  const project = await findGlobalLessonAnalysisProject(connection);
+  if (!project) {
+    return null;
+  }
+
+  const existingSql = `
+    SELECT id
+    FROM middleware_project_school
+    WHERE school_id = ? AND project_id = ?
+    LIMIT 1
+  `;
+  const insertSql = `
+    INSERT INTO middleware_project_school (school_id, project_id)
+    VALUES (?, ?)
+  `;
+  const lookup = [schoolId, project.id_project];
+
+  if (connection) {
+    const [existing] = await connection.query<RowDataPacket[]>(
+      existingSql,
+      lookup,
+    );
+    if (!existing[0]) {
+      await connection.execute(insertSql, lookup);
+    }
+  } else {
+    const existing = await query<RowDataPacket[]>(existingSql, lookup);
+    if (!existing[0]) {
+      await query(insertSql, lookup);
+    }
+  }
+
+  return Number(project.id_project);
+}
+
+export async function ensureAllSchoolsHaveLessonAnalysisProject(): Promise<number> {
+  const project = await findGlobalLessonAnalysisProject();
+  if (!project) {
+    return 0;
+  }
+
+  const result = await query<ResultSetHeader>(
+    `INSERT INTO middleware_project_school (school_id, project_id)
+     SELECT s.id_school, ?
+     FROM schools s
+     LEFT JOIN middleware_project_school m
+       ON m.school_id = s.id_school AND m.project_id = ?
+     WHERE m.id IS NULL`,
+    [project.id_project, project.id_project],
+  );
+
+  return Number(result.affectedRows ?? 0);
 }

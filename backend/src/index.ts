@@ -9,6 +9,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
+import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
@@ -96,6 +97,20 @@ app.listen(config.port, () => {
   void ensureRecoverySchema().catch((error) => {
     console.error("Failed to initialize recovery requests schema:", error);
   });
+  void ensureAllSchoolsHaveLessonAnalysisProject()
+    .then((count) => {
+      if (count) {
+        console.log(
+          `Connected ${count} schools to the lesson analysis project`,
+        );
+      }
+    })
+    .catch((error) => {
+      console.error(
+        "Failed to connect schools to the lesson analysis project:",
+        error,
+      );
+    });
   void syncSchoolCabinetAccess()
     .then((count) => {
       if (count) {

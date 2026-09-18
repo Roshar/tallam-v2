@@ -8,6 +8,7 @@ import {
   parseSubscriptionPeriod,
   syncSchoolCabinetAccess,
 } from "./school-access.service.js";
+import { attachSchoolToLessonAnalysisProject } from "./project.service.js";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const DEFAULT_SCHOOL_TYPE_ID = 1;
@@ -165,6 +166,17 @@ export async function createSchoolWithCabinet(input: {
        ) VALUES (?, ?, ?, NULL, 0, 'admin-register', NULL)`,
       [schoolId, startsOn, endsOn],
     );
+
+    const projectId = await attachSchoolToLessonAnalysisProject(
+      schoolId,
+      connection,
+    );
+    if (!projectId) {
+      throw new SchoolRegisterError(
+        "Проект «Анализ урока» не найден. Школу нельзя зарегистрировать без проекта",
+        500,
+      );
+    }
 
     await connection.commit();
   } catch (error) {
