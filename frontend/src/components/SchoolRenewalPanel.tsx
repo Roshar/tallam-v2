@@ -168,10 +168,10 @@ export function SchoolRenewalPanel({
       <div className="school-renewal__heading">
         <div>
           <p className="school-sub__eyebrow">Продление на 12 месяцев</p>
-          <h3>Данные заказчика для договора и счёта</h3>
+          <h3>Продление подписки</h3>
           <p>
-            Договор заключается с физическим лицом, представителем школы.
-            Стоимость: <strong>10 000 ₽</strong>.
+            Договор заключается с физическим лицом, директором образовательной
+            организации. Стоимость: <strong>10 000 ₽</strong>.
           </p>
         </div>
         <span className="school-renewal__secure">Данные зашифрованы</span>
@@ -223,6 +223,10 @@ export function SchoolRenewalPanel({
 
       {canEdit ? (
         <form className="school-renewal__form" onSubmit={submit}>
+          <h4 className="school-renewal__form-title">
+            Данные заказчика (директора образовательной организации) для
+            договора и счёта
+          </h4>
           <div className="school-renewal__field school-renewal__field--wide">
             <label className="form-label" htmlFor="renewal-full-name">
               ФИО полностью
