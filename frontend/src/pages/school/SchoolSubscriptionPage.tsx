@@ -31,6 +31,22 @@ async function copyText(value: string) {
   await navigator.clipboard.writeText(value);
 }
 
+function kbkTypingHint(kbk: string): string | null {
+  const match = kbk.match(/^(0+)([1-9]\d*)$/);
+  if (!match) return null;
+  const zeros = match[1].length;
+  const rest = match[2];
+  const word =
+    zeros % 10 === 1 && zeros % 100 !== 11
+      ? "ноль"
+      : zeros % 10 >= 2 &&
+          zeros % 10 <= 4 &&
+          (zeros % 100 < 12 || zeros % 100 > 14)
+        ? "нуля"
+        : "нулей";
+  return `${zeros} ${word} и ${rest}`;
+}
+
 export function SchoolSubscriptionPage() {
   const { refresh: refreshAuth } = useAuth();
   const [data, setData] = useState<SchoolSubscriptionOverview | null>(null);
@@ -152,6 +168,8 @@ export function SchoolSubscriptionPage() {
       setCheckingPayment(false);
     }
   }
+
+  const kbkHint = data?.bank ? kbkTypingHint(data.bank.kbk) : null;
 
   return (
     <div className="school-sub">
@@ -427,6 +445,12 @@ export function SchoolSubscriptionPage() {
                               : "Копировать"}
                           </button>
                         </dd>
+                        {kbkHint ? (
+                          <p>
+                            Чтобы не считать нули, введите{" "}
+                            <strong>{kbkHint}</strong>.
+                          </p>
+                        ) : null}
                       </div>
                     </dl>
                   </div>
@@ -479,7 +503,14 @@ export function SchoolSubscriptionPage() {
                     </div>
                     <div>
                       <dt>КБК</dt>
-                      <dd>{data.bank.kbk}</dd>
+                      <dd>
+                        {data.bank.kbk}
+                        {kbkHint ? (
+                          <span className="school-sub__kbk-hint">
+                            {kbkHint}
+                          </span>
+                        ) : null}
+                      </dd>
                     </div>
                     <div>
                       <dt>ОКТМО</dt>

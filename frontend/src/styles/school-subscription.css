@@ -347,6 +347,14 @@
   font-weight: 600;
 }
 
+.school-sub__kbk-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
 .school-sub__contract {
   display: flex;
   align-items: center;
