@@ -264,17 +264,31 @@ export function SchoolSubscriptionPage() {
                 <div className="school-sub__qr">
                   <h3>Оплата по QR-коду</h3>
                   <p>
-                    В этом блоке сначала указаны поля для СберБанк Онлайн, ниже
-                    QR-код. Отсканируйте код и при необходимости перенесите
-                    значения в форму банка.
+                    Откройте СберБанк Онлайн, отсканируйте QR-код и при
+                    необходимости перенесите значения в форму банка.
                   </p>
                   <div className="school-sub__sber">
                     <h4>Как оплатить в СберБанк Онлайн</h4>
                     <ol className="school-sub__sber-steps">
                       <li>
                         Откройте приложение СберБанк Онлайн и отсканируйте
-                        QR-код в этом блоке.
+                        QR-код ниже.
                       </li>
+                    </ol>
+                    <div className="school-sub__sber-qr">
+                      {data.qrImage ? (
+                        <img
+                          src={data.qrImage}
+                          alt="QR-код для оплаты подписки"
+                          width={240}
+                          height={240}
+                        />
+                      ) : null}
+                      <p className="school-sub__amount">
+                        {data.bank.amountLabel}
+                      </p>
+                    </div>
+                    <ol className="school-sub__sber-steps" start={2}>
                       <li>
                         Если откроется форма платежа в бюджет, заполните поля
                         значениями ниже. Их можно скопировать.
@@ -416,15 +430,6 @@ export function SchoolSubscriptionPage() {
                       </div>
                     </dl>
                   </div>
-                  {data.qrImage ? (
-                    <img
-                      src={data.qrImage}
-                      alt="QR-код для оплаты подписки"
-                      width={240}
-                      height={240}
-                    />
-                  ) : null}
-                  <p className="school-sub__amount">{data.bank.amountLabel}</p>
                   <p className="school-sub__test">{data.bank.paymentNotice}</p>
                 </div>
 
