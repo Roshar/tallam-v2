@@ -400,7 +400,12 @@ async function buildInvoice(request: RenewalRequest): Promise<Buffer> {
   doc.font("Regular").fontSize(7.8);
   doc.text("1", 51, tableY + 48, { width: 12, align: "center" });
   doc.text(
-    `Оплата за образовательные услуги согласно договору № ${meta.contractNumber} от ${formatDate(meta.issuedOn)}`,
+    renewalPaymentPurpose({
+      contractNumber: meta.contractNumber,
+      issuedOnLabel: formatDate(meta.issuedOn),
+      requestId: request.id,
+      schoolName: request.schoolName,
+    }),
     78,
     tableY + 38,
     { width: 278 },
@@ -429,6 +434,7 @@ async function buildInvoice(request: RenewalRequest): Promise<Buffer> {
       contractNumber: meta.contractNumber,
       issuedOnLabel: formatDate(meta.issuedOn),
       requestId: request.id,
+      schoolName: request.schoolName,
     }),
   );
   invoiceLine(doc, "КБК", BILLING_RECIPIENT.kbk);

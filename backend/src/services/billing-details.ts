@@ -22,20 +22,23 @@ export const BILLING_RECIPIENT = {
   accountant: "Дурдиева Ж. А.",
 } as const;
 
+function qrValue(value: string): string {
+  return value.replace(/[\r\n|]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 export function renewalPaymentPurpose(input: {
   contractNumber?: string | null;
   issuedOnLabel?: string | null;
   requestId?: number | null;
+  schoolName?: string | null;
 }): string {
+  const school = qrValue(String(input.schoolName ?? ""));
+  const schoolSuffix = school ? `, ${school}` : "";
   if (!input.contractNumber) {
-    return "Оплата за образовательные услуги согласно договору";
+    return `Оплата за образовательные услуги согласно договору${schoolSuffix}`;
   }
   const date = input.issuedOnLabel || "без даты";
-  return `Оплата за образовательные услуги согласно договору № ${input.contractNumber} от ${date}`;
-}
-
-function qrValue(value: string): string {
-  return value.replace(/[\r\n|]/g, " ").replace(/\s+/g, " ").trim();
+  return `Оплата за образовательные услуги согласно договору № ${input.contractNumber} от ${date}${schoolSuffix}`;
 }
 
 export function buildSubscriptionQrPayload(input: { purpose: string }): string {

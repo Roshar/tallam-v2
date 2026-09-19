@@ -70,6 +70,7 @@ export interface SchoolBankDetails {
   oktmo: string;
   purpose: string;
   contractNumber: string | null;
+  directorFullName: string | null;
   amount: number;
   amountLabel: string;
   paymentNotice: string;

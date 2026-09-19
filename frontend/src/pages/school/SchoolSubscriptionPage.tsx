@@ -36,6 +36,7 @@ export function SchoolSubscriptionPage() {
   const [data, setData] = useState<SchoolSubscriptionOverview | null>(null);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [copiedField, setCopiedField] = useState("");
   const [renewalSubmitted, setRenewalSubmitted] = useState(false);
   const [renewalRefreshKey, setRenewalRefreshKey] = useState(0);
   const [checkingPayment, setCheckingPayment] = useState(false);
@@ -88,6 +89,16 @@ export function SchoolSubscriptionPage() {
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       setError("Не удалось скопировать реквизиты");
+    }
+  }
+
+  async function handleCopyField(key: string, value: string) {
+    try {
+      await copyText(value);
+      setCopiedField(key);
+      window.setTimeout(() => setCopiedField(""), 2000);
+    } catch {
+      setError("Не удалось скопировать значение");
     }
   }
 
@@ -253,8 +264,8 @@ export function SchoolSubscriptionPage() {
                 <div className="school-sub__qr">
                   <h3>Оплата по QR-коду</h3>
                   <p>
-                    Наведите камеру приложения банка на код. Реквизиты совпадают
-                    с платёжным документом института.
+                    Откройте СберБанк Онлайн и наведите камеру на код. Если банк
+                    попросит дозаполнить поля, используйте инструкцию под кодом.
                   </p>
                   {data.qrImage ? (
                     <img
@@ -332,6 +343,149 @@ export function SchoolSubscriptionPage() {
                     </div>
                   </dl>
                 </div>
+              </section>
+              <section className="school-sub__sber">
+                <h3>Как оплатить в СберБанк Онлайн</h3>
+                <ol className="school-sub__sber-steps">
+                  <li>
+                    Откройте приложение СберБанк Онлайн и отсканируйте QR-код
+                    выше.
+                  </li>
+                  <li>
+                    Если откроется форма платежа в бюджет, заполните поля
+                    значениями ниже. Их можно скопировать.
+                  </li>
+                </ol>
+                <dl className="school-sub__sber-fields">
+                  <div>
+                    <dt>Номер договора</dt>
+                    <dd>
+                      <strong>
+                        {data.bank.contractNumber || "номер появится после заявки"}
+                      </strong>
+                      {data.bank.contractNumber ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() =>
+                            void handleCopyField(
+                              "contract",
+                              data.bank!.contractNumber!,
+                            )
+                          }
+                        >
+                          {copiedField === "contract"
+                            ? "Скопировано"
+                            : "Копировать"}
+                        </button>
+                      ) : null}
+                    </dd>
+                    <p>
+                      Укажите номер, который формируется сразу после отправки
+                      заявки. Для этой оплаты это{" "}
+                      <strong>
+                        {data.bank.contractNumber || "номер договора"}
+                      </strong>
+                      .
+                    </p>
+                  </div>
+                  <div>
+                    <dt>ФИО обучающегося</dt>
+                    <dd>
+                      <strong>
+                        {data.bank.directorFullName ||
+                          "ФИО директора из договора"}
+                      </strong>
+                      {data.bank.directorFullName ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() =>
+                            void handleCopyField(
+                              "student",
+                              data.bank!.directorFullName!,
+                            )
+                          }
+                        >
+                          {copiedField === "student"
+                            ? "Скопировано"
+                            : "Копировать"}
+                        </button>
+                      ) : null}
+                    </dd>
+                    <p>
+                      В это поле банк просит ФИО обучающегося. Укажите ФИО
+                      директора из договора.
+                    </p>
+                  </div>
+                  <div>
+                    <dt>ФИО плательщика</dt>
+                    <dd>
+                      <strong>
+                        {data.bank.directorFullName ||
+                          "ФИО того, кто платит"}
+                      </strong>
+                      {data.bank.directorFullName ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() =>
+                            void handleCopyField(
+                              "payer",
+                              data.bank!.directorFullName!,
+                            )
+                          }
+                        >
+                          {copiedField === "payer"
+                            ? "Скопировано"
+                            : "Копировать"}
+                        </button>
+                      ) : null}
+                    </dd>
+                    <p>
+                      Укажите ФИО человека, который платит. Если платит сам
+                      директор, впишите то же ФИО. Если платит другой человек,
+                      укажите его ФИО.
+                    </p>
+                  </div>
+                  <div>
+                    <dt>Документ, удостоверяющий личность</dt>
+                    <dd>
+                      <strong>Паспорт</strong>
+                    </dd>
+                    <p>В списке документов выберите паспорт.</p>
+                  </div>
+                  <div>
+                    <dt>ОКТМО</dt>
+                    <dd>
+                      <strong>{data.bank.oktmo}</strong>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() =>
+                          void handleCopyField("oktmo", data.bank!.oktmo)
+                        }
+                      >
+                        {copiedField === "oktmo" ? "Скопировано" : "Копировать"}
+                      </button>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>КБК</dt>
+                    <dd>
+                      <strong>{data.bank.kbk}</strong>
+                      <button
+                        type="button"
+                        className="btn btn-ghost"
+                        onClick={() =>
+                          void handleCopyField("kbk", data.bank!.kbk)
+                        }
+                      >
+                        {copiedField === "kbk" ? "Скопировано" : "Копировать"}
+                      </button>
+                    </dd>
+                  </div>
+                </dl>
               </section>
               <div className="school-sub__payment-check">
                 <div className="school-sub__payment-check-copy">

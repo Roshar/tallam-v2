@@ -36,6 +36,7 @@ export interface SchoolBankDetails {
   oktmo: string;
   purpose: string;
   contractNumber: string | null;
+  directorFullName: string | null;
   amount: number;
   amountLabel: string;
   paymentNotice: string;
@@ -236,6 +237,7 @@ export async function getSchoolSubscriptionOverview(
           ? formatDateRu(renewal.issuedOn)
           : null,
         requestId: renewal?.id,
+        schoolName,
       })
     : null;
   const qrPayload =
@@ -281,6 +283,7 @@ export async function getSchoolSubscriptionOverview(
           oktmo: BILLING_RECIPIENT.oktmo,
           purpose,
           contractNumber: renewal?.contractNumber ?? null,
+          directorFullName: renewal?.customer.fullName?.trim() || null,
           amount: SUBSCRIPTION_PRICE_RUB,
           amountLabel: formatMoney(SUBSCRIPTION_PRICE_RUB),
           paymentNotice:
