@@ -28,9 +28,12 @@ export interface SchoolBankDetails {
   inn: string;
   kpp: string;
   account: string;
+  personalAccount: string;
   bankName: string;
   bik: string;
   correspondentAccount: string;
+  kbk: string;
+  oktmo: string;
   purpose: string;
   contractNumber: string | null;
   amount: number;
@@ -236,14 +239,7 @@ export async function getSchoolSubscriptionOverview(
       })
     : null;
   const qrPayload =
-    purpose && renewal
-      ? buildSubscriptionQrPayload({
-          purpose,
-          contractNumber: renewal.contractNumber,
-          payerInn: renewal.customer.inn,
-          payerFullName: renewal.customer.fullName,
-        })
-      : null;
+    purpose && renewal ? buildSubscriptionQrPayload({ purpose }) : null;
   const qrImage = qrPayload
     ? await QRCode.toDataURL(qrPayload, {
         errorCorrectionLevel: "M",
@@ -273,13 +269,16 @@ export async function getSchoolSubscriptionOverview(
     qrImage,
     bank: paymentReady && purpose
       ? {
-          recipient: BILLING_RECIPIENT.fullName,
+          recipient: BILLING_RECIPIENT.treasury,
           inn: BILLING_RECIPIENT.inn,
           kpp: BILLING_RECIPIENT.kpp,
           account: BILLING_RECIPIENT.account,
+          personalAccount: BILLING_RECIPIENT.personalAccount,
           bankName: BILLING_RECIPIENT.bankName,
           bik: BILLING_RECIPIENT.bik,
           correspondentAccount: BILLING_RECIPIENT.correspondentAccount,
+          kbk: BILLING_RECIPIENT.kbk,
+          oktmo: BILLING_RECIPIENT.oktmo,
           purpose,
           contractNumber: renewal?.contractNumber ?? null,
           amount: SUBSCRIPTION_PRICE_RUB,

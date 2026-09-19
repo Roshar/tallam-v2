@@ -67,9 +67,12 @@ export function SchoolSubscriptionPage() {
       `ИНН: ${data.bank.inn}`,
       `КПП: ${data.bank.kpp}`,
       `Расчётный счёт: ${data.bank.account}`,
+      `Лицевой счёт: ${data.bank.personalAccount}`,
       `Банк: ${data.bank.bankName}`,
       `БИК: ${data.bank.bik}`,
       `Корр. счёт: ${data.bank.correspondentAccount}`,
+      `КБК: ${data.bank.kbk}`,
+      `ОКТМО: ${data.bank.oktmo}`,
       `Сумма: ${data.bank.amountLabel}`,
       data.bank.contractNumber
         ? `Номер договора: ${data.bank.contractNumber}`
@@ -250,9 +253,8 @@ export function SchoolSubscriptionPage() {
                 <div className="school-sub__qr">
                   <h3>Оплата по QR-коду</h3>
                   <p>
-                    Наведите камеру телефона на код. Если оплата не открылась,
-                    отсканируйте его в приложении банка. Сумма, назначение и
-                    реквизиты платежа в бюджет уже заполнены.
+                    Наведите камеру приложения банка на код. Реквизиты совпадают
+                    с платёжным документом института.
                   </p>
                   {data.qrImage ? (
                     <img
@@ -295,6 +297,10 @@ export function SchoolSubscriptionPage() {
                       <dd>{data.bank.account}</dd>
                     </div>
                     <div>
+                      <dt>Лицевой счёт</dt>
+                      <dd>{data.bank.personalAccount}</dd>
+                    </div>
+                    <div>
                       <dt>Банк</dt>
                       <dd>{data.bank.bankName}</dd>
                     </div>
@@ -305,6 +311,14 @@ export function SchoolSubscriptionPage() {
                     <div>
                       <dt>Корр. счёт</dt>
                       <dd>{data.bank.correspondentAccount}</dd>
+                    </div>
+                    <div>
+                      <dt>КБК</dt>
+                      <dd>{data.bank.kbk}</dd>
+                    </div>
+                    <div>
+                      <dt>ОКТМО</dt>
+                      <dd>{data.bank.oktmo}</dd>
                     </div>
                     {data.bank.contractNumber ? (
                       <div>

@@ -62,9 +62,12 @@ export interface SchoolBankDetails {
   inn: string;
   kpp: string;
   account: string;
+  personalAccount: string;
   bankName: string;
   bik: string;
   correspondentAccount: string;
+  kbk: string;
+  oktmo: string;
   purpose: string;
   contractNumber: string | null;
   amount: number;

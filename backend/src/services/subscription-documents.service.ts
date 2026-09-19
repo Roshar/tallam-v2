@@ -400,7 +400,7 @@ async function buildInvoice(request: RenewalRequest): Promise<Buffer> {
   doc.font("Regular").fontSize(7.8);
   doc.text("1", 51, tableY + 48, { width: 12, align: "center" });
   doc.text(
-    `Оплата за оказание информационно-образовательных услуг согласно договору № ${meta.contractNumber} от ${formatDate(meta.issuedOn)}`,
+    `Оплата за образовательные услуги согласно договору № ${meta.contractNumber} от ${formatDate(meta.issuedOn)}`,
     78,
     tableY + 38,
     { width: 278 },
