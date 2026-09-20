@@ -1,7 +1,6 @@
 import { FormEvent, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { schoolLandingPath } from "../api/client";
-import { MaintenanceNotice } from "../components/MaintenanceNotice";
 import { useAuth } from "../context/AuthContext";
 
 type Tab = "school" | "methodist";
@@ -43,7 +42,6 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
-      <MaintenanceNotice variant="banner" />
       <aside className="auth-brand">
         <h1 className="auth-brand__logo">Tallam</h1>
         <div className="auth-brand__line" />

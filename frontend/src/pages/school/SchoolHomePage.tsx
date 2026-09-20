@@ -36,7 +36,7 @@ export function SchoolHomePage() {
       <div className="card-body">
         {error ? <div className="alert alert-error">{error}</div> : null}
 
-        <MaintenanceNotice variant="page" showFeedbackLink />
+        <MaintenanceNotice />
         <SupportContacts />
 
         {subscription?.status === "expiring" ? (

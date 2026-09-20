@@ -221,6 +221,9 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 }
 
 .maintenance-notice {
+  margin: 0 0 var(--space-lg);
+  padding: 1rem 1.15rem;
+  border-radius: var(--radius-md);
   color: var(--color-text);
   background: #f3f7fc;
   border: 1px solid #d7e3f2;
@@ -253,20 +256,6 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 
 .maintenance-notice a:hover {
   color: var(--color-darkblue-hover);
-}
-
-.maintenance-notice--banner {
-  grid-column: 1 / -1;
-  padding: 0.9rem 1.25rem 1.1rem;
-  text-align: center;
-  border: none;
-  border-bottom: 1px solid #d7e3f2;
-}
-
-.maintenance-notice--page {
-  margin: 0 0 var(--space-lg);
-  padding: 1rem 1.15rem;
-  border-radius: var(--radius-md);
 }
 
 .support-contacts {
