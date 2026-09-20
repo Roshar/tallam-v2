@@ -1,14 +1,11 @@
 import { Link } from "react-router-dom";
-import { SupportContacts } from "./SupportContacts";
 
 export function MaintenanceNotice({
   variant = "page",
   showFeedbackLink = false,
-  showContacts = false,
 }: {
   variant?: "banner" | "page";
   showFeedbackLink?: boolean;
-  showContacts?: boolean;
 }) {
   return (
     <div
@@ -29,7 +26,6 @@ export function MaintenanceNotice({
           <> после входа в разделе «Отзывы и пожелания».</>
         )}
       </p>
-      {showContacts ? <SupportContacts variant="compact" /> : null}
     </div>
   );
 }

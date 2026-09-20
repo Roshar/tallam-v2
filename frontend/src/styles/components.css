@@ -263,12 +263,6 @@ input[type="number"].form-input::-webkit-inner-spin-button {
   border-bottom: 1px solid #d7e3f2;
 }
 
-.maintenance-notice--banner .support-contacts {
-  margin: 0.85rem auto 0;
-  max-width: 52rem;
-  text-align: left;
-}
-
 .maintenance-notice--page {
   margin: 0 0 var(--space-lg);
   padding: 1rem 1.15rem;
@@ -277,6 +271,11 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 
 .support-contacts {
   min-width: 0;
+  padding: 1.15rem 1.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
 }
 
 .support-contacts h3 {
@@ -314,19 +313,6 @@ input[type="number"].form-input::-webkit-inner-spin-button {
   color: var(--color-text-muted);
   font-size: 0.88rem;
   line-height: 1.4;
-}
-
-.support-contacts--card {
-  padding: 1.15rem 1.3rem;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  background: #fff;
-  box-shadow: var(--shadow-sm);
-}
-
-.support-contacts--compact {
-  padding: 0.85rem 0 0;
-  border-top: 1px solid #d7e3f2;
 }
 
 @media (max-width: 720px) {
