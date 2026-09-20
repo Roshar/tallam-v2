@@ -43,7 +43,7 @@ export function LoginPage() {
 
   return (
     <div className="auth-page">
-      <MaintenanceNotice variant="banner" />
+      <MaintenanceNotice variant="banner" showContacts />
       <aside className="auth-brand">
         <h1 className="auth-brand__logo">Tallam</h1>
         <div className="auth-brand__line" />

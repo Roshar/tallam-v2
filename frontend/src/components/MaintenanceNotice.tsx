@@ -1,27 +1,39 @@
+import { Link } from "react-router-dom";
+import { SupportContacts } from "./SupportContacts";
+
 export function MaintenanceNotice({
   variant = "page",
+  showFeedbackLink = false,
+  showContacts = false,
 }: {
   variant?: "banner" | "page";
+  showFeedbackLink?: boolean;
+  showContacts?: boolean;
 }) {
   return (
     <div
       className={`maintenance-notice maintenance-notice--${variant}`}
       role="status"
     >
-      <p className="maintenance-notice__title">Технические работы</p>
+      <p className="maintenance-notice__title">Доступна новая версия</p>
       <p>
-        Сейчас на платформе идут технические работы до 20.09.2026.
+        Платформа Tallam обновлена. Если вы нашли проблему или ошибку, сообщите
+        об этом
+        {showFeedbackLink ? (
+          <>
+            {" "}
+            в разделе{" "}
+            <Link to="/school/feedback">«Отзывы и пожелания»</Link>
+          </>
+        ) : (
+          <>
+            {" "}
+            после входа в разделе «Отзывы и пожелания»
+          </>
+        )}
+        .
       </p>
-      <p>
-        Оплата по подпискам, продлениям и новым договорам будет доступна с
-        20.09.2026 с 09:00.
-      </p>
-      <p className="maintenance-notice__link-row">
-        Пока можно пользоваться предыдущей версией:{" "}
-        <a href="https://old.tallam.ru" target="_blank" rel="noopener noreferrer">
-          old.tallam.ru
-        </a>
-      </p>
+      {showContacts ? <SupportContacts variant="compact" /> : null}
     </div>
   );
 }

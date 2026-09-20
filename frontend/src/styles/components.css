@@ -221,13 +221,14 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 }
 
 .maintenance-notice {
-  color: #6b4a00;
-  background: #fff6e0;
-  border: 1px solid #f0d48a;
+  color: var(--color-text);
+  background: #f3f7fc;
+  border: 1px solid #d7e3f2;
 }
 
 .maintenance-notice__title {
   margin: 0 0 0.3rem;
+  color: var(--color-darkblue);
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -256,16 +257,82 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 
 .maintenance-notice--banner {
   grid-column: 1 / -1;
-  padding: 0.9rem 1.25rem;
+  padding: 0.9rem 1.25rem 1.1rem;
   text-align: center;
   border: none;
-  border-bottom: 1px solid #f0d48a;
+  border-bottom: 1px solid #d7e3f2;
+}
+
+.maintenance-notice--banner .support-contacts {
+  margin: 0.85rem auto 0;
+  max-width: 52rem;
+  text-align: left;
 }
 
 .maintenance-notice--page {
   margin: 0 0 var(--space-lg);
   padding: 1rem 1.15rem;
   border-radius: var(--radius-md);
+}
+
+.support-contacts {
+  min-width: 0;
+}
+
+.support-contacts h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+
+.support-contacts__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem 1.25rem;
+}
+
+.support-contacts__label {
+  margin: 0 0 0.2rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+.support-contacts__value {
+  display: inline-block;
+  margin-bottom: 0.25rem;
+  color: var(--color-darkblue);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.support-contacts__value:hover {
+  text-decoration: underline;
+}
+
+.support-contacts article p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.support-contacts--card {
+  padding: 1.15rem 1.3rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.support-contacts--compact {
+  padding: 0.85rem 0 0;
+  border-top: 1px solid #d7e3f2;
+}
+
+@media (max-width: 720px) {
+  .support-contacts__grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Cards */

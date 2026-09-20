@@ -184,6 +184,10 @@
   font-size: 0.925rem;
 }
 
+.school-home .support-contacts {
+  margin: 0 0 var(--space-lg);
+}
+
 .school-home__hero {
   padding: 1.35rem 1.4rem 1.45rem;
   margin-bottom: var(--space-lg);

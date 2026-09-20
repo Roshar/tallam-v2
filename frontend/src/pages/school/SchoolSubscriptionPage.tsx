@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
 import { SchoolPasswordForm } from "../../components/SchoolPasswordForm";
 import { SchoolRenewalPanel } from "../../components/SchoolRenewalPanel";
+import { SupportContacts } from "../../components/SupportContacts";
 import { useAuth } from "../../context/AuthContext";
 import type { SchoolSubscriptionOverview } from "../../types/school";
 
@@ -180,6 +181,8 @@ export function SchoolSubscriptionPage() {
           Срок доступа к платформе, оплата продления и типовой договор
         </p>
       </header>
+
+      <SupportContacts />
 
       {error ? <div className="alert alert-error">{error}</div> : null}
 
