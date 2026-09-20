@@ -23,15 +23,11 @@ export function MaintenanceNotice({
           <>
             {" "}
             в разделе{" "}
-            <Link to="/school/feedback">«Отзывы и пожелания»</Link>
+            <Link to="/school/feedback">«Отзывы и пожелания»</Link>.
           </>
         ) : (
-          <>
-            {" "}
-            после входа в разделе «Отзывы и пожелания»
-          </>
+          <> после входа в разделе «Отзывы и пожелания».</>
         )}
-        .
       </p>
       {showContacts ? <SupportContacts variant="compact" /> : null}
     </div>
