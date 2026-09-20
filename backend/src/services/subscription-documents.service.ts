@@ -120,8 +120,33 @@ function heading(doc: PDFKit.PDFDocument, text: string): void {
   doc
     .font("Bold")
     .fontSize(10)
-    .text(text, doc.page.margins.left, doc.y, { width: contentWidth(doc) });
+    .text(text, doc.page.margins.left, doc.y, {
+      width: contentWidth(doc),
+      align: "center",
+    });
   doc.moveDown(0.35);
+}
+
+function ensureSpace(doc: PDFKit.PDFDocument, needed: number): void {
+  const bottom = doc.page.height - doc.page.margins.bottom;
+  if (doc.y + needed > bottom) {
+    doc.addPage();
+  }
+}
+
+function placeAndDate(doc: PDFKit.PDFDocument, issuedOn: string): void {
+  const y = doc.y;
+  const left = doc.page.margins.left;
+  const width = contentWidth(doc);
+  const half = width / 2;
+  doc.font("Regular").fontSize(9).fillColor("#111111");
+  doc.text("г. Грозный", left, y, { width: half, align: "left" });
+  doc.text(formatDate(issuedOn), left + half, y, {
+    width: half,
+    align: "right",
+  });
+  doc.x = left;
+  doc.y = y + 16;
 }
 
 async function buildContract(request: RenewalRequest): Promise<Buffer> {
@@ -139,11 +164,8 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
     .fontSize(10)
     .text("оказания информационно-образовательных услуг", { align: "center" });
   doc.moveDown(0.7);
-  doc
-    .font("Regular")
-    .fontSize(9)
-    .text(`г. Грозный                                                    ${formatDate(meta.issuedOn)}`);
-  doc.moveDown(0.7);
+  placeAndDate(doc, meta.issuedOn);
+  doc.moveDown(0.35);
 
   paragraph(
     doc,
@@ -182,7 +204,6 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
     "4.1. Стороны несут ответственность за выполнение обязательств в соответствии с заключённым Договором. 4.2. Действие Договора может быть приостановлено в случае невыполнения условий одной из Сторон.",
   );
 
-  doc.addPage();
   heading(doc, "5. Срок действия Договора");
   paragraph(
     doc,
@@ -203,6 +224,7 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
     "6.3. Все изменения и дополнения являются неотъемлемой частью Договора и вступают в силу с момента их подписания Сторонами. 6.4. Все уведомления и сообщения направляются в письменной форме. 6.5. Стороны обязуются незамедлительно уведомлять друг друга об изменении адресов и банковских реквизитов.",
   );
 
+  ensureSpace(doc, 280);
   heading(doc, "7. Юридические адреса и реквизиты сторон");
   const top = doc.y;
   const leftWidth = 245;
@@ -248,11 +270,8 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
     .fontSize(10)
     .text("оказания информационно-образовательных услуг", { align: "center" });
   doc.moveDown(0.8);
-  doc
-    .font("Regular")
-    .fontSize(9)
-    .text(`г. Грозный                                                    ${formatDate(meta.issuedOn)}`);
-  doc.moveDown(0.8);
+  placeAndDate(doc, meta.issuedOn);
+  doc.moveDown(0.45);
   paragraph(
     doc,
     `${BILLING_RECIPIENT.fullName} (${BILLING_RECIPIENT.shortName}), в лице ректора ${BILLING_RECIPIENT.rector}, действующей на основании Устава, именуемое «Исполнитель», с одной стороны, и физическое лицо ${customer.fullName}, ${passportShort(customer)}, именуемое «Заказчик», с другой стороны, составили настоящий Акт о нижеследующем:`,
@@ -263,23 +282,30 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
   );
 
   const tableY = doc.y + 5;
-  doc.rect(44, tableY, 507, 66).stroke("#555555");
-  doc.moveTo(78, tableY).lineTo(78, tableY + 66).stroke();
-  doc.moveTo(450, tableY).lineTo(450, tableY + 66).stroke();
+  const tableH = 90;
+  doc.rect(44, tableY, 507, tableH).stroke("#555555");
+  doc.moveTo(78, tableY).lineTo(78, tableY + tableH).stroke();
+  doc.moveTo(450, tableY).lineTo(450, tableY + tableH).stroke();
   doc.moveTo(44, tableY + 24).lineTo(551, tableY + 24).stroke();
+  doc.moveTo(44, tableY + 66).lineTo(551, tableY + 66).stroke();
   doc.font("Bold").fontSize(8).text("№", 54, tableY + 7, { width: 15 });
   doc.text("Услуга", 90, tableY + 7, { width: 340, align: "center" });
   doc.text("Цена", 465, tableY + 7, { width: 70, align: "center" });
-  doc.font("Regular").text("1", 54, tableY + 34, { width: 15 });
+  doc.font("Regular").text("1", 54, tableY + 38, { width: 15 });
   doc.text(
     "Доступ к информационно-образовательной платформе в сети Интернет",
     90,
-    tableY + 29,
+    tableY + 32,
     { width: 340 },
   );
-  doc.text("10 000,00", 465, tableY + 34, { width: 70, align: "center" });
+  doc.text("10 000,00", 465, tableY + 38, { width: 70, align: "center" });
+  doc.font("Bold").text("Итого", 90, tableY + 74, {
+    width: 340,
+    align: "right",
+  });
+  doc.text("10 000,00", 465, tableY + 74, { width: 70, align: "center" });
   doc.x = doc.page.margins.left;
-  doc.y = tableY + 82;
+  doc.y = tableY + tableH + 16;
   paragraph(
     doc,
     "2. Исполнитель оказал услуги своевременно и в полном объёме. Заказчик по объёму и качеству оказанных услуг претензий не имеет.",
