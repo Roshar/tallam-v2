@@ -442,13 +442,10 @@ export const api = {
     );
   },
 
-  downloadSchoolRenewalDocument(
-    requestId: number,
-    kind: "contract" | "invoice",
-  ) {
+  downloadSchoolRenewalDocument(requestId: number) {
     return downloadFile(
-      `/api/school/subscription/renewal/${requestId}/${kind}`,
-      kind === "contract" ? "Договор-Таллам.pdf" : "Счет-Таллам.pdf",
+      `/api/school/subscription/renewal/${requestId}/contract`,
+      "Договор-и-акт-Таллам.pdf",
     );
   },
 
@@ -529,13 +526,10 @@ export const api = {
     );
   },
 
-  downloadAdminRenewalDocument(
-    requestId: number,
-    kind: "contract" | "invoice",
-  ) {
+  downloadAdminRenewalDocument(requestId: number) {
     return downloadFile(
-      `/api/admin/renewals/${requestId}/${kind}`,
-      kind === "contract" ? "Договор-Таллам.pdf" : "Счет-Таллам.pdf",
+      `/api/admin/renewals/${requestId}/contract`,
+      "Договор-и-акт-Таллам.pdf",
     );
   },
 

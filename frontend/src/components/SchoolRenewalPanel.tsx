@@ -36,7 +36,7 @@ const STATUS_COPY: Record<
 > = {
   pending: {
     title: "Заявка ожидает подтверждения",
-        text: "Для оплаты используйте QR-код или реквизиты ниже. Номер договора уже закреплён за этой заявкой. PDF договора и счёта появятся после проверки платежа администратором.",
+        text: "Для оплаты используйте QR-код или реквизиты ниже. Номер договора уже закреплён за этой заявкой. PDF договора и акта появятся после проверки платежа администратором.",
   },
   documents_ready: {
     title: "Заявка ожидает подтверждения",
@@ -44,7 +44,7 @@ const STATUS_COPY: Record<
   },
   paid: {
     title: "Оплата подтверждена",
-    text: "Годовой период подписки добавлен. Договор и счёт останутся доступны в этом разделе.",
+    text: "Годовой период подписки добавлен. Договор и акт останутся доступны в этом разделе.",
   },
   cancelled: {
     title: "Заявка отменена",
@@ -72,9 +72,7 @@ export function SchoolRenewalPanel({
   const [consent, setConsent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [downloading, setDownloading] = useState<
-    "contract" | "invoice" | null
-  >(null);
+  const [downloading, setDownloading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -120,16 +118,16 @@ export function SchoolRenewalPanel({
     }
   }
 
-  async function download(kind: "contract" | "invoice") {
+  async function download() {
     if (!request) return;
-    setDownloading(kind);
+    setDownloading(true);
     setError("");
     try {
-      await api.downloadSchoolRenewalDocument(request.id, kind);
+      await api.downloadSchoolRenewalDocument(request.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось скачать документ");
     } finally {
-      setDownloading(null);
+      setDownloading(false);
     }
   }
 
@@ -198,14 +196,6 @@ export function SchoolRenewalPanel({
               </dd>
             </div>
             <div>
-              <dt>Счёт</dt>
-              <dd>
-                {request.invoiceNumber
-                  ? `№ ${request.invoiceNumber}`
-                  : "ожидается"}
-              </dd>
-            </div>
-            <div>
               <dt>Дата</dt>
               <dd>{formatDate(request.issuedOn)}</dd>
             </div>
@@ -225,7 +215,7 @@ export function SchoolRenewalPanel({
         <form className="school-renewal__form" onSubmit={submit}>
           <h4 className="school-renewal__form-title">
             Данные заказчика (директора образовательной организации) для
-            договора и счёта
+            договора и акта
           </h4>
           <div className="school-renewal__field school-renewal__field--wide">
             <label className="form-label" htmlFor="renewal-full-name">
@@ -428,8 +418,8 @@ export function SchoolRenewalPanel({
                   : "Отправить заявку"}
             </button>
             <p>
-              Номер договора и счёта резервируются сразу при отправке заявки и
-              больше не выдаются другой школе. PDF документов появятся после
+              Номер договора резервируется сразу при отправке заявки и больше
+              не выдаётся другой школе. PDF договора и акта появятся после
               подтверждения оплаты.
             </p>
           </div>
@@ -448,20 +438,10 @@ export function SchoolRenewalPanel({
             <button
               type="button"
               className="btn btn-ghost"
-              disabled={downloading !== null}
-              onClick={() => void download("contract")}
+              disabled={downloading}
+              onClick={() => void download()}
             >
-              {downloading === "contract"
-                ? "Подготовка..."
-                : "Скачать договор и акт"}
-            </button>
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={downloading !== null}
-              onClick={() => void download("invoice")}
-            >
-              {downloading === "invoice" ? "Подготовка..." : "Скачать счёт"}
+              {downloading ? "Подготовка..." : "Скачать договор и акт"}
             </button>
           </div>
         </div>

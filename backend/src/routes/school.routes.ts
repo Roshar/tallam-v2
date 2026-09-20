@@ -57,16 +57,6 @@ router.get(
   }),
   schoolController.schoolRenewalContract,
 );
-router.get(
-  "/subscription/renewal/:requestId/invoice",
-  auditHttpAction({
-    category: "subscription",
-    action: "subscription.invoice_download",
-    entityType: "renewal_request",
-    entityId: (req) => req.params.requestId,
-  }),
-  schoolController.schoolRenewalInvoice,
-);
 
 router.use(requireActiveSchoolCabinet);
 

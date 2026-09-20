@@ -651,17 +651,13 @@ export async function payRenewal(req: Request, res: Response) {
   }
 }
 
-async function downloadAdminRenewalDocument(
-  req: Request,
-  res: Response,
-  kind: "contract" | "invoice",
-) {
+async function downloadAdminRenewalDocument(req: Request, res: Response) {
   const requestId = Number(req.params.requestId);
   if (!Number.isInteger(requestId) || requestId <= 0) {
     return res.status(400).json({ error: "Некорректный идентификатор заявки" });
   }
   try {
-    const document = await buildRenewalDocument({ requestId, kind });
+    const document = await buildRenewalDocument({ requestId });
     if (!document) {
       return res.status(404).json({ error: "Документ не найден" });
     }
@@ -675,17 +671,13 @@ async function downloadAdminRenewalDocument(
     if (error instanceof RenewalDocumentUnavailableError) {
       return res.status(409).json({ error: error.message });
     }
-    console.error(`Admin renewal ${kind} error:`, error);
+    console.error("Admin renewal document error:", error);
     return res.status(500).json({ error: "Не удалось сформировать документ" });
   }
 }
 
 export async function adminRenewalContract(req: Request, res: Response) {
-  return downloadAdminRenewalDocument(req, res, "contract");
-}
-
-export async function adminRenewalInvoice(req: Request, res: Response) {
-  return downloadAdminRenewalDocument(req, res, "invoice");
+  return downloadAdminRenewalDocument(req, res);
 }
 
 export async function adminFeedbackUnread(_req: Request, res: Response) {

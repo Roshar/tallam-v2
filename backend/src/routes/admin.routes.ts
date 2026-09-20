@@ -78,7 +78,6 @@ router.get(
   "/renewals/:requestId/contract",
   adminController.adminRenewalContract,
 );
-router.get("/renewals/:requestId/invoice", adminController.adminRenewalInvoice);
 router.get("/subscriptions/:schoolId", adminController.schoolDetail);
 router.post(
   "/subscriptions/:schoolId/block",

@@ -690,7 +690,7 @@ export async function markRenewalPaid(
         startsOn,
         endsOn,
         customer.phone || null,
-        `Оплачено по счёту № ${invoiceNumber}, договор № ${contractNumber}`,
+        `Оплачено по договору № ${contractNumber}`,
       ],
     );
     await connection.query(

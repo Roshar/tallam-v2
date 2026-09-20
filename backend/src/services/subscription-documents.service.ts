@@ -1,10 +1,6 @@
 import { createRequire } from "node:module";
 import PDFDocument from "pdfkit";
-import {
-  BILLING_RECIPIENT,
-  SUBSCRIPTION_PRICE_RUB,
-  renewalPaymentPurpose,
-} from "./billing-details.js";
+import { BILLING_RECIPIENT } from "./billing-details.js";
 import {
   getRenewalRequest,
   type RenewalCustomerData,
@@ -14,8 +10,6 @@ import {
 const require = createRequire(import.meta.url);
 const FONT_REGULAR = require.resolve("dejavu-fonts-ttf/ttf/DejaVuSans.ttf");
 const FONT_BOLD = require.resolve("dejavu-fonts-ttf/ttf/DejaVuSans-Bold.ttf");
-
-type DocumentKind = "contract" | "invoice";
 
 interface DocumentMeta {
   contractNumber: string;
@@ -207,7 +201,7 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
   );
   paragraph(
     doc,
-    "3.4. Оплата производится Заказчиком в форме безналичного расчёта на основании счёта, выставленного Исполнителем.",
+    "3.4. Оплата производится Заказчиком в форме безналичного расчёта по реквизитам Исполнителя, указанным в настоящем Договоре.",
   );
 
   heading(doc, "4. Ответственность сторон");
@@ -364,176 +358,22 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
   return result;
 }
 
-function invoiceLine(
-  doc: PDFKit.PDFDocument,
-  label: string,
-  value: string,
-): void {
-  doc.font("Bold").fontSize(8.5).text(`${label}: `, { continued: true });
-  doc.font("Regular").text(value);
-  doc.moveDown(0.25);
-}
-
-async function buildInvoice(request: RenewalRequest): Promise<Buffer> {
-  const meta = documentMeta(request);
-  const customer = request.customer;
-  const { doc, result } = createPdf(
-    `Счёт № ${meta.invoiceNumber} — ${customer.fullName}`,
-  );
-
-  doc
-    .font("Bold")
-    .fontSize(9)
-    .text(BILLING_RECIPIENT.fullName, { align: "center" });
-  doc
-    .font("Regular")
-    .fontSize(8.2)
-    .text(
-      `ИНН ${BILLING_RECIPIENT.inn} / КПП ${BILLING_RECIPIENT.kpp}\n${BILLING_RECIPIENT.address}`,
-      { align: "center" },
-    );
-  doc.moveDown(0.7);
-
-  const bankTop = doc.y;
-  doc.rect(44, bankTop, 507, 94).stroke("#444444");
-  doc.moveTo(370, bankTop).lineTo(370, bankTop + 94).stroke();
-  doc.font("Regular").fontSize(7.8);
-  doc.text(BILLING_RECIPIENT.bankName, 50, bankTop + 7, { width: 310 });
-  doc.text("Банк получателя", 50, bankTop + 38, { width: 150 });
-  doc.text(`БИК ${BILLING_RECIPIENT.bik}`, 378, bankTop + 7, { width: 165 });
-  doc.text(
-    `К/сч. № ${BILLING_RECIPIENT.correspondentAccount}`,
-    378,
-    bankTop + 27,
-    { width: 165 },
-  );
-  doc.text(
-    `${BILLING_RECIPIENT.treasury}\nИНН ${BILLING_RECIPIENT.inn}  КПП ${BILLING_RECIPIENT.kpp}`,
-    50,
-    bankTop + 52,
-    { width: 310 },
-  );
-  doc.text(`Р/сч. № ${BILLING_RECIPIENT.account}`, 378, bankTop + 52, {
-    width: 165,
-  });
-  doc.y = bankTop + 108;
-
-  doc
-    .font("Bold")
-    .fontSize(15)
-    .text(`СЧЁТ № ${meta.invoiceNumber} от ${formatDate(meta.issuedOn)}`, {
-      align: "center",
-    });
-  doc.moveDown(0.8);
-  invoiceLine(doc, "Получатель", BILLING_RECIPIENT.fullName);
-  invoiceLine(doc, "Заказчик", customer.fullName);
-  invoiceLine(
-    doc,
-    "Плательщик",
-    `${customer.fullName}, ${passportFull(customer)}, ИНН ${customer.inn}`,
-  );
-  invoiceLine(
-    doc,
-    "Основание",
-    `Договор № ${meta.contractNumber} от ${formatDate(meta.issuedOn)}`,
-  );
-  doc.moveDown(0.5);
-
-  const tableY = doc.y;
-  doc.rect(44, tableY, 507, 86).stroke("#444444");
-  doc.moveTo(70, tableY).lineTo(70, tableY + 86).stroke();
-  doc.moveTo(365, tableY).lineTo(365, tableY + 86).stroke();
-  doc.moveTo(410, tableY).lineTo(410, tableY + 86).stroke();
-  doc.moveTo(478, tableY).lineTo(478, tableY + 86).stroke();
-  doc.moveTo(44, tableY + 30).lineTo(551, tableY + 30).stroke();
-  doc.font("Bold").fontSize(7.5);
-  doc.text("№", 51, tableY + 10, { width: 12, align: "center" });
-  doc.text("Наименование услуг", 80, tableY + 10, {
-    width: 275,
-    align: "center",
-  });
-  doc.text("Ед.", 370, tableY + 10, { width: 35, align: "center" });
-  doc.text("Цена", 415, tableY + 10, { width: 58, align: "center" });
-  doc.text("Сумма", 482, tableY + 10, { width: 64, align: "center" });
-  doc.font("Regular").fontSize(7.8);
-  doc.text("1", 51, tableY + 48, { width: 12, align: "center" });
-  doc.text(
-    renewalPaymentPurpose({
-      contractNumber: meta.contractNumber,
-      issuedOnLabel: formatDate(meta.issuedOn),
-      requestId: request.id,
-      schoolName: request.schoolName,
-    }),
-    78,
-    tableY + 38,
-    { width: 278 },
-  );
-  doc.text("ед", 370, tableY + 48, { width: 35, align: "center" });
-  doc.text("10 000,00", 415, tableY + 48, { width: 58, align: "center" });
-  doc.text("10 000,00", 482, tableY + 48, { width: 64, align: "center" });
-  doc.y = tableY + 98;
-
-  doc
-    .font("Bold")
-    .fontSize(9)
-    .text("Итого: 10 000,00 руб.", { align: "right" })
-    .text("НДС не облагается", { align: "right" })
-    .text("Всего к оплате: 10 000,00 руб.", { align: "right" });
-  doc.moveDown(0.8);
-  doc
-    .font("Regular")
-    .fontSize(8.5)
-    .text("Всего наименований 1, на сумму: Десять тысяч рублей 00 копеек");
-  doc.moveDown(1);
-  invoiceLine(
-    doc,
-    "Назначение платежа",
-    renewalPaymentPurpose({
-      contractNumber: meta.contractNumber,
-      issuedOnLabel: formatDate(meta.issuedOn),
-      requestId: request.id,
-      schoolName: request.schoolName,
-    }),
-  );
-  invoiceLine(doc, "КБК", BILLING_RECIPIENT.kbk);
-  invoiceLine(doc, "ОКТМО", BILLING_RECIPIENT.oktmo);
-  doc.moveDown(1.5);
-  doc
-    .font("Regular")
-    .fontSize(9)
-    .text("Ректор ____________________________ / Г. Б. Эльмурзаева /")
-    .moveDown(1.3)
-    .text("Главный бухгалтер __________________ / Ж. А. Дурдиева /")
-    .moveDown(0.8)
-    .text("М.П.");
-
-  doc.end();
-  return result;
-}
-
 export async function buildRenewalDocument(input: {
   requestId: number;
-  kind: DocumentKind;
   schoolId?: number;
 }): Promise<{ buffer: Buffer; filename: string } | null> {
   const request = await getRenewalRequest(input.requestId, input.schoolId);
   if (!request) return null;
-  return buildRenewalDocumentFromRequest(request, input.kind);
+  return buildRenewalDocumentFromRequest(request);
 }
 
 export async function buildRenewalDocumentFromRequest(
   request: RenewalRequest,
-  kind: DocumentKind,
 ): Promise<{ buffer: Buffer; filename: string }> {
   const meta = documentMeta(request);
-  const isContract = kind === "contract";
   return {
-    buffer: isContract
-      ? await buildContract(request)
-      : await buildInvoice(request),
-    filename: isContract
-      ? `Договор-Таллам-${meta.contractNumber}.pdf`
-      : `Счет-Таллам-${meta.invoiceNumber}.pdf`,
+    buffer: await buildContract(request),
+    filename: `Договор-и-акт-Таллам-${meta.contractNumber}.pdf`,
   };
 }
 

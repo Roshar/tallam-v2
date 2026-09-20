@@ -790,11 +790,7 @@ export async function submitRenewal(req: Request, res: Response) {
   }
 }
 
-async function downloadRenewalDocument(
-  req: Request,
-  res: Response,
-  kind: "contract" | "invoice",
-) {
+async function downloadRenewalDocument(req: Request, res: Response) {
   const schoolId = getSchoolId(req);
   const requestId = Number(req.params.requestId);
   if (!schoolId) {
@@ -807,7 +803,6 @@ async function downloadRenewalDocument(
   try {
     const document = await buildRenewalDocument({
       requestId,
-      kind,
       schoolId,
     });
     if (!document) {
@@ -823,15 +818,11 @@ async function downloadRenewalDocument(
     if (error instanceof RenewalDocumentUnavailableError) {
       return res.status(409).json({ error: error.message });
     }
-    console.error(`School renewal ${kind} error:`, error);
+    console.error("School renewal document error:", error);
     return res.status(500).json({ error: "Не удалось сформировать документ" });
   }
 }
 
 export async function schoolRenewalContract(req: Request, res: Response) {
-  return downloadRenewalDocument(req, res, "contract");
-}
-
-export async function schoolRenewalInvoice(req: Request, res: Response) {
-  return downloadRenewalDocument(req, res, "invoice");
+  return downloadRenewalDocument(req, res);
 }

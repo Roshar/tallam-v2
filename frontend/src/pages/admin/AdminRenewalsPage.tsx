@@ -40,9 +40,7 @@ export function AdminRenewalsPage() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const [downloading, setDownloading] = useState<
-    "contract" | "invoice" | null
-  >(null);
+  const [downloading, setDownloading] = useState(false);
   const [revealPersonalData, setRevealPersonalData] = useState(false);
   const [error, setError] = useState("");
 
@@ -99,16 +97,16 @@ export function AdminRenewalsPage() {
     }
   }
 
-  async function download(kind: "contract" | "invoice") {
+  async function download() {
     if (!selected) return;
-    setDownloading(kind);
+    setDownloading(true);
     setError("");
     try {
-      await api.downloadAdminRenewalDocument(selected.id, kind);
+      await api.downloadAdminRenewalDocument(selected.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось скачать документ");
     } finally {
-      setDownloading(null);
+      setDownloading(false);
     }
   }
 
@@ -336,25 +334,15 @@ export function AdminRenewalsPage() {
                   <button
                     type="button"
                     className="btn btn-ghost"
-                    disabled={downloading !== null}
-                    onClick={() => void download("contract")}
+                    disabled={downloading}
+                    onClick={() => void download()}
                   >
-                    {downloading === "contract"
-                      ? "Подготовка..."
-                      : "Договор и акт"}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn btn-ghost"
-                    disabled={downloading !== null}
-                    onClick={() => void download("invoice")}
-                  >
-                    {downloading === "invoice" ? "Подготовка..." : "Счёт"}
+                    {downloading ? "Подготовка..." : "Договор и акт"}
                   </button>
                 </div>
               ) : (
                 <p className="admin-renewals__period">
-                  Договор и счёт станут доступны после подтверждения оплаты.
+                  Договор и акт станут доступны после подтверждения оплаты.
                 </p>
               )}
 
@@ -363,13 +351,6 @@ export function AdminRenewalsPage() {
                 <strong>
                   {selected.contractNumber
                     ? `№ ${selected.contractNumber}`
-                    : "ещё не присвоен"}
-                </strong>
-                <br />
-                Счёт:{" "}
-                <strong>
-                  {selected.invoiceNumber
-                    ? `№ ${selected.invoiceNumber}`
                     : "ещё не присвоен"}
                 </strong>
               </p>
