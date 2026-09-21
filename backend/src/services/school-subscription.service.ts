@@ -21,6 +21,7 @@ export type SchoolSubscriptionPageStatus =
   | "expiring"
   | "expired"
   | "scheduled"
+  | "blocked"
   | "missing";
 
 export interface SchoolBankDetails {
@@ -123,12 +124,18 @@ function pageCopy(
   period: PeriodRow | null,
 ): { title: string; description: string } {
   switch (status) {
+    case "blocked":
+      return {
+        title: "Кабинет заблокирован",
+        description:
+          "Доступ к разделам кабинета закрыт. Оплатите продление по QR-коду или реквизитам. Если вы уже оплатили, дождитесь подтверждения администрацией портала, повторно платить не нужно.",
+      };
     case "expired":
       return {
         title: "Подписка истекла",
         description: period
-          ? `Срок доступа закончился ${formatDateRu(period.endsOn)}. Необходимо оплатить продление по QR-коду или реквизитам. Если вы уже оплатили — дождитесь подтверждения со стороны администрации портала, повторно платить не нужно.`
-          : "Срок доступа закончился. Необходимо оплатить продление. Если вы уже оплатили — дождитесь подтверждения со стороны администрации портала, повторно платить не нужно.",
+          ? `Срок доступа закончился ${formatDateRu(period.endsOn)}. Необходимо оплатить продление по QR-коду или реквизитам. Если вы уже оплатили, дождитесь подтверждения со стороны администрации портала, повторно платить не нужно.`
+          : "Срок доступа закончился. Необходимо оплатить продление. Если вы уже оплатили, дождитесь подтверждения со стороны администрации портала, повторно платить не нужно.",
       };
     case "expiring":
       return {
@@ -182,7 +189,9 @@ export async function getSchoolSubscriptionOverview(
   const today = todayIso();
   let status: SchoolSubscriptionPageStatus = "missing";
 
-  if (access.reason === "expired") {
+  if (access.reason === "blocked") {
+    status = "blocked";
+  } else if (access.reason === "expired") {
     status = "expired";
   } else if (access.reason === "scheduled") {
     status = "scheduled";
@@ -198,7 +207,7 @@ export async function getSchoolSubscriptionOverview(
   }
 
   const subscriptionNeedsPayment =
-    status === "expired" || status === "expiring";
+    status === "expired" || status === "expiring" || status === "blocked";
   const needsPayment =
     subscriptionNeedsPayment && renewal?.status !== "paid";
   const paymentReady =
@@ -208,7 +217,8 @@ export async function getSchoolSubscriptionOverview(
         (renewal.status === "pending" ||
           renewal.status === "documents_ready"),
     );
-  const cabinetLocked = status === "expired" || status === "scheduled";
+  const cabinetLocked =
+    status === "expired" || status === "scheduled" || status === "blocked";
   const { title, description } = pageCopy(status, period);
 
   let daysLeft: number | null = null;

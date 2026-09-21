@@ -93,7 +93,7 @@ function accessMessage(reason: SchoolAccessReason): string {
     case "no_account":
       return "Кабинет школы не найден";
     case "blocked":
-      return "Кабинет школы принудительно заблокирован";
+      return "Кабинет школы заблокирован. Оплатите продление или, если платёж уже отправлен, дождитесь подтверждения администрацией портала";
     case "scheduled":
       return "Подписка ещё не началась. Кабинет откроется в дату начала срока";
     case "expired":
@@ -236,10 +236,7 @@ export async function getSchoolAccessState(
   }
 
   const canUseCabinet = reason === "active";
-  const canLogin =
-    hasAccount &&
-    !blockedByAdmin &&
-    (reason === "active" || reason === "expired" || reason === "scheduled");
+  const canLogin = hasAccount;
 
   return {
     hasAccount,

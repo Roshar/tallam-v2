@@ -714,6 +714,12 @@ export async function markRenewalPaid(
         id,
       ],
     );
+    await connection.query(
+      `UPDATE users
+       SET blocked_by_admin = 0
+       WHERE school_id = ? AND role = 'school_admin'`,
+      [row.schoolId],
+    );
     await connection.commit();
   } catch (error) {
     await connection.rollback();

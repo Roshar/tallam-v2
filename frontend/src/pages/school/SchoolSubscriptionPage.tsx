@@ -227,9 +227,11 @@ export function SchoolSubscriptionPage() {
               <strong>
                 {data.status === "scheduled"
                   ? daysLabel(data.daysLeft, "until")
-                  : data.status === "expired"
-                    ? "срок истёк"
-                    : daysLabel(data.daysLeft, "left")}
+                  : data.status === "blocked"
+                    ? "доступ закрыт"
+                    : data.status === "expired"
+                      ? "срок истёк"
+                      : daysLabel(data.daysLeft, "left")}
               </strong>
             </article>
             <article>

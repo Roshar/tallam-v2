@@ -74,7 +74,7 @@ function accountLabel(reason: AdminSchoolAccessReason) {
     case "active":
       return "Кабинет активен";
     case "blocked":
-      return "Принудительно заблокирован";
+      return "Заблокирован, доступно продление";
     case "expired":
       return "Подписка истекла, доступно продление";
     case "scheduled":
@@ -402,7 +402,7 @@ export function AdminSchoolDetailPage() {
             disabled={!canLogin || linkLoading}
             title={
               !canLogin
-                ? "Для создания ссылки нужен аккаунт без принудительной блокировки"
+                ? "Для создания ссылки нужен аккаунт школы"
                 : undefined
             }
             onClick={() => void createResetLink()}

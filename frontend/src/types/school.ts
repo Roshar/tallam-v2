@@ -55,6 +55,7 @@ export type SchoolSubscriptionPageStatus =
   | "expiring"
   | "expired"
   | "scheduled"
+  | "blocked"
   | "missing";
 
 export interface SchoolBankDetails {
