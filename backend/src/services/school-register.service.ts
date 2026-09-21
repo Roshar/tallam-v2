@@ -1,7 +1,7 @@
-import bcrypt from "bcryptjs";
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { v4 as uuidv4 } from "uuid";
 import { pool, query } from "../db/pool.js";
+import { hashPassword } from "./auth.service.js";
 import { appendSchoolPasswordNote } from "./password-notebook.service.js";
 import { validatePassword } from "./password-reset.service.js";
 import {
@@ -129,7 +129,7 @@ export async function createSchoolWithCabinet(input: {
     throw new SchoolRegisterError("Этот email уже зарегистрирован");
   }
 
-  const passwordHash = await bcrypt.hash(input.password, 10);
+  const passwordHash = await hashPassword(input.password);
   const idUser = uuidv4();
   const connection = await pool.getConnection();
 

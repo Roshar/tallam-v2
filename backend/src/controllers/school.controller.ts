@@ -1,5 +1,4 @@
 import type { Request, Response } from "express";
-import { config } from "../config.js";
 import { getSchoolName, countTeachers } from "../services/auth.service.js";
 import { getSchoolProfile } from "../services/school.service.js";
 import {
@@ -705,16 +704,10 @@ export async function changeSchoolPassword(req: Request, res: Response) {
       `school:${req.session.user?.email ?? "unknown"}`,
     );
 
-    req.session.destroy((err) => {
-      if (err) {
-        console.error("School session destroy after password change:", err);
-      }
-      res.clearCookie(config.session.name);
-      return res.json({
-        ok: true,
-        message: "Пароль обновлён. Войдите с новым паролем.",
-        email: result.email,
-      });
+    return res.json({
+      ok: true,
+      message: "Пароль обновлён. При следующем входе используйте новый пароль.",
+      email: result.email,
     });
   } catch (error) {
     const message =

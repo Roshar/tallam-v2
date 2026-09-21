@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { authenticate } from "../services/auth.service.js";
 import { recordAuditLog } from "../services/audit-log.service.js";
+import { clearSessionCookie } from "../lib/session-cookie.js";
 import {
   SchoolAccessDeniedError,
   assertSchoolLoginAccess,
@@ -11,8 +12,14 @@ import {
 
 function clearSession(req: Request, res: Response, status: number, error: string) {
   req.session.destroy(() => {
-    res.clearCookie(process.env.SESSION_NAME ?? "smad");
+    clearSessionCookie(res);
     res.status(status).json({ error });
+  });
+}
+
+function saveSession(req: Request): Promise<void> {
+  return new Promise((resolve, reject) => {
+    req.session.save((err) => (err ? reject(err) : resolve()));
   });
 }
 
@@ -28,7 +35,7 @@ export async function login(req: Request, res: Response) {
   }
 
   try {
-    const user = await authenticate(email.trim(), password, accountType);
+    const user = await authenticate(email.trim(), String(password), accountType);
     if (!user) {
       return res.status(401).json({ error: "Неверный логин или пароль" });
     }
@@ -38,8 +45,11 @@ export async function login(req: Request, res: Response) {
       user.cabinetAccess = cabinetAccessFromState(access);
     }
 
-    delete req.session.impersonator;
+    await new Promise<void>((resolve, reject) => {
+      req.session.regenerate((err) => (err ? reject(err) : resolve()));
+    });
     req.session.user = user;
+    await saveSession(req);
     return res.json({ user });
   } catch (error) {
     if (error instanceof SchoolAccessDeniedError) {
@@ -55,7 +65,7 @@ export function logout(req: Request, res: Response) {
     if (err) {
       return res.status(500).json({ error: "Не удалось выйти" });
     }
-    res.clearCookie(process.env.SESSION_NAME ?? "smad");
+    clearSessionCookie(res);
     return res.json({ ok: true });
   });
 }

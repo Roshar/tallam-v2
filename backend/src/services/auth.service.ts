@@ -51,12 +51,42 @@ function mapMethodist(row: DbMethodist): SessionUser {
   };
 }
 
+function storedPassword(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (Buffer.isBuffer(value)) return value.toString("utf8").trim();
+  return String(value ?? "").trim();
+}
+
+export async function passwordsMatch(
+  plain: string,
+  hash: unknown,
+): Promise<boolean> {
+  const password = plain.trim();
+  const stored = storedPassword(hash);
+  if (!password || !stored) return false;
+  try {
+    return await bcrypt.compare(password, stored);
+  } catch {
+    return false;
+  }
+}
+
+export async function hashPassword(plain: string): Promise<string> {
+  const password = plain.trim();
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+  if (!(await passwordsMatch(password, hash))) {
+    throw new Error("Не удалось сохранить пароль. Попробуйте ещё раз.");
+  }
+  return hash;
+}
+
 export async function findSchoolUserByEmail(
   email: string,
 ): Promise<DbUser | null> {
   const rows = await query<DbUser[]>(
     "SELECT id, id_user, email, password, status, school_id, role FROM users WHERE email = ? LIMIT 1",
-    [email],
+    [email.trim()],
   );
   return rows[0] ?? null;
 }
@@ -81,8 +111,7 @@ export async function authenticate(
     if (!user) {
       return null;
     }
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) {
+    if (!(await passwordsMatch(password, user.password))) {
       return null;
     }
     if (user.role === "admin") {
@@ -98,8 +127,10 @@ export async function authenticate(
   if (!methodist || methodist.status !== "on") {
     return null;
   }
-  const valid = await bcrypt.compare(password, methodist.password);
-  return valid ? mapMethodist(methodist) : null;
+  if (!(await passwordsMatch(password, methodist.password))) {
+    return null;
+  }
+  return mapMethodist(methodist);
 }
 
 export async function getSchoolSessionUser(

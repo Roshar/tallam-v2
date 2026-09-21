@@ -1,5 +1,5 @@
-import { FormEvent, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { FormEvent, useMemo, useState } from "react";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { schoolLandingPath } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -7,12 +7,22 @@ type Tab = "school" | "methodist";
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const initialEmail = searchParams.get("email") ?? "";
+  const passwordUpdated = searchParams.get("passwordUpdated") === "1";
   const [tab, setTab] = useState<Tab>("school");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(initialEmail);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const successText = useMemo(
+    () =>
+      passwordUpdated
+        ? "Пароль обновлён. Войдите с новым паролем для этой почты."
+        : "",
+    [passwordUpdated],
+  );
 
   if (!loading && user) {
     if (user.accountType === "admin") {
@@ -26,13 +36,19 @@ export function LoginPage() {
     }
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSubmitting(true);
 
+    const form = new FormData(event.currentTarget);
+    const nextEmail = String(form.get("email") ?? "").trim();
+    const nextPassword = String(form.get("password") ?? "");
+    setEmail(nextEmail);
+    setPassword(nextPassword);
+
     try {
-      await login(email.trim(), password, tab);
+      await login(nextEmail, nextPassword, tab);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка входа");
     } finally {
@@ -90,6 +106,9 @@ export function LoginPage() {
           </div>
 
           <form onSubmit={handleSubmit}>
+            {successText ? (
+              <div className="alert alert-success">{successText}</div>
+            ) : null}
             {error ? <div className="alert alert-error">{error}</div> : null}
 
             <div className="form-group">

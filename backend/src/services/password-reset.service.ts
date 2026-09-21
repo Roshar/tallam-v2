@@ -1,9 +1,13 @@
-import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import { config } from "../config.js";
 import { query } from "../db/pool.js";
 import { sendPasswordResetEmail } from "./email.service.js";
 import { appendSchoolPasswordNote } from "./password-notebook.service.js";
+import {
+  findSchoolUserByEmail,
+  hashPassword,
+  passwordsMatch,
+} from "./auth.service.js";
 import { getSchoolAccessState, syncSchoolCabinetAccess } from "./school-access.service.js";
 
 interface SchoolUserRow {
@@ -200,7 +204,7 @@ export async function resetSchoolPassword(
     return { ok: false, error: validation.reason ?? "Ссылка недействительна" };
   }
 
-  const passwordError = validatePassword(password);
+  const passwordError = validatePassword(password.trim());
   if (passwordError) {
     return {
       ok: false,
@@ -210,6 +214,8 @@ export async function resetSchoolPassword(
       schoolId: validation.schoolId,
     };
   }
+
+  password = password.trim();
 
   const tokenHash = hashToken(token.trim());
   const rows = await query<ResetTokenRow[]>(
@@ -228,9 +234,12 @@ export async function resetSchoolPassword(
     return { ok: false, error: "Ссылка недействительна" };
   }
 
-  const hash = await bcrypt.hash(password, 10);
+  const hash = await hashPassword(password);
 
-  await query("UPDATE users SET password = ? WHERE id = ?", [hash, row.user_id]);
+  await query("UPDATE users SET `password` = ? WHERE id = ?", [
+    hash,
+    row.user_id,
+  ]);
   await query(
     "UPDATE password_reset_tokens SET used_at = NOW() WHERE id = ?",
     [row.id],
@@ -267,9 +276,11 @@ export async function changeSchoolCabinetPassword(
   confirmPassword: string,
   actor: string,
 ): Promise<{ email: string; schoolName: string }> {
-  if (!password || !confirmPassword) {
+  if (!password.trim() || !confirmPassword.trim()) {
     throw new Error("Укажите пароль и подтверждение");
   }
+  password = password.trim();
+  confirmPassword = confirmPassword.trim();
   if (password !== confirmPassword) {
     throw new Error("Пароли не совпадают");
   }
@@ -294,8 +305,13 @@ export async function changeSchoolCabinetPassword(
     throw new Error("Кабинет школы не найден");
   }
 
-  const hash = await bcrypt.hash(password, 10);
-  await query("UPDATE users SET password = ? WHERE id = ?", [hash, user.id]);
+  const hash = await hashPassword(password);
+  await query("UPDATE users SET `password` = ? WHERE id = ?", [hash, user.id]);
+
+  const stored = await findSchoolUserByEmail(user.email);
+  if (!stored || !(await passwordsMatch(password, stored.password))) {
+    throw new Error("Не удалось сохранить пароль. Попробуйте ещё раз.");
+  }
 
   try {
     await appendSchoolPasswordNote({

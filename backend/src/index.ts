@@ -5,6 +5,7 @@ import session from "express-session";
 import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 import { config } from "./config.js";
+import { sessionCookieOptions } from "./lib/session-cookie.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
@@ -65,9 +66,7 @@ app.use(session({
   store: sessionStore,
   cookie: {
     maxAge: config.session.lifetime,
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    ...sessionCookieOptions(),
   },
 }));
 

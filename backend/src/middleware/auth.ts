@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { SessionUser } from "../types/session.js";
+import { clearSessionCookie } from "../lib/session-cookie.js";
 import {
   SchoolAccessDeniedError,
   assertSchoolCabinetAccess,
@@ -51,7 +52,7 @@ export async function requireSchoolSession(
 
     if (!access.canLogin && !isImpersonating(req)) {
       req.session.destroy(() => {
-        res.clearCookie(process.env.SESSION_NAME ?? "smad");
+        clearSessionCookie(res);
         res.status(401).json({ error: access.message });
       });
       return;
@@ -89,7 +90,7 @@ export async function requireActiveSchoolCabinet(
       }
 
       req.session.destroy(() => {
-        res.clearCookie(process.env.SESSION_NAME ?? "smad");
+        clearSessionCookie(res);
         res.status(401).json({ error: error.message });
       });
       return;

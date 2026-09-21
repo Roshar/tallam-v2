@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
@@ -12,27 +12,43 @@ export function SchoolPasswordForm({ idPrefix = "school-password" }: SchoolPassw
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const submittingRef = useRef(false);
 
   if (user?.impersonatedBy) {
     return null;
   }
 
-  async function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submittingRef.current) return;
     setError("");
+    setSuccess("");
 
-    if (password !== confirmPassword) {
+    const form = new FormData(event.currentTarget);
+    const nextPassword = String(form.get("password") ?? "");
+    const nextConfirm = String(form.get("confirmPassword") ?? "");
+
+    if (nextPassword !== nextConfirm) {
       setError("Пароли не совпадают");
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
     try {
-      await api.changeSchoolPassword(password, confirmPassword);
-      window.location.assign("/auth");
+      const result = await api.changeSchoolPassword(nextPassword, nextConfirm);
+      setPassword("");
+      setConfirmPassword("");
+      setSuccess(
+        result.message ||
+          "Пароль обновлён. При следующем входе используйте новый пароль.",
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось изменить пароль");
+    } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
   }
@@ -42,12 +58,10 @@ export function SchoolPasswordForm({ idPrefix = "school-password" }: SchoolPassw
       <h3>Пароль кабинета</h3>
       <p>
         Новый пароль сохраняется сразу, текущий пароль подтверждать не нужно.
+        Сеанс останется открытым.
       </p>
-      <div className="alert alert-warning">
-        Внимание: после смены пароля вам придётся войти заново. Вы будете
-        выведены из личного кабинета.
-      </div>
       {error ? <div className="alert alert-error">{error}</div> : null}
+      {success ? <div className="alert alert-success">{success}</div> : null}
 
       <form className="school-password__form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -59,6 +73,7 @@ export function SchoolPasswordForm({ idPrefix = "school-password" }: SchoolPassw
               id={`${idPrefix}-new`}
               className="form-input"
               type={showPassword ? "text" : "password"}
+              name="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="new-password"
@@ -84,6 +99,7 @@ export function SchoolPasswordForm({ idPrefix = "school-password" }: SchoolPassw
             id={`${idPrefix}-confirm`}
             className="form-input"
             type={showPassword ? "text" : "password"}
+            name="confirmPassword"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
             autoComplete="new-password"
