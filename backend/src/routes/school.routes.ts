@@ -39,6 +39,15 @@ router.get(
   schoolController.schoolRenewal,
 );
 router.post(
+  "/subscription/payment-check",
+  auditHttpAction({
+    category: "subscription",
+    action: "subscription.payment_check",
+    entityType: "renewal_request",
+  }),
+  schoolController.checkSchoolPayment,
+);
+router.post(
   "/subscription/renewal",
   auditHttpAction({
     category: "subscription",

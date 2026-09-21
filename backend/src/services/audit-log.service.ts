@@ -69,6 +69,11 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "subscription",
+    action: "subscription.payment_check",
+    label: "Проверка оплаты школой",
+  },
+  {
+    category: "subscription",
     action: "subscription.period_created",
     label: "Добавление периода подписки",
   },
@@ -350,6 +355,13 @@ export function auditHttpAction(options: {
 
     res.once("finish", () => {
       const user = req.session?.user ?? initialUser;
+      const extraDetails =
+        res.locals.auditDetails &&
+        typeof res.locals.auditDetails === "object" &&
+        !Array.isArray(res.locals.auditDetails)
+          ? (res.locals.auditDetails as Record<string, unknown>)
+          : null;
+      const extraEntityId = extraDetails?.renewalId;
       void recordAuditLog({
         actorUserId: user?.id ?? null,
         actorEmail: user?.email ?? fallbackEmail ?? "unknown",
@@ -359,10 +371,14 @@ export function auditHttpAction(options: {
         action: options.action,
         status: res.statusCode < 400 ? "success" : "failure",
         entityType: options.entityType ?? null,
-        entityId,
+        entityId:
+          typeof extraEntityId === "string" || typeof extraEntityId === "number"
+            ? extraEntityId
+            : entityId,
         details: {
           httpStatus: res.statusCode,
           ...details,
+          ...extraDetails,
         },
         ipAddress,
         userAgent,

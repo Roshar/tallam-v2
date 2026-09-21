@@ -172,6 +172,20 @@
   line-height: 1.45;
 }
 
+.school-sub__payment-check p + p {
+  margin-top: 0.55rem;
+}
+
+.school-sub__payment-check a {
+  color: var(--color-darkblue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.school-sub__payment-check a:hover {
+  text-decoration: underline;
+}
+
 .school-sub__payment-check .alert {
   margin-top: 0.75rem;
 }

@@ -756,6 +756,29 @@ export async function schoolRenewal(req: Request, res: Response) {
   }
 }
 
+export async function checkSchoolPayment(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  try {
+    const [request, overview] = await Promise.all([
+      getLatestSchoolRenewal(schoolId),
+      getSchoolSubscriptionOverview(schoolId),
+    ]);
+    res.locals.auditDetails = {
+      renewalStatus: request?.status ?? "none",
+      paid: request?.status === "paid",
+      renewalId: request?.id ?? null,
+    };
+    return res.json({ request, overview });
+  } catch (error) {
+    console.error("School payment check error:", error);
+    return res.status(500).json({ error: "Не удалось проверить оплату" });
+  }
+}
+
 export async function submitRenewal(req: Request, res: Response) {
   const schoolId = getSchoolId(req);
   if (!schoolId) {

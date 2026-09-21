@@ -435,6 +435,13 @@ export const api = {
     );
   },
 
+  checkSchoolPayment() {
+    return request<{
+      request: SchoolRenewalRequest | null;
+      overview: SchoolSubscriptionOverview;
+    }>("/api/school/subscription/payment-check", { method: "POST" });
+  },
+
   submitSchoolRenewal(payload: SubmitRenewalPayload) {
     return request<{ request: SchoolRenewalRequest }>(
       "/api/school/subscription/renewal",

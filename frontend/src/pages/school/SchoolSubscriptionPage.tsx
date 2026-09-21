@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "../../api/client";
 import { SchoolPasswordForm } from "../../components/SchoolPasswordForm";
 import { SchoolRenewalPanel } from "../../components/SchoolRenewalPanel";
-import { SupportContacts } from "../../components/SupportContacts";
+import { SupportContacts, ACCOUNTING_PHONE_HREF, ACCOUNTING_PHONE_LABEL } from "../../components/SupportContacts";
 import { useAuth } from "../../context/AuthContext";
 import type { SchoolSubscriptionOverview } from "../../types/school";
 
@@ -135,10 +135,7 @@ export function SchoolSubscriptionPage() {
     setError("");
     setPaymentCheck(null);
     try {
-      const [{ request }, overview] = await Promise.all([
-        api.schoolRenewal(),
-        api.schoolSubscription(),
-      ]);
+      const { request, overview } = await api.checkSchoolPayment();
       setData(overview);
       setRenewalRefreshKey((current) => current + 1);
 
@@ -541,6 +538,11 @@ export function SchoolSubscriptionPage() {
                     Нажмите кнопку после перевода. Система проверит, подтвердил
                     ли администратор поступление оплаты. Повторная проверка не
                     списывает деньги и не создаёт новую заявку.
+                  </p>
+                  <p>
+                    Для ускорения процесса рекомендуем отправить документ
+                    платежки на номер{" "}
+                    <a href={ACCOUNTING_PHONE_HREF}>{ACCOUNTING_PHONE_LABEL}</a>.
                   </p>
                   {paymentCheck?.status === "waiting" ? (
                     <div className="alert alert-warning" role="status">
