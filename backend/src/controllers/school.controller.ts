@@ -16,14 +16,22 @@ import {
   type CreateTeacherInput,
   type UpdateTeacherInput,
 } from "../services/teachers.service.js";
-import { getProjectTeacherEvaluations, createProjectTeacherEvaluation, getSchoolEvaluationYearStats } from "../services/card.service.js";
+import {
+  getProjectTeacherEvaluations,
+  createProjectTeacherEvaluation,
+  getSchoolEvaluationYearStats,
+  updateOutsideEvaluator,
+} from "../services/card.service.js";
 import {
   buildRecommendationsPdf,
   deleteEvaluation,
   getEvaluationDetail,
   sendEvaluationToTeacher,
 } from "../services/card-view.service.js";
-import { upsertEvaluationComment } from "../services/evaluation-comment.service.js";
+import {
+  sanitizeCommentHtml,
+  upsertEvaluationComment,
+} from "../services/evaluation-comment.service.js";
 import {
   countSchoolUnread,
   getSchoolSupportThread,
@@ -469,10 +477,12 @@ export async function createLessonAnalysisEvaluation(req: Request, res: Response
           message === "Teacher not in project"
             ? "Учитель не найден в проекте"
             : message === "Outside evaluator fields required"
-              ? "Для внешней оценки укажите ФИО, должность и место работы эксперта"
+              ? "Укажите ФИО, должность и место работы оценивающего"
               : message === "Missing required fields"
                 ? "Заполните предмет, класс, дату, тему и тип оценки"
-                : "Проверьте заполнение формы оценки",
+                : message === "Invalid date"
+                  ? "Укажите корректную дату урока"
+                  : "Проверьте заполнение формы оценки",
       });
     }
 
@@ -559,13 +569,45 @@ export async function updateLessonAnalysisEvaluationComment(
       return res.status(404).json({ error: "Оценка не найдена" });
     }
 
+    const body = req.body as {
+      commentHtml?: unknown;
+      sourceFio?: string;
+      positionName?: string;
+      sourceWorkplace?: string;
+    };
+    const nextComment = sanitizeCommentHtml(body.commentHtml);
+
+    if (nextComment && !detail.hasEvaluatorIdentity) {
+      if (
+        !body.sourceFio?.trim() ||
+        !body.positionName?.trim() ||
+        !body.sourceWorkplace?.trim()
+      ) {
+        return res.status(400).json({
+          error: "Укажите ФИО, должность и место работы оценивающего",
+        });
+      }
+
+      await updateOutsideEvaluator(schoolId, cardId, {
+        sourceFio: body.sourceFio,
+        positionName: body.positionName,
+        sourceWorkplace: body.sourceWorkplace,
+      });
+    }
+
     const commentHtml = await upsertEvaluationComment(
       cardId,
       schoolId,
-      (req.body as { commentHtml?: unknown })?.commentHtml,
+      body.commentHtml,
     );
+    const updated = await getEvaluationDetail(schoolId, teacherId, cardId);
 
-    return res.json({ commentHtml });
+    return res.json({
+      commentHtml,
+      evaluatorLabel: updated?.evaluatorLabel ?? detail.evaluatorLabel,
+      hasEvaluatorIdentity:
+        updated?.hasEvaluatorIdentity ?? detail.hasEvaluatorIdentity,
+    });
   } catch (error) {
     console.error("Update evaluation comment error:", error);
     return res.status(500).json({

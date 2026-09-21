@@ -316,6 +316,16 @@
   margin: 0.35rem 0 0.35rem 1.25rem;
 }
 
+.evaluate-extras .evaluate-meta__external {
+  padding-top: 0.75rem;
+  margin-top: 0.2rem;
+  border-top: 1px solid var(--color-border);
+}
+
+.evaluate-comment-modal .evaluate-meta__external {
+  padding-top: 0.75rem;
+}
+
 .evaluate-meta__external .form-input[readonly] {
   background: #f4f7fb;
   color: var(--color-text);

@@ -1,7 +1,8 @@
 import { FormEvent, Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { MinimalEditor } from "../../components/MinimalEditor";
+import { EvaluatorIdentityFields } from "../../components/EvaluatorIdentityFields";
+import { isEditorEmpty, MinimalEditor } from "../../components/MinimalEditor";
 import {
   FULL_GROUPS,
   METHOD_GROUPS,
@@ -16,12 +17,23 @@ import type {
 const CLASS_OPTIONS = Array.from({ length: 11 }, (_, i) => i + 1);
 const LITER_OPTIONS = ["", "А", "Б", "В", "Г", "Д"];
 
+const EVALUATION_DATE_MIN = "2000-01-01";
+const EVALUATION_DATE_MAX = "2100-12-31";
+const EVALUATION_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 function todayIso(): string {
   const now = new Date();
   const y = now.getFullYear();
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+function isValidEvaluationDate(value: string): boolean {
+  if (!EVALUATION_DATE_RE.test(value)) return false;
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return false;
+  return value >= EVALUATION_DATE_MIN && value <= EVALUATION_DATE_MAX;
 }
 
 function emptyScores(criteria: CriterionDef[]): Record<string, string> {
@@ -82,6 +94,8 @@ export function EvaluateFormPage() {
   }, [teacherId]);
 
   const isExternal = sourceId === "1";
+  const wantsComment = !isEditorEmpty(commentHtml);
+  const needsEvaluatorIdentity = isExternal || wantsComment;
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -90,6 +104,19 @@ export function EvaluateFormPage() {
     const missing = criteria.find((item) => scores[item.key] === "");
     if (missing) {
       setError(`Укажите оценку: ${missing.code}. ${missing.title}`);
+      return;
+    }
+
+    if (!isValidEvaluationDate(dateCreate)) {
+      setError("Укажите корректную дату урока");
+      return;
+    }
+
+    if (
+      needsEvaluatorIdentity &&
+      (!sourceFio.trim() || !positionName.trim() || !sourceWorkplace.trim())
+    ) {
+      setError("Укажите ФИО, должность и место работы оценивающего");
       return;
     }
 
@@ -103,12 +130,12 @@ export function EvaluateFormPage() {
         sourceId: Number(sourceId),
         dateCreate,
         thema: thema.trim(),
-        sourceFio: sourceFio.trim() || undefined,
-        positionName: positionName.trim() || undefined,
-        sourceWorkplace: isExternal
+        sourceFio: needsEvaluatorIdentity ? sourceFio.trim() : undefined,
+        positionName: needsEvaluatorIdentity ? positionName.trim() : undefined,
+        sourceWorkplace: needsEvaluatorIdentity
           ? sourceWorkplace.trim()
-          : profile?.schoolName,
-        commentHtml: commentHtml.trim() || undefined,
+          : undefined,
+        commentHtml: wantsComment ? commentHtml : undefined,
         scores: Object.fromEntries(
           Object.entries(scores).map(([key, value]) => [key, Number(value)]),
         ),
@@ -220,9 +247,10 @@ export function EvaluateFormPage() {
                   onChange={(e) => {
                     const next = e.target.value;
                     setSourceId(next);
+                    const schoolName = profile?.schoolName ?? "";
                     if (next === "2") {
-                      setSourceWorkplace(profile?.schoolName ?? "");
-                    } else if (sourceWorkplace === (profile?.schoolName ?? "")) {
+                      setSourceWorkplace(schoolName);
+                    } else if (sourceWorkplace === schoolName) {
                       setSourceWorkplace("");
                     }
                   }}
@@ -238,7 +266,14 @@ export function EvaluateFormPage() {
                   className="form-input"
                   type="date"
                   value={dateCreate}
-                  onChange={(e) => setDateCreate(e.target.value)}
+                  min={EVALUATION_DATE_MIN}
+                  max={EVALUATION_DATE_MAX}
+                  onChange={(e) => {
+                    const next = e.target.value;
+                    if (!next || isValidEvaluationDate(next)) {
+                      setDateCreate(next);
+                    }
+                  }}
                   required
                   aria-label="Дата"
                 />
@@ -259,48 +294,16 @@ export function EvaluateFormPage() {
               />
             </div>
 
-            <div className="evaluate-meta__external">
-              <div className="form-group">
-                <label className="form-label" htmlFor="source-fio">
-                  ФИО оценивающего
-                </label>
-                <input
-                  id="source-fio"
-                  className="form-input"
-                  value={sourceFio}
-                  onChange={(e) => setSourceFio(e.target.value)}
-                  placeholder="ФИО оценивающего"
-                  required={isExternal}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="source-position">
-                  Должность
-                </label>
-                <input
-                  id="source-position"
-                  className="form-input"
-                  value={positionName}
-                  onChange={(e) => setPositionName(e.target.value)}
-                  placeholder="Должность"
-                  required={isExternal}
-                />
-              </div>
-              <div className="form-group">
-                <label className="form-label" htmlFor="source-workplace">
-                  Место работы
-                </label>
-                <input
-                  id="source-workplace"
-                  className="form-input"
-                  value={sourceWorkplace}
-                  onChange={(e) => setSourceWorkplace(e.target.value)}
-                  placeholder={isExternal ? "Место работы" : "Название школы"}
-                  required={isExternal}
-                  readOnly={!isExternal}
-                />
-              </div>
-            </div>
+            {isExternal ? (
+              <EvaluatorIdentityFields
+                fio={sourceFio}
+                position={positionName}
+                workplace={sourceWorkplace}
+                onFioChange={setSourceFio}
+                onPositionChange={setPositionName}
+                onWorkplaceChange={setSourceWorkplace}
+              />
+            ) : null}
           </div>
         </section>
 
@@ -402,6 +405,17 @@ export function EvaluateFormPage() {
             labelledBy="evaluate-comment-title"
             placeholder="Введите комментарий или дополнение к оценке"
           />
+          {!isExternal && wantsComment ? (
+            <EvaluatorIdentityFields
+              fio={sourceFio}
+              position={positionName}
+              workplace={sourceWorkplace}
+              hint="Для комментария укажите ФИО, должность и место работы."
+              onFioChange={setSourceFio}
+              onPositionChange={setPositionName}
+              onWorkplaceChange={setSourceWorkplace}
+            />
+          ) : null}
         </section>
 
         <div className="evaluate-form__actions">

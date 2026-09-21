@@ -1,7 +1,8 @@
 import { Fragment, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
-import { MinimalEditor } from "../../components/MinimalEditor";
+import { EvaluatorIdentityFields } from "../../components/EvaluatorIdentityFields";
+import { isEditorEmpty, MinimalEditor } from "../../components/MinimalEditor";
 import {
   FULL_GROUPS,
   METHOD_GROUPS,
@@ -30,6 +31,9 @@ export function EvaluationViewPage() {
   const [commentDraft, setCommentDraft] = useState("");
   const [commentSaving, setCommentSaving] = useState(false);
   const [commentError, setCommentError] = useState("");
+  const [sourceFio, setSourceFio] = useState("");
+  const [positionName, setPositionName] = useState("");
+  const [sourceWorkplace, setSourceWorkplace] = useState("");
 
   useEffect(() => {
     if (!teacherId || !Number.isInteger(numericCardId) || numericCardId <= 0) {
@@ -56,20 +60,52 @@ export function EvaluationViewPage() {
   function openCommentEditor() {
     setCommentError("");
     setCommentDraft(detail?.commentHtml ?? "");
+    setSourceFio("");
+    setPositionName("");
+    setSourceWorkplace(
+      detail?.sourceId === 1 ? "" : (detail?.schoolName ?? ""),
+    );
     setCommentEditOpen(true);
   }
 
   async function saveComment() {
     if (!detail) return;
+    const wantsComment = !isEditorEmpty(commentDraft);
+    const needsEvaluatorIdentity =
+      !detail.hasEvaluatorIdentity && wantsComment;
+
+    if (
+      needsEvaluatorIdentity &&
+      (!sourceFio.trim() || !positionName.trim() || !sourceWorkplace.trim())
+    ) {
+      setCommentError("Укажите ФИО, должность и место работы оценивающего");
+      return;
+    }
+
     setCommentSaving(true);
     setCommentError("");
     try {
       const result = await api.updateLessonAnalysisEvaluationComment(
         teacherId,
         detail.id,
-        commentDraft,
+        {
+          commentHtml: commentDraft,
+          sourceFio: needsEvaluatorIdentity ? sourceFio.trim() : undefined,
+          positionName: needsEvaluatorIdentity
+            ? positionName.trim()
+            : undefined,
+          sourceWorkplace: needsEvaluatorIdentity
+            ? sourceWorkplace.trim()
+            : undefined,
+        },
       );
-      setDetail({ ...detail, commentHtml: result.commentHtml });
+      setDetail({
+        ...detail,
+        commentHtml: result.commentHtml,
+        evaluatorLabel: result.evaluatorLabel ?? detail.evaluatorLabel,
+        hasEvaluatorIdentity:
+          result.hasEvaluatorIdentity ?? detail.hasEvaluatorIdentity,
+      });
       setCommentOpen(Boolean(result.commentHtml));
       setCommentEditOpen(false);
       setNotice(
@@ -482,6 +518,17 @@ export function EvaluationViewPage() {
                 onChange={setCommentDraft}
                 placeholder="Введите комментарий или дополнение к оценке"
               />
+              {!detail.hasEvaluatorIdentity && !isEditorEmpty(commentDraft) ? (
+                <EvaluatorIdentityFields
+                  fio={sourceFio}
+                  position={positionName}
+                  workplace={sourceWorkplace}
+                  hint="Для комментария укажите ФИО, должность и место работы."
+                  onFioChange={setSourceFio}
+                  onPositionChange={setPositionName}
+                  onWorkplaceChange={setSourceWorkplace}
+                />
+              ) : null}
               <div className="modal-actions">
                 <button
                   type="button"

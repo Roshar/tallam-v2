@@ -63,6 +63,7 @@ export interface EvaluationDetail {
   sourceId: number;
   sourceLabel: string;
   evaluatorLabel: string;
+  hasEvaluatorIdentity: boolean;
   teacher: {
     id: string;
     fullName: string;
@@ -172,13 +173,22 @@ function blockResult(
   };
 }
 
+function isEvaluatorPlaceholder(value: string): boolean {
+  return !value || value === "Школа";
+}
+
+function hasRealEvaluatorIdentity(row: CardRow): boolean {
+  const fio = row.source_fio?.trim() || "";
+  const position = row.position_name?.trim() || "";
+  return !isEvaluatorPlaceholder(fio) || !isEvaluatorPlaceholder(position);
+}
+
 function formatEvaluatorLabel(row: CardRow): string {
   const fio = row.source_fio?.trim() || "";
   const position = row.position_name?.trim() || "";
   const workplace = row.source_workplace?.trim() || "";
-  const isPlaceholder = (value: string) => !value || value === "Школа";
 
-  if (Number(row.source_id) !== 1 && isPlaceholder(fio) && isPlaceholder(position)) {
+  if (Number(row.source_id) !== 1 && isEvaluatorPlaceholder(fio) && isEvaluatorPlaceholder(position)) {
     return "Внутришкольная";
   }
 
@@ -335,6 +345,7 @@ export async function getEvaluationDetail(
     sourceId: Number(row.source_id),
     sourceLabel: Number(row.source_id) === 1 ? "Внешняя" : "Внутришкольная",
     evaluatorLabel,
+    hasEvaluatorIdentity: hasRealEvaluatorIdentity(row),
     teacher: {
       id: row.teacher_id,
       fullName: [row.surname, row.firstname, row.patronymic]

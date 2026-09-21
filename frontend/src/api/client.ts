@@ -676,13 +676,22 @@ export const api = {
   updateLessonAnalysisEvaluationComment(
     teacherId: string,
     cardId: number,
-    commentHtml: string,
+    payload: {
+      commentHtml: string;
+      sourceFio?: string;
+      positionName?: string;
+      sourceWorkplace?: string;
+    },
   ) {
-    return request<{ commentHtml: string | null }>(
+    return request<{
+      commentHtml: string | null;
+      evaluatorLabel?: string;
+      hasEvaluatorIdentity?: boolean;
+    }>(
       `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/comment`,
       {
         method: "PATCH",
-        body: JSON.stringify({ commentHtml }),
+        body: JSON.stringify(payload),
       },
     );
   },

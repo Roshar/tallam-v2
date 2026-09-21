@@ -279,6 +279,7 @@ export interface EvaluationDetail {
   sourceId: number;
   sourceLabel: string;
   evaluatorLabel: string;
+  hasEvaluatorIdentity: boolean;
   teacher: {
     id: string;
     fullName: string;

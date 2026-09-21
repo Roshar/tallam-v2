@@ -11,7 +11,7 @@ function exec(command: string) {
   document.execCommand(command, false);
 }
 
-function isEditorEmpty(html: string): boolean {
+export function isEditorEmpty(html: string): boolean {
   return html.replace(/<[^>]+>/g, "").replace(/&nbsp;/gi, " ").trim() === "";
 }
 

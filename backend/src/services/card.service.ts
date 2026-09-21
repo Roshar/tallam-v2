@@ -4,11 +4,13 @@ import { getSchoolName } from "./auth.service.js";
 import {
   ensureEvaluationCommentSchema,
   insertEvaluationComment,
+  sanitizeCommentHtml,
 } from "./evaluation-comment.service.js";
 import {
   findLessonAnalysisProject,
   resolveProjectMiddlewareTable,
 } from "./project.service.js";
+import { parseIsoDate } from "./school-access.service.js";
 
 export interface EvaluationListItem {
   id: number;
@@ -423,14 +425,21 @@ export async function createProjectTeacherEvaluation(
     throw new Error("Missing required fields");
   }
 
-  if (input.sourceId === 1) {
-    if (
-      !input.sourceFio?.trim() ||
-      !input.positionName?.trim() ||
-      !input.sourceWorkplace?.trim()
-    ) {
-      throw new Error("Outside evaluator fields required");
-    }
+  const dateCreate = parseIsoDate(input.dateCreate.trim());
+  if (!dateCreate) {
+    throw new Error("Invalid date");
+  }
+
+  const hasComment = Boolean(sanitizeCommentHtml(input.commentHtml));
+  const sourceFio = input.sourceFio?.trim() ?? "";
+  const positionName = input.positionName?.trim() ?? "";
+  const sourceWorkplace = input.sourceWorkplace?.trim() ?? "";
+  const hasIdentity = Boolean(sourceFio && positionName && sourceWorkplace);
+  const requiresIdentity = input.sourceId === 1 || hasComment;
+  const useEvaluatorIdentity = requiresIdentity && hasIdentity;
+
+  if (requiresIdentity && !hasIdentity) {
+    throw new Error("Outside evaluator fields required");
   }
 
   const literClass = input.literClass?.trim() ?? "";
@@ -467,7 +476,7 @@ export async function createProjectTeacherEvaluation(
         input.classId,
         literClass,
         ...scoreValues,
-        input.dateCreate,
+        dateCreate,
         cardType,
       ];
     } else {
@@ -487,7 +496,7 @@ export async function createProjectTeacherEvaluation(
         input.classId,
         literClass,
         ...scoreValues,
-        input.dateCreate,
+        dateCreate,
         cardType,
       ];
     }
@@ -499,16 +508,13 @@ export async function createProjectTeacherEvaluation(
     }
 
     const schoolName = (await getSchoolName(schoolId))?.trim() || "Школа";
-    const outsideFio =
-      input.sourceId === 1
-        ? input.sourceFio!.trim()
-        : input.sourceFio?.trim() || "Школа";
-    const outsidePosition =
-      input.sourceId === 1
-        ? input.positionName!.trim()
-        : input.positionName?.trim() || "Школа";
-    const outsideWorkplace =
-      input.sourceId === 1 ? input.sourceWorkplace!.trim() : schoolName;
+    const outsideFio = useEvaluatorIdentity ? sourceFio : "Школа";
+    const outsidePosition = useEvaluatorIdentity ? positionName : "Школа";
+    const outsideWorkplace = useEvaluatorIdentity
+      ? sourceWorkplace
+      : input.sourceId === 1
+        ? "Школа"
+        : schoolName;
 
     await connection.execute(
       `INSERT INTO outside_card2
@@ -532,4 +538,35 @@ export async function createProjectTeacherEvaluation(
   } finally {
     connection.release();
   }
+}
+
+export async function updateOutsideEvaluator(
+  schoolId: number,
+  cardId: number,
+  input: {
+    sourceFio: string;
+    positionName: string;
+    sourceWorkplace: string;
+  },
+): Promise<boolean> {
+  const fio = input.sourceFio.trim();
+  const position = input.positionName.trim();
+  const workplace = input.sourceWorkplace.trim();
+  if (!fio || !position || !workplace) {
+    throw new Error("Outside evaluator fields required");
+  }
+
+  const result = await query<ResultSetHeader>(
+    `UPDATE outside_card2 AS outside
+     INNER JOIN card_from_project_teacher_mark3 AS cftm
+       ON cftm.id_card = outside.card_id
+     SET outside.source_fio = ?,
+         outside.position_name = ?,
+         outside.source_workplace = ?
+     WHERE outside.card_id = ?
+       AND cftm.school_id = ?`,
+    [fio, position, workplace, cardId, schoolId],
+  );
+
+  return result.affectedRows > 0;
 }
