@@ -20,6 +20,12 @@ const STATUS_LABELS: Record<AdminSubscriptionListStatus, string> = {
   missing: "Нет данных",
 };
 
+function cabinetAccessLabel(accountStatus: AdminSubscription["accountStatus"]) {
+  if (accountStatus === "on") return "Кабинет открыт";
+  if (accountStatus != null) return "Нужна оплата";
+  return "Нет кабинета";
+}
+
 function formatDate(value: string | null) {
   if (!value) return "—";
   return new Intl.DateTimeFormat("ru-RU").format(
@@ -162,7 +168,7 @@ export function AdminSubscriptionsPage() {
           <p className="admin-dashboard__eyebrow">Доступ школ</p>
           <h2 className="page-title">Подписки</h2>
           <p className="page-subtitle">
-            Все школы платформы: сроки доступа, кабинеты без данных и ссылки для смены пароля
+            Все школы платформы: сроки доступа, кабинеты без данных и школы, которым нужна оплата
           </p>
         </div>
         <div className="admin-subscriptions__header-actions">
@@ -208,6 +214,7 @@ export function AdminSubscriptionsPage() {
             <option value="expired">Истёкшие</option>
             <option value="scheduled">Ещё не начались</option>
             <option value="missing">Без данных о подписке</option>
+            <option value="unpaid">Заблокированы, нужна оплата</option>
           </select>
         </label>
 
@@ -243,13 +250,14 @@ export function AdminSubscriptionsPage() {
               <th>Телефон</th>
               <th>Срок подписки</th>
               <th>Статус</th>
+              <th>Кабинет</th>
               <th>Действия</th>
             </tr>
           </thead>
           <tbody>
             {!loading && items.length === 0 ? (
               <tr>
-                <td colSpan={7} className="admin-subscriptions__empty">
+                <td colSpan={8} className="admin-subscriptions__empty">
                   Школы по выбранным условиям не найдены
                 </td>
               </tr>
@@ -384,6 +392,19 @@ export function AdminSubscriptionsPage() {
                   </span>
                 </td>
                 <td>
+                  <span
+                    className={`admin-cabinet-access admin-cabinet-access--${
+                      item.accountStatus === "on"
+                        ? "open"
+                        : item.accountStatus != null
+                          ? "unpaid"
+                          : "none"
+                    }`}
+                  >
+                    {cabinetAccessLabel(item.accountStatus)}
+                  </span>
+                </td>
+                <td>
                   <button
                     type="button"
                     className="table-action-link table-action-link--button"
@@ -403,7 +424,7 @@ export function AdminSubscriptionsPage() {
 
             {loading ? (
               <tr>
-                <td colSpan={7} className="admin-subscriptions__empty">
+                <td colSpan={8} className="admin-subscriptions__empty">
                   Загрузка...
                 </td>
               </tr>

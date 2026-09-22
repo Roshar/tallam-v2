@@ -62,6 +62,7 @@ const SUBSCRIPTION_STATUSES = new Set<SubscriptionStatusFilter>([
   "expired",
   "scheduled",
   "missing",
+  "unpaid",
 ]);
 
 function parseSubscriptionFilters(req: Request) {
@@ -320,6 +321,12 @@ const SUBSCRIPTION_STATUS_LABELS: Record<
   missing: "Нет данных",
 };
 
+function cabinetAccessLabel(accountStatus: SubscriptionListRow["accountStatus"]) {
+  if (accountStatus === "on") return "Кабинет открыт";
+  if (accountStatus != null) return "Нужна оплата";
+  return "Нет кабинета";
+}
+
 function displayDate(value: string | null) {
   if (!value) return "";
   const [year, month, day] = value.split("-");
@@ -357,6 +364,7 @@ export async function exportSubscriptions(req: Request, res: Response) {
       { header: "Начало подписки", key: "startsOn", width: 18 },
       { header: "Окончание подписки", key: "endsOn", width: 20 },
       { header: "Статус", key: "status", width: 20 },
+      { header: "Кабинет", key: "cabinet", width: 22 },
     ];
 
     items.forEach((item, index) => {
@@ -369,6 +377,7 @@ export async function exportSubscriptions(req: Request, res: Response) {
         startsOn: displayDate(item.startsOn),
         endsOn: displayDate(item.endsOn),
         status: SUBSCRIPTION_STATUS_LABELS[item.subscriptionStatus],
+        cabinet: cabinetAccessLabel(item.accountStatus),
       });
     });
 
@@ -384,7 +393,7 @@ export async function exportSubscriptions(req: Request, res: Response) {
     worksheet.views = [{ state: "frozen", ySplit: 1 }];
     worksheet.autoFilter = {
       from: "A1",
-      to: "H1",
+      to: "I1",
     };
     worksheet.eachRow((row, rowNumber) => {
       if (rowNumber > 1) {

@@ -1024,6 +1024,30 @@
   color: var(--color-text-muted);
 }
 
+.admin-cabinet-access {
+  display: inline-flex;
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-full);
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.admin-cabinet-access--open {
+  background: #e9f7e7;
+  color: #267712;
+}
+
+.admin-cabinet-access--unpaid {
+  background: #fdecec;
+  color: var(--color-error);
+}
+
+.admin-cabinet-access--none {
+  background: #eef1f5;
+  color: var(--color-text-muted);
+}
+
 .admin-subscriptions__no-data {
   color: var(--color-text-muted);
 }

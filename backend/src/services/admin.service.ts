@@ -87,7 +87,8 @@ export type SubscriptionStatusFilter =
   | "expiring"
   | "expired"
   | "scheduled"
-  | "missing";
+  | "missing"
+  | "unpaid";
 
 async function count(sql: string, params: unknown[] = []): Promise<number> {
   const rows = await query<CountRow[]>(sql, params);
@@ -263,6 +264,10 @@ function subscriptionStatusCondition(status: SubscriptionStatusFilter) {
       return "ss.id IS NOT NULL AND ss.starts_on > CURDATE()";
     case "missing":
       return "ss.id IS NULL";
+    case "unpaid":
+      return `u.id IS NOT NULL
+        AND IFNULL(u.status, '') <> 'on'
+        AND (ss.id IS NULL OR ss.ends_on < CURDATE())`;
     default:
       return "1 = 1";
   }
