@@ -23,10 +23,7 @@ import {
   normalizeEmail,
   SchoolRegisterError,
 } from "../services/school-register.service.js";
-import {
-  cleanupDatabaseBackup,
-  createDatabaseBackup,
-} from "../services/database-backup.service.js";
+import { streamDatabaseBackup } from "../services/database-backup.service.js";
 import { purgeSchoolTeachersAndEvaluations } from "../services/school-purge.service.js";
 import {
   activateSchoolCabinet,
@@ -97,21 +94,16 @@ export async function downloadDatabaseBackup(req: Request, res: Response) {
   res.setTimeout(BACKUP_TIMEOUT_MS);
 
   try {
-    const backup = await createDatabaseBackup();
+    const backup = await streamDatabaseBackup(res);
     res.locals.auditDetails = {
       filename: backup.filename,
       database: backup.database,
     };
-    res.setHeader("Content-Type", "application/gzip");
-    res.setHeader(
-      "Content-Disposition",
-      `attachment; filename*=UTF-8''${encodeURIComponent(backup.filename)}`,
-    );
-    res.setHeader("Cache-Control", "no-store");
-    return res.sendFile(backup.filePath, { cacheControl: false }, async () => {
-      await cleanupDatabaseBackup(backup);
-    });
+    return;
   } catch (error) {
+    if (res.headersSent) {
+      return;
+    }
     const message =
       error instanceof Error
         ? error.message

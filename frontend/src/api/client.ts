@@ -169,10 +169,12 @@ export const api = {
   },
 
   downloadAdminDatabaseBackup() {
-    return downloadFile(
-      "/api/admin/backup",
-      `tallam-db-${new Date().toISOString().slice(0, 10)}.sql.gz`,
-    );
+    const link = document.createElement("a");
+    link.href = "/api/admin/backup";
+    link.rel = "noopener";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
   },
 
   adminOnlineSchools() {

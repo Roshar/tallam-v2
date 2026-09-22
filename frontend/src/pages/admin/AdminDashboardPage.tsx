@@ -41,22 +41,15 @@ export function AdminDashboardPage() {
     return () => window.clearInterval(timer);
   }, []);
 
-  async function downloadBackup() {
-    setBackupLoading(true);
+  function downloadBackup() {
     setError("");
+    setBackupLoading(true);
     setBackupNotice("");
-    try {
-      await api.downloadAdminDatabaseBackup();
-      setBackupNotice("Резервная копия скачана на компьютер");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Не удалось скачать резервную копию",
-      );
-    } finally {
-      setBackupLoading(false);
-    }
+    api.downloadAdminDatabaseBackup();
+    setBackupNotice(
+      "Файл готовится и появится в загрузках браузера. Это может занять одну-две минуты.",
+    );
+    window.setTimeout(() => setBackupLoading(false), 1500);
   }
 
   const activeShare = useMemo(() => {
@@ -97,7 +90,7 @@ export function AdminDashboardPage() {
             type="button"
             className="btn btn-primary"
             disabled={backupLoading}
-            onClick={() => void downloadBackup()}
+            onClick={downloadBackup}
           >
             {backupLoading
               ? "Готовим файл..."
