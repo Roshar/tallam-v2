@@ -174,6 +174,21 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "cabinet",
+    action: "school.renamed",
+    label: "Переименование школы",
+  },
+  {
+    category: "cabinet",
+    action: "school.workers_cleared",
+    label: "Очистка работников и оценок школы",
+  },
+  {
+    category: "system",
+    action: "database.backup_downloaded",
+    label: "Скачивание резервной копии базы",
+  },
+  {
+    category: "cabinet",
     action: "cabinet.feedback_submit",
     label: "Сообщение из кабинета школы",
   },
@@ -191,6 +206,7 @@ export const AUDIT_CATEGORIES = [
   { value: "teachers", label: "Работники" },
   { value: "lesson_analysis", label: "Анализ урока" },
   { value: "cabinet", label: "Кабинет школы" },
+  { value: "system", label: "Система" },
 ] as const;
 
 export interface AuditLogItem {

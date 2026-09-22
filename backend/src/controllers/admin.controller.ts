@@ -7,6 +7,7 @@ import {
   getAdminSchools,
   getAdminSubscriptionAreas,
   getAdminSubscriptions,
+  updateSchoolName,
   type SchoolCabinetStatusFilter,
   type SubscriptionListRow,
   type SubscriptionStatusFilter,
@@ -22,6 +23,11 @@ import {
   normalizeEmail,
   SchoolRegisterError,
 } from "../services/school-register.service.js";
+import {
+  cleanupDatabaseBackup,
+  createDatabaseBackup,
+} from "../services/database-backup.service.js";
+import { purgeSchoolTeachersAndEvaluations } from "../services/school-purge.service.js";
 import {
   activateSchoolCabinet,
   blockSchoolCabinet,
@@ -82,6 +88,45 @@ function parseSubscriptionFilters(req: Request) {
         ? requestedAreaId
         : null,
   };
+}
+
+const BACKUP_TIMEOUT_MS = 15 * 60 * 1000;
+
+export async function downloadDatabaseBackup(req: Request, res: Response) {
+  req.setTimeout(BACKUP_TIMEOUT_MS);
+  res.setTimeout(BACKUP_TIMEOUT_MS);
+
+  try {
+    const backup = await createDatabaseBackup();
+    res.locals.auditDetails = {
+      filename: backup.filename,
+      database: backup.database,
+    };
+    res.setHeader("Content-Type", "application/gzip");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(backup.filename)}`,
+    );
+    res.setHeader("Cache-Control", "no-store");
+    return res.sendFile(backup.filePath, { cacheControl: false }, async () => {
+      await cleanupDatabaseBackup(backup);
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Не удалось сформировать резервную копию базы";
+    if (message.includes("уже формируется")) {
+      return res.status(409).json({ error: message });
+    }
+    if (message.includes("mariadb-dump") || message.includes("mysqldump")) {
+      return res.status(500).json({ error: message });
+    }
+    console.error("Admin database backup error:", error);
+    return res.status(500).json({
+      error: "Не удалось сформировать резервную копию базы",
+    });
+  }
 }
 
 export async function dashboard(_req: Request, res: Response) {
@@ -233,6 +278,76 @@ export async function createSchool(req: Request, res: Response) {
     }
     console.error("Admin create school error:", error);
     return res.status(500).json({ error: "Не удалось зарегистрировать школу" });
+  }
+}
+
+export async function renameSchool(req: Request, res: Response) {
+  const schoolId = parseSchoolId(req);
+  if (!schoolId) {
+    return res.status(400).json({ error: "Некорректный идентификатор школы" });
+  }
+
+  try {
+    const renamed = await updateSchoolName(
+      schoolId,
+      String((req.body as { schoolName?: string })?.schoolName ?? ""),
+    );
+    res.locals.auditDetails = {
+      previousName: renamed.previousName,
+      schoolName: renamed.schoolName,
+    };
+    return res.json(await getAdminSchoolDetail(schoolId));
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Не удалось переименовать школу";
+    if (
+      message.includes("не менее") ||
+      message.includes("длинное") ||
+      message.includes("не найдена")
+    ) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("Admin rename school error:", error);
+    return res.status(500).json({ error: "Не удалось переименовать школу" });
+  }
+}
+
+export async function purgeSchoolWorkers(req: Request, res: Response) {
+  const schoolId = parseSchoolId(req);
+  if (!schoolId) {
+    return res.status(400).json({ error: "Некорректный идентификатор школы" });
+  }
+
+  try {
+    const result = await purgeSchoolTeachersAndEvaluations(
+      schoolId,
+      String((req.body as { confirmName?: string })?.confirmName ?? ""),
+    );
+    res.locals.auditDetails = {
+      schoolName: result.schoolName,
+      teachers: result.teachers,
+      evaluations: result.evaluations,
+    };
+    return res.json({
+      ...result,
+      detail: await getAdminSchoolDetail(schoolId),
+    });
+  } catch (error) {
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Не удалось очистить работников и оценки";
+    if (
+      message.includes("подтверждения") ||
+      message.includes("не найдена") ||
+      message.includes("Некорректный")
+    ) {
+      return res.status(400).json({ error: message });
+    }
+    console.error("Admin purge school workers error:", error);
+    return res.status(500).json({
+      error: "Не удалось очистить работников и оценки",
+    });
   }
 }
 

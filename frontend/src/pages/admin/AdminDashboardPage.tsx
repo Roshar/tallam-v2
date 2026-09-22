@@ -16,6 +16,8 @@ function statusLabel(status: AdminDashboard["recentSchools"][number]["status"]) 
 export function AdminDashboardPage() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
   const [error, setError] = useState("");
+  const [backupLoading, setBackupLoading] = useState(false);
+  const [backupNotice, setBackupNotice] = useState("");
 
   useEffect(() => {
     api.adminDashboard().then(setDashboard).catch((err: Error) => {
@@ -38,6 +40,24 @@ export function AdminDashboardPage() {
     }, 20_000);
     return () => window.clearInterval(timer);
   }, []);
+
+  async function downloadBackup() {
+    setBackupLoading(true);
+    setError("");
+    setBackupNotice("");
+    try {
+      await api.downloadAdminDatabaseBackup();
+      setBackupNotice("Резервная копия скачана на компьютер");
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось скачать резервную копию",
+      );
+    } finally {
+      setBackupLoading(false);
+    }
+  }
 
   const activeShare = useMemo(() => {
     if (!dashboard?.schools) {
@@ -65,16 +85,31 @@ export function AdminDashboardPage() {
             Ключевые показатели Tallam на текущий момент
           </p>
         </div>
-        <div className="admin-dashboard__date">
-          {new Intl.DateTimeFormat("ru-RU", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          }).format(new Date())}
+        <div className="admin-dashboard__heading-actions">
+          <div className="admin-dashboard__date">
+            {new Intl.DateTimeFormat("ru-RU", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            }).format(new Date())}
+          </div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            disabled={backupLoading}
+            onClick={() => void downloadBackup()}
+          >
+            {backupLoading
+              ? "Готовим файл..."
+              : "Скачать резервную копию БД"}
+          </button>
         </div>
       </div>
 
       {error ? <div className="alert alert-error">{error}</div> : null}
+      {backupNotice ? (
+        <div className="alert alert-success">{backupNotice}</div>
+      ) : null}
 
       {dashboard ? (
         <>

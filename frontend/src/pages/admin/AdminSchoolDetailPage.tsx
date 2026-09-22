@@ -69,6 +69,10 @@ function addDays(value: string, days: number) {
   return isoDate(date);
 }
 
+function normalizeSchoolName(value: string) {
+  return value.trim().replace(/\s+/g, " ");
+}
+
 function accountLabel(reason: AdminSchoolAccessReason) {
   switch (reason) {
     case "active":
@@ -111,6 +115,14 @@ export function AdminSchoolDetailPage() {
   const [periodNote, setPeriodNote] = useState("");
   const [addingNewPeriod, setAddingNewPeriod] = useState(false);
   const [editingPeriodId, setEditingPeriodId] = useState<number | null>(null);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+  const [purgeOpen, setPurgeOpen] = useState(false);
+  const [purgeConfirmName, setPurgeConfirmName] = useState("");
+  const [purgeAcknowledged, setPurgeAcknowledged] = useState(false);
+  const [purgeLoading, setPurgeLoading] = useState(false);
+  const [notice, setNotice] = useState("");
 
   useEffect(() => {
     if (!Number.isInteger(numericSchoolId) || numericSchoolId <= 0) {
@@ -277,6 +289,71 @@ export function AdminSchoolDetailPage() {
     }
   }
 
+  function openRename() {
+    if (!detail) return;
+    setError("");
+    setNotice("");
+    setNameDraft(detail.school.name);
+    setRenameOpen(true);
+  }
+
+  function openPurge() {
+    if (!detail) return;
+    setError("");
+    setNotice("");
+    setPurgeConfirmName("");
+    setPurgeAcknowledged(false);
+    setPurgeOpen(true);
+  }
+
+  async function purgeWorkers() {
+    if (!detail) return;
+    setPurgeLoading(true);
+    setError("");
+    setNotice("");
+    try {
+      const result = await api.purgeAdminSchoolWorkers(
+        detail.school.id,
+        purgeConfirmName,
+      );
+      setDetail(result.detail);
+      setPurgeOpen(false);
+      setPurgeConfirmName("");
+      setPurgeAcknowledged(false);
+      setNotice(
+        result.teachers === 0 && result.evaluations === 0
+          ? "У этой школы уже не было работников и оценок"
+          : `Удалены работники: ${result.teachers}, оценки: ${result.evaluations}. Кабинет, подписка и вход сохранены.`,
+      );
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Не удалось очистить работников и оценки",
+      );
+    } finally {
+      setPurgeLoading(false);
+    }
+  }
+
+  async function saveSchoolName() {
+    if (!detail) return;
+    setRenameSaving(true);
+    setError("");
+    setNotice("");
+    try {
+      setDetail(await api.renameAdminSchool(detail.school.id, nameDraft));
+      setRenameOpen(false);
+      setNotice("Название школы обновлено");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось переименовать школу",
+      );
+    } finally {
+      setRenameSaving(false);
+    }
+  }
+
   async function blockCabinet() {
     if (!detail) return;
     setActionLoading(true);
@@ -320,6 +397,11 @@ export function AdminSchoolDetailPage() {
   const canLogin = access.canLogin ?? access.allowed;
   const canBlock = access.canUseCabinet ?? access.allowed;
   const isCabinetActive = access.reason === "active";
+  const canConfirmPurge =
+    normalizeSchoolName(purgeConfirmName) ===
+      normalizeSchoolName(school.name) &&
+    purgeAcknowledged &&
+    !purgeLoading;
 
   return (
     <div className="admin-school-detail">
@@ -335,7 +417,45 @@ export function AdminSchoolDetailPage() {
           <p className="admin-dashboard__eyebrow">
             {school.area ?? "Район не указан"} · Школа № {school.id}
           </p>
-          <h2 className="page-title">{school.name}</h2>
+          {renameOpen ? (
+            <form
+              className="admin-school-detail__rename"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveSchoolName();
+              }}
+            >
+              <input
+                className="form-input"
+                value={nameDraft}
+                onChange={(event) => setNameDraft(event.target.value)}
+                aria-label="Название школы"
+                autoFocus
+                required
+                minLength={5}
+                maxLength={255}
+              />
+              <div className="admin-school-detail__rename-actions">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  disabled={renameSaving}
+                  onClick={() => setRenameOpen(false)}
+                >
+                  Отмена
+                </button>
+                <button
+                  className="btn btn-primary"
+                  type="submit"
+                  disabled={renameSaving}
+                >
+                  {renameSaving ? "Сохранение..." : "Сохранить"}
+                </button>
+              </div>
+            </form>
+          ) : (
+            <h2 className="page-title">{school.name}</h2>
+          )}
           <div className="admin-school-detail__account-line">
             <span
               className={`admin-status admin-status--${
@@ -359,6 +479,14 @@ export function AdminSchoolDetailPage() {
         </div>
 
         <div className="admin-school-detail__actions">
+          <button
+            type="button"
+            className="btn btn-ghost"
+            disabled={renameSaving}
+            onClick={openRename}
+          >
+            Изменить название
+          </button>
           {access.hasAccount ? (
             <button
               type="button"
@@ -409,10 +537,19 @@ export function AdminSchoolDetailPage() {
           >
             {linkLoading ? "Создание..." : "Ссылка для смены пароля"}
           </button>
+          <button
+            type="button"
+            className="btn btn-danger"
+            disabled={purgeLoading || renameSaving}
+            onClick={openPurge}
+          >
+            Очистить работников и оценки
+          </button>
         </div>
       </header>
 
       {error ? <div className="alert alert-error">{error}</div> : null}
+      {notice ? <div className="alert alert-success">{notice}</div> : null}
 
       {fromSchools ? (
         <>
@@ -977,6 +1114,106 @@ export function AdminSchoolDetailPage() {
                   : isCabinetActive
                     ? "Сохранить срок"
                     : "Активировать"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {purgeOpen ? (
+        <div
+          className="admin-reset-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-purge-modal-title"
+          onClick={() => !purgeLoading && setPurgeOpen(false)}
+        >
+          <div
+            className="admin-reset-modal__dialog admin-purge-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-reset-modal__header">
+              <div>
+                <h3 id="admin-purge-modal-title">
+                  Очистить работников и оценки
+                </h3>
+                <p>{school.name}</p>
+              </div>
+              <button
+                type="button"
+                className="admin-reset-modal__close"
+                onClick={() => !purgeLoading && setPurgeOpen(false)}
+                aria-label="Закрыть"
+              >
+                ×
+              </button>
+            </div>
+            <div className="admin-reset-modal__body">
+              <p>
+                Будут удалены только работники и оценки этой школы. Кабинет,
+                логин, подписка и участие в проекте останутся. Данные других
+                школ не затрагиваются. Восстановить удалённые записи будет
+                нельзя.
+              </p>
+              <dl className="admin-purge-modal__counts">
+                <div>
+                  <dt>Работников</dt>
+                  <dd>{stats.teachers}</dd>
+                </div>
+                <div>
+                  <dt>Оценок</dt>
+                  <dd>{stats.evaluations}</dd>
+                </div>
+              </dl>
+              <label className="admin-purge-modal__field">
+                <span>
+                  Чтобы подтвердить, введите название школы точно как указано
+                  выше
+                </span>
+                <input
+                  className="form-input"
+                  value={purgeConfirmName}
+                  onChange={(event) => setPurgeConfirmName(event.target.value)}
+                  placeholder={school.name}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={purgeLoading}
+                  aria-label="Название школы для подтверждения"
+                />
+              </label>
+              <label className="admin-purge-modal__check">
+                <input
+                  type="checkbox"
+                  checked={purgeAcknowledged}
+                  disabled={purgeLoading}
+                  onChange={(event) =>
+                    setPurgeAcknowledged(event.target.checked)
+                  }
+                />
+                <span>
+                  Понимаю, что работников и оценки этой школы нельзя будет
+                  вернуть
+                </span>
+              </label>
+            </div>
+            <div className="admin-reset-modal__actions">
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={purgeLoading}
+                onClick={() => setPurgeOpen(false)}
+              >
+                Отмена
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                disabled={!canConfirmPurge}
+                onClick={() => void purgeWorkers()}
+              >
+                {purgeLoading
+                  ? "Очистка..."
+                  : "Очистить работников и оценки"}
               </button>
             </div>
           </div>

@@ -168,6 +168,13 @@ export const api = {
     return request<AdminDashboard>("/api/admin/dashboard");
   },
 
+  downloadAdminDatabaseBackup() {
+    return downloadFile(
+      "/api/admin/backup",
+      `tallam-db-${new Date().toISOString().slice(0, 10)}.sql.gz`,
+    );
+  },
+
   adminOnlineSchools() {
     return request<{ onlineSchools: number }>("/api/admin/online-schools");
   },
@@ -285,6 +292,26 @@ export const api = {
     return request<AdminSchoolDetail>(
       `/api/admin/subscriptions/${schoolId}`,
     );
+  },
+
+  renameAdminSchool(schoolId: number, schoolName: string) {
+    return request<AdminSchoolDetail>(`/api/admin/schools/${schoolId}`, {
+      method: "PATCH",
+      body: JSON.stringify({ schoolName }),
+    });
+  },
+
+  purgeAdminSchoolWorkers(schoolId: number, confirmName: string) {
+    return request<{
+      schoolId: number;
+      schoolName: string;
+      teachers: number;
+      evaluations: number;
+      detail: AdminSchoolDetail;
+    }>(`/api/admin/schools/${schoolId}/purge-workers`, {
+      method: "POST",
+      body: JSON.stringify({ confirmName }),
+    });
   },
 
   async downloadAdminSubscriptions(params?: {

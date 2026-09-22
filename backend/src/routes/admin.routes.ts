@@ -10,6 +10,15 @@ router.use(requireAuth, requireRole("admin"));
 router.get("/logs/options", auditLogController.options);
 router.get("/logs", auditLogController.logs);
 router.get("/dashboard", adminController.dashboard);
+router.get(
+  "/backup",
+  auditHttpAction({
+    category: "system",
+    action: "database.backup_downloaded",
+    entityType: "database",
+  }),
+  adminController.downloadDatabaseBackup,
+);
 router.get("/online-schools", adminController.onlineSchools);
 router.get("/schools/areas", adminController.schoolAreas);
 router.get("/schools/email-availability", adminController.schoolEmailAvailability);
@@ -33,6 +42,29 @@ router.post(
   adminController.impersonateSchool,
 );
 router.get("/schools/:schoolId", adminController.schoolDetail);
+router.patch(
+  "/schools/:schoolId",
+  auditHttpAction({
+    category: "cabinet",
+    action: "school.renamed",
+    entityType: "school",
+    entityId: (req) => req.params.schoolId,
+    details: (req) => ({
+      schoolName: String(req.body?.schoolName ?? "").slice(0, 255),
+    }),
+  }),
+  adminController.renameSchool,
+);
+router.post(
+  "/schools/:schoolId/purge-workers",
+  auditHttpAction({
+    category: "cabinet",
+    action: "school.workers_cleared",
+    entityType: "school",
+    entityId: (req) => req.params.schoolId,
+  }),
+  adminController.purgeSchoolWorkers,
+);
 router.get("/subscriptions/areas", adminController.subscriptionAreas);
 router.get("/subscriptions/export", adminController.exportSubscriptions);
 router.get("/subscriptions", adminController.subscriptions);

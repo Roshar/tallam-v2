@@ -6,6 +6,7 @@ import {
   resolveProjectMiddlewareTable,
 } from "./project.service.js";
 import { getSchoolAccessState, syncSchoolCabinetAccess } from "./school-access.service.js";
+import { getSchoolName } from "./auth.service.js";
 
 interface CountRow {
   count: number;
@@ -548,6 +549,30 @@ function pickCurrentSubscription(
     live[0] ??
     null
   );
+}
+
+export async function updateSchoolName(schoolId: number, rawName: string) {
+  const schoolName = rawName.trim().replace(/\s+/g, " ");
+  if (schoolName.length < 5) {
+    throw new Error(
+      "Наименование образовательной организации должно содержать не менее 5 символов",
+    );
+  }
+  if (schoolName.length > 255) {
+    throw new Error("Слишком длинное наименование школы");
+  }
+
+  const current = await getSchoolName(schoolId);
+  if (!current) {
+    throw new Error("Школа не найдена");
+  }
+
+  await query("UPDATE schools SET school_name = ? WHERE id_school = ?", [
+    schoolName,
+    schoolId,
+  ]);
+
+  return { previousName: current.trim(), schoolName };
 }
 
 export async function getAdminSchoolDetail(schoolId: number) {
