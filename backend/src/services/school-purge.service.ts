@@ -1,4 +1,4 @@
-import type { ResultSetHeader } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import type { PoolConnection } from "mysql2/promise";
 import { pool, query } from "../db/pool.js";
 import { getSchoolName } from "./auth.service.js";
@@ -154,10 +154,9 @@ export async function purgeSchoolTeachersAndEvaluations(
   try {
     await connection.beginTransaction();
 
-    const [locked] = await connection.query<{
-      id_school: number;
-      school_name: string;
-    }[]>(
+    const [locked] = await connection.query<
+      (RowDataPacket & { id_school: number; school_name: string })[]
+    >(
       "SELECT id_school, school_name FROM schools WHERE id_school = ? FOR UPDATE",
       [schoolId],
     );
