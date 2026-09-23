@@ -637,11 +637,17 @@ export async function emailLessonAnalysisEvaluation(req: Request, res: Response)
     if (!detail) {
       return res.status(404).json({ error: "Оценка не найдена" });
     }
-    await sendEvaluationToTeacher(detail, email);
-    return res.json({ ok: true });
+    const result = await sendEvaluationToTeacher(detail, email);
+    return res.json({
+      ok: true,
+      previewUrl: result.previewUrl,
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
-    if (message.includes("Почтовый сервер не настроен")) {
+    if (
+      message.includes("Почтовый сервер не настроен") ||
+      message.includes("Локальная почта не запущена")
+    ) {
       return res.status(503).json({ error: message });
     }
     console.error("Email evaluation error:", error);

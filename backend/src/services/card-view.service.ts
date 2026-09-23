@@ -572,15 +572,15 @@ export async function buildRecommendationsPdf(
 export async function sendEvaluationToTeacher(
   detail: EvaluationDetail,
   email: string,
-): Promise<void> {
+): Promise<{ previewUrl: string | null }> {
   const pdf = await buildRecommendationsPdf(detail);
   const blockLines = detail.blocks
-    .map((block) => `${block.title}: ${block.percent}% — ${block.level}`)
+    .map((block) => `${block.title}: ${block.percent}% - ${block.level}`)
     .join("\n");
 
-  await sendMail({
+  return sendMail({
     to: email,
-    subject: `Анализ урока — ${detail.teacher.fullName}`,
+    subject: `Анализ урока: ${detail.teacher.fullName}`,
     text: [
       `Здравствуйте!`,
       ``,
@@ -611,7 +611,7 @@ export async function sendEvaluationToTeacher(
       <p>${detail.blocks
         .map(
           (block) =>
-            `${escapeHtml(block.title)}: <strong>${block.percent}%</strong> — ${escapeHtml(block.level)}`,
+            `${escapeHtml(block.title)}: <strong>${block.percent}%</strong> - ${escapeHtml(block.level)}`,
         )
         .join("<br>")}</p>
       <p>Методические рекомендации приложены к письму.</p>

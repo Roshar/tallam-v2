@@ -1,3 +1,4 @@
+import path from "node:path";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -15,6 +16,11 @@ import { ensureAuditLogSchema } from "./services/audit-log.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
 import { ensureRecoverySchema } from "./services/password-recovery.service.js";
+import { requireAuth } from "./middleware/auth.js";
+import {
+  isSafeOutboxName,
+  OUTBOX_DIR,
+} from "./services/local-outbox.service.js";
 
 const MySQLStore = MySQLStoreFactory(session);
 
@@ -77,6 +83,20 @@ app.get("/api/health", (_req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/school", schoolRoutes);
+
+if (config.isDev) {
+  app.get("/api/dev/outbox/:file", requireAuth, (req, res) => {
+    const file = String(req.params.file ?? "");
+    if (!isSafeOutboxName(file)) {
+      return res.status(400).json({ error: "Некорректный файл" });
+    }
+    return res.sendFile(path.join(OUTBOX_DIR, file), (error) => {
+      if (error && !res.headersSent) {
+        res.status(404).json({ error: "Письмо не найдено" });
+      }
+    });
+  });
+}
 
 app.use((_req, res) => {
   res.status(404).json({ error: "Not found" });

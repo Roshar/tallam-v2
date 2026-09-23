@@ -24,6 +24,7 @@ export function EvaluationViewPage() {
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [notice, setNotice] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
   const [emailError, setEmailError] = useState("");
   const [deleteError, setDeleteError] = useState("");
   const [commentOpen, setCommentOpen] = useState(false);
@@ -150,8 +151,17 @@ export function EvaluationViewPage() {
     setSending(true);
     setEmailError("");
     try {
-      await api.emailLessonAnalysisEvaluation(teacherId, detail.id, email.trim());
-      setNotice("Письмо отправлено учителю");
+      const result = await api.emailLessonAnalysisEvaluation(
+        teacherId,
+        detail.id,
+        email.trim(),
+      );
+      setPreviewUrl(result.previewUrl ?? "");
+      setNotice(
+        result.previewUrl
+          ? "Письмо отправлено. На локалке его можно открыть во входящих."
+          : "Письмо отправлено учителю",
+      );
       setEmailOpen(false);
     } catch (err) {
       setEmailError(
@@ -218,7 +228,19 @@ export function EvaluationViewPage() {
       </div>
 
       {error ? <div className="alert alert-error print-hide">{error}</div> : null}
-      {notice ? <div className="alert alert-success print-hide">{notice}</div> : null}
+      {notice ? (
+        <div className="alert alert-success print-hide">
+          {notice}
+          {previewUrl ? (
+            <>
+              {" "}
+              <a href={previewUrl} target="_blank" rel="noreferrer">
+                Открыть входящие
+              </a>
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
       <section className="evaluate-meta">
         <h2 className="evaluate-meta__title">Анализ урока</h2>

@@ -730,7 +730,7 @@ export const api = {
     cardId: number,
     email: string,
   ) {
-    return request<{ ok: boolean }>(
+    return request<{ ok: boolean; previewUrl?: string | null }>(
       `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/email`,
       {
         method: "POST",

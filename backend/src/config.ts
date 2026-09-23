@@ -37,7 +37,8 @@ export const config = {
     port: Number(process.env.SMTP_PORT ?? 465),
     user: process.env.SMTP_USER ?? "",
     pass: process.env.SMTP_PASS ?? "",
-    from: process.env.SMTP_FROM ?? "Tallam <noreply@tallam.ru>",
+    from: process.env.SMTP_FROM ?? "Tallam <webrush@mail.ru>",
+    previewUrl: process.env.SMTP_PREVIEW_URL ?? "",
   },
   passwordReset: {
     expiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 60),
@@ -48,5 +49,5 @@ export const config = {
 } as const;
 
 export function isSmtpConfigured(): boolean {
-  return Boolean(config.smtp.host && config.smtp.user && config.smtp.pass);
+  return Boolean(config.smtp.host);
 }
