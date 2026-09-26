@@ -1,0 +1,111 @@
+.status-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: #f4f7fb;
+}
+
+.status-login__card {
+  width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 1.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.status-login__card h1 {
+  margin: 0 0 0.4rem;
+  color: var(--color-darkblue);
+  font-size: 1.35rem;
+}
+
+.status-login__brand,
+.status-page__brand {
+  margin: 0;
+  color: var(--color-blue, #3978bd);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-login__card label,
+.status-page__filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+
+.status-login__card .btn {
+  width: 100%;
+}
+
+.status-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.status-page__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.status-page__header h1 {
+  margin: 0.2rem 0;
+  color: var(--color-darkblue);
+}
+
+.status-page__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.status-page__header .btn,
+.status-page__filters .btn,
+.status-page .data-table .btn {
+  width: auto;
+}
+
+.status-page__filters {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) minmax(220px, 1fr) auto auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.status-page__note {
+  margin: 0 0 0.8rem;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.status-page .data-table small {
+  display: block;
+  margin-top: 0.15rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+@media (max-width: 800px) {
+  .status-page__header,
+  .status-page__filters {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+  }
+
+  .status-page__header .btn,
+  .status-page__filters .btn {
+    width: 100%;
+  }
+}

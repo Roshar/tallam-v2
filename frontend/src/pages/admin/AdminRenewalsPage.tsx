@@ -8,6 +8,8 @@ import type {
 } from "../../types/admin";
 import type { RenewalStatus } from "../../types/school";
 
+const PAGE_SIZE = 20;
+
 const STATUS_LABELS: Record<RenewalStatus, string> = {
   pending: "Ожидает подтверждения",
   documents_ready: "Ожидает подтверждения",
@@ -48,7 +50,7 @@ export function AdminRenewalsPage() {
     setLoading(true);
     setError("");
     try {
-      setData(await api.adminRenewals({ page, limit: 20, status, search }));
+      setData(await api.adminRenewals({ page, limit: PAGE_SIZE, status, search }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось загрузить заявки");
     } finally {
@@ -169,13 +171,14 @@ export function AdminRenewalsPage() {
             <table className="data-table">
               <thead>
                 <tr>
+                  <th>№</th>
                   <th>Школа / заказчик</th>
                   <th>Создана</th>
                   <th>Статус</th>
                 </tr>
               </thead>
               <tbody>
-                {data?.items.map((item) => (
+                {data?.items.map((item, index) => (
                   <tr
                     key={item.id}
                     className={
@@ -184,6 +187,7 @@ export function AdminRenewalsPage() {
                         : undefined
                     }
                   >
+                    <td>{(page - 1) * PAGE_SIZE + index + 1}</td>
                     <td>
                       <button
                         type="button"
@@ -206,14 +210,14 @@ export function AdminRenewalsPage() {
                 ))}
                 {!loading && !data?.items.length ? (
                   <tr>
-                    <td colSpan={3} className="admin-subscriptions__empty">
+                    <td colSpan={4} className="admin-subscriptions__empty">
                       Заявок не найдено
                     </td>
                   </tr>
                 ) : null}
                 {loading ? (
                   <tr>
-                    <td colSpan={3} className="admin-subscriptions__empty">
+                    <td colSpan={4} className="admin-subscriptions__empty">
                       Загрузка...
                     </td>
                   </tr>

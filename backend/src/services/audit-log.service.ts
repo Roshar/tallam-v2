@@ -6,6 +6,11 @@ export type AuditStatus = "success" | "failure";
 
 export const AUDIT_ACTIONS = [
   { category: "auth", action: "auth.login", label: "Авторизация" },
+  {
+    category: "accountant",
+    action: "auth.accountant_login",
+    label: "Вход бухгалтера",
+  },
   { category: "auth", action: "auth.logout", label: "Выход из системы" },
   {
     category: "auth",
@@ -56,6 +61,16 @@ export const AUDIT_ACTIONS = [
     category: "subscription",
     action: "subscription.contract_download",
     label: "Скачивание договора",
+  },
+  {
+    category: "accountant",
+    action: "accountant.contract_download",
+    label: "Бухгалтер: скачивание договора и акта",
+  },
+  {
+    category: "accountant",
+    action: "accountant.archive_download",
+    label: "Бухгалтер: скачивание архива договоров",
   },
   {
     category: "subscription",
@@ -201,6 +216,7 @@ export const AUDIT_ACTIONS = [
 
 export const AUDIT_CATEGORIES = [
   { value: "auth", label: "Авторизация" },
+  { value: "accountant", label: "Бухгалтер" },
   { value: "password", label: "Пароли" },
   { value: "subscription", label: "Подписка" },
   { value: "teachers", label: "Работники" },
@@ -382,7 +398,11 @@ export function auditHttpAction(options: {
         actorUserId: user?.id ?? null,
         actorEmail: user?.email ?? fallbackEmail ?? "unknown",
         actorAccountType: user?.accountType ?? null,
-        schoolId: user?.schoolId || null,
+        schoolId:
+          user?.schoolId ||
+          (typeof extraDetails?.schoolId === "number" && extraDetails.schoolId > 0
+            ? extraDetails.schoolId
+            : null),
         category: options.category,
         action: options.action,
         status: res.statusCode < 400 ? "success" : "failure",

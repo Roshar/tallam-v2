@@ -28,6 +28,7 @@ import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
 import { AdminFeedbackPage } from "./pages/admin/AdminFeedbackPage";
 import { AdminFeedbackThreadPage } from "./pages/admin/AdminFeedbackThreadPage";
 import { AdminRecoveryPage } from "./pages/admin/AdminRecoveryPage";
+import { AccountantStatusPage } from "./pages/AccountantStatusPage";
 import "./styles/variables.css";
 import "./styles/components.css";
 import "./styles/auth.css";
@@ -40,6 +41,7 @@ import "./styles/project-teacher.css";
 import "./styles/evaluate.css";
 import "./styles/admin.css";
 import "./styles/school-subscription.css";
+import "./styles/status.css";
 
 export default function App() {
   return (
@@ -82,6 +84,7 @@ export default function App() {
           </Route>
 
           <Route path="/methodist/cabinet" element={<MethodistCabinetPage />} />
+          <Route path="/status" element={<AccountantStatusPage />} />
 
           <Route path="/admin" element={<AdminCabinetShell />}>
             <Route path="cabinet" element={<AdminDashboardPage />} />

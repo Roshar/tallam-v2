@@ -7,6 +7,7 @@ import MySQLStoreFactory from "express-mysql-session";
 import mysql from "mysql2/promise";
 import { config } from "./config.js";
 import { sessionCookieOptions } from "./lib/session-cookie.js";
+import accountantRoutes from "./routes/accountant.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
@@ -81,6 +82,7 @@ app.get("/api/health", (_req, res) => {
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/status", accountantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/school", schoolRoutes);
 

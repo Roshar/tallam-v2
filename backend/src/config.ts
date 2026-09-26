@@ -46,6 +46,17 @@ export const config = {
   schoolPasswordLog:
     process.env.SCHOOL_PASSWORD_LOG ??
     path.resolve(__dirname, "../data/school-passwords.log"),
+  accountant: {
+    login: (
+      process.env.ACCOUNTANT_LOGIN ||
+      (process.env.NODE_ENV === "production" ? "" : "durdieva67@mail.ru")
+    )
+      .trim()
+      .toLowerCase(),
+    password:
+      process.env.ACCOUNTANT_PASSWORD ||
+      (process.env.NODE_ENV === "production" ? "" : "888888"),
+  },
 } as const;
 
 export function isSmtpConfigured(): boolean {

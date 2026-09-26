@@ -33,7 +33,7 @@ import type {
   AdminSupportConversation,
 } from "../types/admin";
 
-export type AccountType = "school" | "methodist" | "admin";
+export type AccountType = "school" | "methodist" | "admin" | "accountant";
 export type SchoolCabinetAccess = "full" | "billing";
 
 export interface User {
@@ -72,7 +72,8 @@ function shouldRedirectOnUnauthorized(path: string): boolean {
     path.startsWith("/api/auth/login") ||
     path.startsWith("/api/auth/forgot-password") ||
     path.startsWith("/api/auth/recovery-captcha") ||
-    path.startsWith("/api/auth/reset-password")
+    path.startsWith("/api/auth/reset-password") ||
+    path.startsWith("/api/status/login")
   );
 }
 
@@ -142,6 +143,55 @@ async function downloadFile(path: string, fallbackFilename: string) {
 }
 
 export const api = {
+  accountantLogin(login: string, password: string) {
+    return request<{ user: User }>("/api/status/login", {
+      method: "POST",
+      body: JSON.stringify({ login, password }),
+    });
+  },
+
+  accountantAreas() {
+    return request<{ items: Array<{ id: number; title: string }> }>(
+      "/api/status/areas",
+    );
+  },
+
+  accountantRenewals(params?: { areaId?: number; search?: string }) {
+    const search = new URLSearchParams();
+    if (params?.areaId) search.set("areaId", String(params.areaId));
+    if (params?.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<{
+      items: Array<{
+        id: number;
+        schoolName: string;
+        area: string | null;
+        email: string | null;
+        status: "paid";
+        contractNumber: string | null;
+      }>;
+      archiveLimit: number;
+    }>(`/api/status/renewals${query ? `?${query}` : ""}`);
+  },
+
+  downloadAccountantContract(requestId: number) {
+    return downloadFile(
+      `/api/status/renewals/${requestId}/contract`,
+      "Договор-и-акт-Таллам.pdf",
+    );
+  },
+
+  downloadAccountantArchive(params?: { areaId?: number; search?: string }) {
+    const search = new URLSearchParams();
+    if (params?.areaId) search.set("areaId", String(params.areaId));
+    if (params?.search) search.set("search", params.search);
+    const query = search.toString();
+    return downloadFile(
+      `/api/status/renewals/archive${query ? `?${query}` : ""}`,
+      "Договоры-и-акты-Таллам.zip",
+    );
+  },
+
   login(email: string, password: string, accountType: "school" | "methodist") {
     return request<{ user: User }>("/api/auth/login", {
       method: "POST",

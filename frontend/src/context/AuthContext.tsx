@@ -17,6 +17,7 @@ interface AuthContextValue {
     password: string,
     accountType: "school" | "methodist",
   ) => Promise<void>;
+  loginAccountant: (login: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   impersonateSchool: (schoolId: number) => Promise<void>;
@@ -26,7 +27,10 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 function redirectToAuth() {
-  if (window.location.pathname.startsWith("/auth")) {
+  if (
+    window.location.pathname.startsWith("/auth") ||
+    window.location.pathname.startsWith("/status")
+  ) {
     return;
   }
   window.location.assign("/auth");
@@ -72,6 +76,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
+  const loginAccountant = useCallback(async (login: string, password: string) => {
+    const { user: loggedInUser } = await api.accountantLogin(login, password);
+    setUser(loggedInUser);
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.logout();
@@ -97,12 +106,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       loading,
       login,
+      loginAccountant,
       logout,
       refresh,
       impersonateSchool,
       stopImpersonation,
     }),
-    [user, loading, login, logout, refresh, impersonateSchool, stopImpersonation],
+    [
+      user,
+      loading,
+      login,
+      loginAccountant,
+      logout,
+      refresh,
+      impersonateSchool,
+      stopImpersonation,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

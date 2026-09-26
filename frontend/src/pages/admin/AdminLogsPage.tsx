@@ -27,6 +27,14 @@ function detailLabel(key: string): string {
     projectId: "Проект",
     cardType: "Тип карты",
     requestedAccountType: "Тип аккаунта",
+    schoolId: "Школа",
+    schoolName: "Название школы",
+    email: "Почта школы",
+    contractNumber: "Номер договора",
+    count: "Договоров в архиве",
+    schools: "Школы",
+    areaId: "Район",
+    search: "Поиск",
   };
   return labels[key] ?? key;
 }
@@ -294,7 +302,11 @@ export function AdminLogsPage() {
                     <td>
                       <strong>{item.actorEmail}</strong>
                       {item.actorAccountType ? (
-                        <small>{item.actorAccountType}</small>
+                        <small>
+                          {item.actorAccountType === "accountant"
+                            ? "Бухгалтер"
+                            : item.actorAccountType}
+                        </small>
                       ) : null}
                     </td>
                     <td>

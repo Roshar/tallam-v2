@@ -13,7 +13,13 @@ export function SchoolCabinetShell() {
   }
 
   if (!user || user.accountType !== "school") {
-    return <Navigate to={user?.accountType === "admin" ? "/admin/cabinet" : "/auth"} replace />;
+    const next =
+      user?.accountType === "admin"
+        ? "/admin/cabinet"
+        : user?.accountType === "accountant"
+          ? "/status"
+          : "/auth";
+    return <Navigate to={next} replace />;
   }
 
   if (

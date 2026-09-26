@@ -100,6 +100,10 @@ export function AdminCabinetShell() {
     return <Navigate to={schoolLandingPath(user)} replace />;
   }
 
+  if (user.accountType === "accountant") {
+    return <Navigate to="/status" replace />;
+  }
+
   if (user.accountType !== "admin") {
     return <Navigate to="/auth" replace />;
   }

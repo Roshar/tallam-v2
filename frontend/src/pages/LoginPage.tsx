@@ -28,6 +28,9 @@ export function LoginPage() {
     if (user.accountType === "admin") {
       return <Navigate to="/admin/cabinet" replace />;
     }
+    if (user.accountType === "accountant") {
+      return <Navigate to="/status" replace />;
+    }
     if (user.accountType === "school") {
       return <Navigate to={schoolLandingPath(user)} replace />;
     }

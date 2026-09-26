@@ -9,6 +9,10 @@ export function MethodistCabinetPage() {
     return <div className="loading-state">Загрузка...</div>;
   }
 
+  if (user?.accountType === "accountant") {
+    return <Navigate to="/status" replace />;
+  }
+
   if (!user || user.accountType !== "methodist") {
     return <Navigate to="/auth" replace />;
   }

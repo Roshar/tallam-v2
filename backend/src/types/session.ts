@@ -1,4 +1,9 @@
-export type UserRole = "school_admin" | "admin" | "moder" | "methodist";
+export type UserRole =
+  | "school_admin"
+  | "admin"
+  | "moder"
+  | "methodist"
+  | "accountant";
 
 export type SchoolCabinetAccess = "full" | "billing";
 
@@ -9,7 +14,7 @@ export interface SessionUser {
   role: UserRole;
   schoolId: number;
   status: "on" | "off";
-  accountType: "school" | "methodist" | "admin";
+  accountType: "school" | "methodist" | "admin" | "accountant";
   cabinetAccess?: SchoolCabinetAccess;
   firstname?: string;
   surname?: string;
