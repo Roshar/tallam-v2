@@ -143,10 +143,10 @@ async function downloadFile(path: string, fallbackFilename: string) {
 }
 
 export const api = {
-  accountantLogin(login: string, password: string) {
+  accountantLogin(login: string, password: string, remember: boolean) {
     return request<{ user: User }>("/api/status/login", {
       method: "POST",
-      body: JSON.stringify({ login, password }),
+      body: JSON.stringify({ login, password, remember }),
     });
   },
 

@@ -33,6 +33,8 @@ function filters(req: Request) {
   };
 }
 
+const REMEMBER_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
+
 function accountantSession(login: string): SessionUser {
   return {
     id: 0,
@@ -64,9 +66,20 @@ export async function login(req: Request, res: Response) {
     return res.status(401).json({ error: "Неверный логин или пароль" });
   }
 
+  const remember = (req.body as { remember?: unknown }).remember === true;
   req.session.user = accountantSession(expectedLogin);
   req.session.impersonator = undefined;
-  await saveSession(req);
+  if (remember) {
+    req.session.cookie.maxAge = REMEMBER_SESSION_MS;
+  }
+
+  try {
+    await saveSession(req);
+  } catch (error) {
+    console.error("Accountant login session error:", error);
+    return res.status(500).json({ error: "Не удалось сохранить вход" });
+  }
+
   return res.json({ user: req.session.user });
 }
 

@@ -17,7 +17,11 @@ interface AuthContextValue {
     password: string,
     accountType: "school" | "methodist",
   ) => Promise<void>;
-  loginAccountant: (login: string, password: string) => Promise<void>;
+  loginAccountant: (
+    login: string,
+    password: string,
+    remember: boolean,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   impersonateSchool: (schoolId: number) => Promise<void>;
@@ -76,10 +80,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const loginAccountant = useCallback(async (login: string, password: string) => {
-    const { user: loggedInUser } = await api.accountantLogin(login, password);
-    setUser(loggedInUser);
-  }, []);
+  const loginAccountant = useCallback(
+    async (login: string, password: string, remember: boolean) => {
+      const { user: loggedInUser } = await api.accountantLogin(
+        login,
+        password,
+        remember,
+      );
+      setUser(loggedInUser);
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {

@@ -15,6 +15,7 @@ export function AccountantStatusPage() {
   const { user, loading, loginAccountant, logout } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
   const [authError, setAuthError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [areas, setAreas] = useState<Array<{ id: number; title: string }>>([]);
@@ -31,12 +32,28 @@ export function AccountantStatusPage() {
   const isAccountant = user?.accountType === "accountant";
 
   useEffect(() => {
+    if (isAccountant) return;
+    setAreaId(0);
+    setSearchInput("");
+    setSearch("");
+    setItems([]);
+    setError("");
+  }, [isAccountant]);
+
+  useEffect(() => {
     if (!isAccountant) return;
     api
       .accountantAreas()
       .then((data) => setAreas(data.items))
       .catch(() => setAreas([]));
   }, [isAccountant]);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setSearch(searchInput.trim());
+    }, 350);
+    return () => window.clearTimeout(timeout);
+  }, [searchInput]);
 
   useEffect(() => {
     if (!isAccountant) return;
@@ -69,17 +86,12 @@ export function AccountantStatusPage() {
     setAuthError("");
     setSubmitting(true);
     try {
-      await loginAccountant(login.trim(), password);
+      await loginAccountant(login.trim(), password, remember);
     } catch (err) {
       setAuthError(err instanceof Error ? err.message : "Неверный логин или пароль");
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function applySearch(event: FormEvent) {
-    event.preventDefault();
-    setSearch(searchInput.trim());
   }
 
   async function downloadOne(id: number) {
@@ -141,6 +153,14 @@ export function AccountantStatusPage() {
               required
             />
           </label>
+          <label className="status-login__remember">
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
+            <span>Запомнить меня</span>
+          </label>
           <button className="btn btn-primary" type="submit" disabled={submitting}>
             {submitting ? "Вход..." : "Войти"}
           </button>
@@ -168,7 +188,7 @@ export function AccountantStatusPage() {
         </button>
       </header>
 
-      <form className="status-page__filters" onSubmit={applySearch}>
+      <div className="status-page__filters">
         <label>
           <span>Район</span>
           <select
@@ -188,14 +208,12 @@ export function AccountantStatusPage() {
           <span>Школа</span>
           <input
             className="form-input"
+            type="search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Название школы"
           />
         </label>
-        <button className="btn btn-primary" type="submit">
-          Найти
-        </button>
         <button
           className="btn btn-ghost"
           type="button"
@@ -204,7 +222,7 @@ export function AccountantStatusPage() {
         >
           {archiveLoading ? "Сбор архива..." : "Скачать все договоры"}
         </button>
-      </form>
+      </div>
 
       {items.length > archiveLimit ? (
         <p className="status-page__note">
