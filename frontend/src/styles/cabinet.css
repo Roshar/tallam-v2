@@ -674,18 +674,63 @@
     flex-wrap: wrap;
   }
 
+  .cabinet-nav__inner {
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .cabinet-nav__logo {
+    font-size: 1.15rem;
+  }
+
+  .cabinet-nav__school {
+    max-width: 11.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .cabinet-nav__user .btn {
+    width: auto;
+    min-height: 2.6rem;
+    padding: 0.55rem 0.9rem;
+  }
+
+  .cabinet-tabs__inner {
+    padding: 0;
+  }
+
   .cabinet-menu {
     flex-wrap: nowrap;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 0 0.15rem;
+  }
+
+  .cabinet-menu::-webkit-scrollbar {
+    display: none;
+  }
+
+  .cabinet-menu li:has(.admin-menu__disabled) {
+    display: none;
   }
 
   .cabinet-menu__item {
-    padding: 0.7rem 0.85rem;
+    padding: 0.75rem 0.9rem;
+    min-height: 2.75rem;
   }
 
   .cabinet-nav__email {
     display: none;
+  }
+
+  .cabinet-main {
+    padding: 1rem 0 2rem;
+  }
+
+  .cabinet-content .card-body {
+    padding: 1rem;
   }
 
   .site-footer__inner {

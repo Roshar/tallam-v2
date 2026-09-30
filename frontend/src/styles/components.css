@@ -9,6 +9,17 @@
   margin-inline: auto;
 }
 
+@media (max-width: 768px) {
+  .page-container {
+    width: min(100% - 1.25rem, var(--container-lg));
+  }
+
+  .btn,
+  .form-input {
+    font-size: 1rem;
+  }
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
@@ -320,6 +331,12 @@ input[type="number"].form-input::-webkit-inner-spin-button {
 
 .card-body {
   padding: var(--space-xl);
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
 }
 
 .stat-grid {

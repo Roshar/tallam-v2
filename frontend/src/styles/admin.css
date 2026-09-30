@@ -333,6 +333,7 @@
   .admin-renewals__filters,
   .admin-renewals__filters form,
   .admin-renewals__detail-head,
+  .admin-renewals__privacy,
   .admin-renewals__document-actions {
     align-items: stretch;
     flex-direction: column;
@@ -344,12 +345,37 @@
     max-width: none;
   }
 
+  .admin-renewals__filters .btn,
+  .admin-renewals__privacy .btn,
+  .admin-renewals__document-actions .btn {
+    width: 100%;
+  }
+
   .admin-renewals__workspace {
     display: block;
   }
 
+  .admin-renewals__list th:nth-child(3),
+  .admin-renewals__list td:nth-child(3) {
+    display: none;
+  }
+
+  .admin-renewals__open {
+    min-height: 2.6rem;
+  }
+
   .admin-renewals__detail {
     margin-top: 1rem;
+    padding: 1rem;
+    scroll-margin-top: 5.5rem;
+  }
+
+  .admin-renewals__paid {
+    position: sticky;
+    bottom: 0.5rem;
+    z-index: 3;
+    min-height: 3rem;
+    box-shadow: 0 8px 20px rgba(46, 96, 154, 0.18);
   }
 
   .admin-renewals__customer > div {

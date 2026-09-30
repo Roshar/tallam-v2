@@ -207,7 +207,7 @@ function EvaluationsTable({
 
   return (
     <div className="table-wrap">
-      <table className="data-table">
+      <table className="data-table data-table--evaluations">
         <thead>
           <tr>
             <th>#</th>

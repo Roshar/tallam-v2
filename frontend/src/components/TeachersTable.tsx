@@ -38,7 +38,9 @@ export function TeachersTable({
 
   return (
     <div className="table-wrap">
-      <table className="data-table">
+      <table
+        className={`data-table${compact ? " data-table--compact" : " data-table--contacts"}`}
+      >
         <thead>
           <tr>
             <th>{headers?.number ?? "#"}</th>

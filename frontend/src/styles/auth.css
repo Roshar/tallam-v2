@@ -220,9 +220,15 @@
 
   .auth-panel {
     min-height: 100vh;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom));
   }
 
   .auth-card {
-    padding: var(--space-xl);
+    width: 100%;
+    padding: 1.35rem 1.15rem;
+  }
+
+  .auth-card .btn-primary {
+    min-height: 3rem;
   }
 }

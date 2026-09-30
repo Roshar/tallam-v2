@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
 import type {
@@ -45,6 +45,7 @@ export function AdminRenewalsPage() {
   const [downloading, setDownloading] = useState(false);
   const [revealPersonalData, setRevealPersonalData] = useState(false);
   const [error, setError] = useState("");
+  const detailRef = useRef<HTMLElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -61,6 +62,12 @@ export function AdminRenewalsPage() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    if (!selected || detailLoading) return;
+    if (!window.matchMedia("(max-width: 720px)").matches) return;
+    detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [selected?.id, detailLoading]);
 
   async function openRequest(item: AdminRenewalListItem) {
     setDetailLoading(true);
@@ -248,7 +255,7 @@ export function AdminRenewalsPage() {
           </div>
         </section>
 
-        <aside className="admin-renewals__detail">
+        <aside ref={detailRef} className="admin-renewals__detail">
           {detailLoading ? (
             <p className="page-subtitle">Загрузка заявки...</p>
           ) : selected && customer ? (
