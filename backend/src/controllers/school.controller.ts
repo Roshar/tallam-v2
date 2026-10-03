@@ -26,6 +26,7 @@ import {
   buildRecommendationsPdf,
   deleteEvaluation,
   getEvaluationDetail,
+  EvaluationMailLimitError,
   sendEvaluationToTeacher,
 } from "../services/card-view.service.js";
 import {
@@ -637,12 +638,15 @@ export async function emailLessonAnalysisEvaluation(req: Request, res: Response)
     if (!detail) {
       return res.status(404).json({ error: "Оценка не найдена" });
     }
-    const result = await sendEvaluationToTeacher(detail, email);
+    const result = await sendEvaluationToTeacher(schoolId, detail, email);
     return res.json({
       ok: true,
       previewUrl: result.previewUrl,
     });
   } catch (error) {
+    if (error instanceof EvaluationMailLimitError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     const message = error instanceof Error ? error.message : "";
     if (
       message.includes("Почтовый сервер не настроен") ||

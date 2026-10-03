@@ -14,6 +14,7 @@ import schoolRoutes from "./routes/school.routes.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
 import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
+import { ensureEvaluationEmailSchema } from "./services/card-view.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
 import { ensureVacancySchema } from "./services/vacancy.service.js";
@@ -112,6 +113,9 @@ app.listen(config.port, () => {
   });
   void ensureEvaluationCommentSchema().catch((error) => {
     console.error("Failed to initialize evaluation comments schema:", error);
+  });
+  void ensureEvaluationEmailSchema().catch((error) => {
+    console.error("Failed to initialize evaluation email log:", error);
   });
   void ensureSchoolFeedbackSchema().catch((error) => {
     console.error("Failed to initialize school feedback schema:", error);

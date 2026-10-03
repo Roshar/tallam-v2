@@ -569,16 +569,136 @@ export async function buildRecommendationsPdf(
   return done;
 }
 
+const SAME_ADDRESS_HOURS = 24;
+const SCHOOL_GAP_SECONDS = 20;
+const SCHOOL_HOUR_LIMIT = 40;
+const SCHOOL_DAY_LIMIT = 120;
+const GLOBAL_HOUR_LIMIT = 200;
+const GLOBAL_DAY_LIMIT = 800;
+
+export class EvaluationMailLimitError extends Error {
+  status = 429;
+}
+
+let emailLogReady: Promise<void> | null = null;
+
+export async function ensureEvaluationEmailSchema(): Promise<void> {
+  if (!emailLogReady) {
+    emailLogReady = query(`
+      CREATE TABLE IF NOT EXISTS evaluation_email_sends (
+        id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+        school_id bigint(20) UNSIGNED NOT NULL,
+        card_id bigint(20) UNSIGNED NOT NULL,
+        recipient varchar(200) NOT NULL,
+        created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (id),
+        KEY idx_evaluation_email_school_created (school_id, created_at),
+        KEY idx_evaluation_email_card_recipient (card_id, recipient, created_at),
+        KEY idx_evaluation_email_created (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `)
+      .then(() => undefined)
+      .catch((error) => {
+        emailLogReady = null;
+        throw error;
+      });
+  }
+  await emailLogReady;
+}
+
+async function assertEvaluationEmailAllowed(
+  schoolId: number,
+  cardId: number,
+  recipient: string,
+) {
+  await ensureEvaluationEmailSchema();
+  const rows = await query<
+    {
+      sameRecipient: number;
+      recentSchool: number;
+      schoolHour: number;
+      schoolDay: number;
+      globalHour: number;
+      globalDay: number;
+    }[]
+  >(
+    `SELECT
+       SUM(school_id = ? AND card_id = ? AND recipient = ? AND created_at >= NOW() - INTERVAL ? HOUR) AS sameRecipient,
+       SUM(school_id = ? AND created_at >= NOW() - INTERVAL ? SECOND) AS recentSchool,
+       SUM(school_id = ? AND created_at >= NOW() - INTERVAL 1 HOUR) AS schoolHour,
+       SUM(school_id = ? AND created_at >= NOW() - INTERVAL 1 DAY) AS schoolDay,
+       SUM(created_at >= NOW() - INTERVAL 1 HOUR) AS globalHour,
+       SUM(created_at >= NOW() - INTERVAL 1 DAY) AS globalDay
+     FROM evaluation_email_sends`,
+    [
+      schoolId,
+      cardId,
+      recipient,
+      SAME_ADDRESS_HOURS,
+      schoolId,
+      SCHOOL_GAP_SECONDS,
+      schoolId,
+      schoolId,
+    ],
+  );
+  const stats = rows[0];
+  if (Number(stats?.sameRecipient ?? 0) > 0) {
+    throw new EvaluationMailLimitError(
+      "Эта оценка уже отправлена на этот адрес. Повторно её можно отправить через сутки.",
+    );
+  }
+  if (Number(stats?.recentSchool ?? 0) > 0) {
+    throw new EvaluationMailLimitError(
+      "Подождите несколько секунд перед следующей отправкой.",
+    );
+  }
+  if (Number(stats?.schoolHour ?? 0) >= SCHOOL_HOUR_LIMIT) {
+    throw new EvaluationMailLimitError(
+      "За последний час школа отправила слишком много писем. Продолжить можно позже.",
+    );
+  }
+  if (Number(stats?.schoolDay ?? 0) >= SCHOOL_DAY_LIMIT) {
+    throw new EvaluationMailLimitError(
+      "За сегодня школа отправила максимум писем с оценками. Продолжить можно завтра.",
+    );
+  }
+  if (
+    Number(stats?.globalHour ?? 0) >= GLOBAL_HOUR_LIMIT ||
+    Number(stats?.globalDay ?? 0) >= GLOBAL_DAY_LIMIT
+  ) {
+    throw new EvaluationMailLimitError(
+      "Сейчас отправляется много писем со всех школ. Повторите через некоторое время.",
+    );
+  }
+}
+
+async function rememberEvaluationEmail(
+  schoolId: number,
+  cardId: number,
+  recipient: string,
+) {
+  await query(
+    `INSERT INTO evaluation_email_sends (school_id, card_id, recipient)
+     VALUES (?, ?, ?)`,
+    [schoolId, cardId, recipient],
+  );
+}
+
+const DO_NOT_REPLY =
+  "Пожалуйста, не отвечайте на это письмо. Все интересующие вопросы вы можете задать администрации вашей школы.";
+
 export async function sendEvaluationToTeacher(
+  schoolId: number,
   detail: EvaluationDetail,
   email: string,
 ): Promise<{ previewUrl: string | null }> {
+  await assertEvaluationEmailAllowed(schoolId, detail.id, email);
   const pdf = await buildRecommendationsPdf(detail);
   const blockLines = detail.blocks
     .map((block) => `${block.title}: ${block.percent}% - ${block.level}`)
     .join("\n");
 
-  return sendMail({
+  const sent = await sendMail({
     to: email,
     subject: `Анализ урока: ${detail.teacher.fullName}`,
     text: [
@@ -596,6 +716,8 @@ export async function sendEvaluationToTeacher(
       blockLines,
       ``,
       `Методические рекомендации приложены к письму.`,
+      ``,
+      DO_NOT_REPLY,
     ].join("\n"),
     html: `
       <p>Здравствуйте!</p>
@@ -615,6 +737,7 @@ export async function sendEvaluationToTeacher(
         )
         .join("<br>")}</p>
       <p>Методические рекомендации приложены к письму.</p>
+      <p style="color:#5c6b7a;font-size:13px;">${escapeHtml(DO_NOT_REPLY)}</p>
     `,
     attachments: [
       {
@@ -624,4 +747,6 @@ export async function sendEvaluationToTeacher(
       },
     ],
   });
+  await rememberEvaluationEmail(schoolId, detail.id, email);
+  return sent;
 }
