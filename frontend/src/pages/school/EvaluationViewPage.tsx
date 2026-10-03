@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
 import { EvaluatorIdentityFields } from "../../components/EvaluatorIdentityFields";
@@ -24,6 +24,7 @@ export function EvaluationViewPage() {
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [notice, setNotice] = useState("");
+  const noticeRef = useRef<HTMLDivElement>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [emailError, setEmailError] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -52,6 +53,11 @@ export function EvaluationViewPage() {
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, [teacherId, numericCardId]);
+
+  useEffect(() => {
+    if (notice !== "Письмо успешно отправлено") return;
+    noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [notice]);
 
   const groups: CriteriaGroup[] = useMemo(
     () => (detail?.cardType === "full" ? FULL_GROUPS : METHOD_GROUPS),
@@ -157,11 +163,7 @@ export function EvaluationViewPage() {
         email.trim(),
       );
       setPreviewUrl(result.previewUrl ?? "");
-      setNotice(
-        result.previewUrl
-          ? "Письмо отправлено. На локалке его можно открыть во входящих."
-          : "Письмо отправлено учителю",
-      );
+      setNotice("Письмо успешно отправлено");
       setEmailOpen(false);
     } catch (err) {
       setEmailError(
@@ -229,7 +231,7 @@ export function EvaluationViewPage() {
 
       {error ? <div className="alert alert-error print-hide">{error}</div> : null}
       {notice ? (
-        <div className="alert alert-success print-hide">
+        <div ref={noticeRef} className="alert alert-success print-hide">
           {notice}
           {previewUrl ? (
             <>
