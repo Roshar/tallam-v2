@@ -3,6 +3,7 @@ import {
   closeVacancy,
   createVacancy,
   getVacancy,
+  listAdminVacancies,
   listVacancies,
   listVacancyFilters,
   parseVacancyInput,
@@ -29,6 +30,16 @@ function optionalNumber(value: unknown): number | null {
   const amount = Number(value.replace(",", "."));
   if (!Number.isFinite(amount) || amount < 0) return null;
   return amount;
+}
+
+export async function adminVacancies(req: Request, res: Response) {
+  try {
+    return res.json(
+      await listAdminVacancies(Number(req.query.page) || 1, Number(req.query.limit) || 20),
+    );
+  } catch (error) {
+    return sendVacancyError(res, error, "Не удалось загрузить вакансии");
+  }
 }
 
 export async function vacancyFilters(req: Request, res: Response) {

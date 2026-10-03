@@ -65,7 +65,8 @@ npm run dev                   # API :4000, web :5173
 - Статусы: `DRAFT`, `ACTIVE`, `CLOSED`. Опубликованную вакансию нельзя вернуть в черновик, её закрывают.
 - Таблица `vacancies` создаётся при старте API (`ensureVacancySchema`). Предметы хранятся списком в `subjects` (JSON) и строкой для карточки в `subject`.
 - Отклики учителей пока не делаются. Позже отдельная сущность может ссылаться на `vacancies.id`.
-- В журнал `audit_logs` пишутся просмотр списка, просмотр карточки, создание, изменение и закрытие (`cabinet.vacancy_list`, `cabinet.vacancy_view`, `cabinet.vacancy_create`, `cabinet.vacancy_update`, `cabinet.vacancy_close`).
+- В журнал `audit_logs` пишутся просмотр списка, просмотр карточки, создание, изменение и закрытие (`cabinet.vacancy_list`, `cabinet.vacancy_view`, `cabinet.vacancy_create`, `cabinet.vacancy_update`, `cabinet.vacancy_close`). Просмотр общего списка в админке пишется как `cabinet.vacancy_admin_list`.
+- Админка `/admin/vacancies`: общий список всех вакансий, включая черновики. Только просмотр.
 
 ### Auth
 

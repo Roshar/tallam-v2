@@ -29,6 +29,7 @@ import { AdminSubscriptionsPage } from "./pages/admin/AdminSubscriptionsPage";
 import { AdminRenewalsPage } from "./pages/admin/AdminRenewalsPage";
 import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
 import { AdminFeedbackPage } from "./pages/admin/AdminFeedbackPage";
+import { AdminVacanciesPage } from "./pages/admin/AdminVacanciesPage";
 import { AdminFeedbackThreadPage } from "./pages/admin/AdminFeedbackThreadPage";
 import { AdminRecoveryPage } from "./pages/admin/AdminRecoveryPage";
 import { AccountantStatusPage } from "./pages/AccountantStatusPage";
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
             <Route path="renewals" element={<AdminRenewalsPage />} />
             <Route path="feedback" element={<AdminFeedbackPage />} />
+            <Route path="vacancies" element={<AdminVacanciesPage />} />
             <Route
               path="feedback/:schoolId"
               element={<AdminFeedbackThreadPage />}

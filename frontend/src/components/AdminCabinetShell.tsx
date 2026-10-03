@@ -9,6 +9,7 @@ const ADMIN_MENU = [
   { label: "Подписки", to: "/admin/subscriptions", enabled: true },
   { label: "Продления", to: "/admin/renewals", enabled: true },
   { label: "Отзывы", to: "/admin/feedback", enabled: true },
+  { label: "Вакансии", to: "/admin/vacancies", enabled: true },
   { label: "Обращения", to: "/admin/recovery", enabled: true },
   { label: "Логи", to: "/admin/logs", enabled: true },
   { label: "Проекты", to: "/admin/projects", enabled: false },

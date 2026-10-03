@@ -685,6 +685,37 @@ export async function listVacancies(input: {
   };
 }
 
+export async function listAdminVacancies(pageInput: number, limitInput: number) {
+  await ensureVacancySchema();
+  const page = Math.max(1, pageInput);
+  const limit = [20, 50, 100].includes(limitInput) ? limitInput : 20;
+  const offset = (page - 1) * limit;
+
+  const [rows, countRows] = await Promise.all([
+    query<VacancyRow[]>(
+      `${VACANCY_SELECT} ORDER BY v.created_at DESC, v.id DESC LIMIT ? OFFSET ?`,
+      [limit, offset],
+    ),
+    query<{ count: number }[]>(
+      `SELECT COUNT(*) AS count
+       FROM vacancies v
+       JOIN schools s ON s.id_school = v.school_id
+       LEFT JOIN area a ON a.id_area = s.area_id`,
+    ),
+  ]);
+
+  const total = Number(countRows[0]?.count ?? 0);
+  return {
+    items: rows.map((row) => mapListItem(row, 0)),
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+  };
+}
+
 export async function getVacancy(id: number, viewerSchoolId: number) {
   await ensureVacancySchema();
   const row = await findRow(id);

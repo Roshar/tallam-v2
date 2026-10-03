@@ -623,6 +623,13 @@ export const api = {
     );
   },
 
+  adminVacancies(params: { page?: number; limit?: number }) {
+    const search = new URLSearchParams();
+    search.set("page", String(params.page ?? 1));
+    search.set("limit", String(params.limit ?? 20));
+    return request<VacancyListResponse>(`/api/admin/vacancies?${search}`);
+  },
+
   adminFeedbackConversations() {
     return request<{ items: AdminSupportConversation[] }>(
       "/api/admin/feedback",

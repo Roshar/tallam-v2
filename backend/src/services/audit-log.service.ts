@@ -219,6 +219,11 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "cabinet",
+    action: "cabinet.vacancy_admin_list",
+    label: "Просмотр вакансий в админке",
+  },
+  {
+    category: "cabinet",
     action: "cabinet.vacancy_view",
     label: "Просмотр вакансии",
   },

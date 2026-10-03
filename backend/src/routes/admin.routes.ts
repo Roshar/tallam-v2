@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as adminController from "../controllers/admin.controller.js";
+import * as vacancyController from "../controllers/vacancy.controller.js";
 import * as auditLogController from "../controllers/audit-log.controller.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { auditHttpAction } from "../services/audit-log.service.js";
@@ -70,6 +71,18 @@ router.get("/subscriptions/export", adminController.exportSubscriptions);
 router.get("/subscriptions", adminController.subscriptions);
 router.get("/renewals", adminController.renewalRequests);
 router.get("/renewals/pending-count", adminController.renewalQueueCount);
+router.get(
+  "/vacancies",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_admin_list",
+    entityType: "vacancy",
+    details: (req) => ({
+      page: Number(req.query.page) || 1,
+    }),
+  }),
+  vacancyController.adminVacancies,
+);
 router.get("/feedback/unread-count", adminController.adminFeedbackUnread);
 router.get("/feedback", adminController.adminFeedbackList);
 router.get("/feedback/:schoolId", adminController.adminFeedbackThread);
