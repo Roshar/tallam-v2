@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as schoolController from "../controllers/school.controller.js";
+import * as vacancyController from "../controllers/vacancy.controller.js";
 import {
   requireAuth,
   requireActiveSchoolCabinet,
@@ -69,6 +70,62 @@ router.get(
 
 router.use(requireActiveSchoolCabinet);
 
+router.get("/vacancies/meta", vacancyController.vacancyFilters);
+router.get(
+  "/vacancies",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_list",
+    entityType: "vacancy",
+    details: (req) => ({
+      scope: req.query.scope === "others" ? "others" : "mine",
+      subject: String(req.query.subject ?? "").trim().slice(0, 200),
+      school: String(req.query.school ?? "").trim().slice(0, 200),
+      status: String(req.query.status ?? "").trim().slice(0, 20),
+      page: Number(req.query.page) || 1,
+    }),
+  }),
+  vacancyController.vacancies,
+);
+router.post(
+  "/vacancies",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_create",
+    entityType: "vacancy",
+  }),
+  vacancyController.createSchoolVacancy,
+);
+router.get(
+  "/vacancies/:vacancyId",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_view",
+    entityType: "vacancy",
+    entityId: (req) => req.params.vacancyId,
+  }),
+  vacancyController.vacancy,
+);
+router.put(
+  "/vacancies/:vacancyId",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_update",
+    entityType: "vacancy",
+    entityId: (req) => req.params.vacancyId,
+  }),
+  vacancyController.updateSchoolVacancy,
+);
+router.post(
+  "/vacancies/:vacancyId/close",
+  auditHttpAction({
+    category: "cabinet",
+    action: "cabinet.vacancy_close",
+    entityType: "vacancy",
+    entityId: (req) => req.params.vacancyId,
+  }),
+  vacancyController.closeSchoolVacancy,
+);
 router.get("/dashboard", schoolController.schoolDashboard);
 router.get("/feedback/unread", schoolController.schoolFeedbackUnread);
 router.get("/feedback", schoolController.schoolFeedbackThread);

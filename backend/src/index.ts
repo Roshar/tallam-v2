@@ -16,6 +16,7 @@ import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.se
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
+import { ensureVacancySchema } from "./services/vacancy.service.js";
 import { ensureRecoverySchema } from "./services/password-recovery.service.js";
 import { requireAuth } from "./middleware/auth.js";
 import {
@@ -114,6 +115,9 @@ app.listen(config.port, () => {
   });
   void ensureSchoolFeedbackSchema().catch((error) => {
     console.error("Failed to initialize school feedback schema:", error);
+  });
+  void ensureVacancySchema().catch((error) => {
+    console.error("Failed to initialize vacancies schema:", error);
   });
   void ensureRecoverySchema().catch((error) => {
     console.error("Failed to initialize recovery requests schema:", error);

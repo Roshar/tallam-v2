@@ -1,0 +1,248 @@
+.vacancies-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.vacancies-header .page-title {
+  margin-bottom: 0.35rem;
+}
+
+.vacancies-header .btn {
+  width: auto;
+  flex: 0 0 auto;
+}
+
+.vacancies-tabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.vacancies-tabs__item {
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: #fff;
+  color: var(--color-darkblue);
+  font-weight: 700;
+}
+
+.vacancies-tabs__item.active {
+  background: var(--color-darkblue);
+  border-color: var(--color-darkblue);
+  color: #fff;
+}
+
+.vacancies-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.vacancy-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.vacancy-card,
+.vacancy-view {
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.vacancy-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.vacancy-card__top h3,
+.vacancy-view .page-title {
+  margin: 0;
+}
+
+.vacancy-card__top a {
+  color: var(--color-darkblue);
+  text-decoration: none;
+}
+
+.vacancy-card__top a:hover {
+  text-decoration: underline;
+}
+
+.vacancy-status {
+  flex: 0 0 auto;
+  padding: 0.2rem 0.55rem;
+  border-radius: var(--radius-full);
+  background: var(--color-lightblue);
+  color: var(--color-darkblue);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.vacancy-status--closed,
+.vacancy-status--expired {
+  background: #f3f5f8;
+  color: var(--color-text-muted);
+}
+
+.vacancy-status--draft {
+  background: #fff4d6;
+  color: #8a5a00;
+}
+
+.vacancy-card__school,
+.vacancy-card__subject {
+  margin: 0.35rem 0 0;
+}
+
+.vacancy-card__subject {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.vacancy-card__facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0.7rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: 0.92rem;
+}
+
+.vacancy-card__actions,
+.vacancy-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.vacancy-card__actions .btn,
+.vacancy-form__actions .btn,
+.vacancy-view .btn {
+  width: auto;
+}
+
+.vacancy-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.vacancy-form__school {
+  margin: 0;
+  font-weight: 700;
+}
+
+.vacancy-form__text {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.vacancy-form__extra {
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.vacancy-form__extra legend {
+  padding: 0 0.4rem;
+  color: var(--color-darkblue);
+  font-weight: 700;
+}
+
+.vacancy-subjects {
+  max-height: 220px;
+  overflow: auto;
+  margin-top: 0.45rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fff;
+}
+
+.vacancy-subjects__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.28rem 0;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.vacancy-subjects__item input {
+  flex: 0 0 auto;
+}
+
+.vacancy-subjects__hint {
+  margin: 0.4rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+.vacancy-form__optional {
+  margin-left: 0.35rem;
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.vacancy-view__description {
+  margin: 1rem 0 0;
+  white-space: pre-wrap;
+}
+
+.vacancy-view__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+  margin: 1rem 0 0;
+}
+
+.vacancy-view__facts div {
+  margin: 0;
+}
+
+.vacancy-view__facts dt {
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.vacancy-view__facts dd {
+  margin: 0.15rem 0 0;
+  white-space: pre-wrap;
+}
+
+.vacancies-empty {
+  margin-top: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .vacancies-header,
+  .vacancy-card__top {
+    flex-direction: column;
+  }
+
+  .vacancies-header .btn,
+  .vacancy-card__actions .btn,
+  .vacancy-form__actions .btn,
+  .vacancy-view .btn {
+    width: 100%;
+  }
+
+  .vacancies-filters,
+  .vacancy-view__facts,
+  .vacancy-form .form-grid {
+    grid-template-columns: 1fr;
+  }
+}

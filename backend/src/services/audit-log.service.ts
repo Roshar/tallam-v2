@@ -212,6 +212,31 @@ export const AUDIT_ACTIONS = [
     action: "cabinet.feedback_reply",
     label: "Ответ администрации на отзыв школы",
   },
+  {
+    category: "cabinet",
+    action: "cabinet.vacancy_list",
+    label: "Просмотр списка вакансий",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.vacancy_view",
+    label: "Просмотр вакансии",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.vacancy_create",
+    label: "Создание вакансии",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.vacancy_update",
+    label: "Изменение вакансии",
+  },
+  {
+    category: "cabinet",
+    action: "cabinet.vacancy_close",
+    label: "Закрытие вакансии",
+  },
 ] as const;
 
 export const AUDIT_CATEGORIES = [
@@ -393,7 +418,7 @@ export function auditHttpAction(options: {
         !Array.isArray(res.locals.auditDetails)
           ? (res.locals.auditDetails as Record<string, unknown>)
           : null;
-      const extraEntityId = extraDetails?.renewalId;
+      const extraEntityId = extraDetails?.renewalId ?? extraDetails?.vacancyId;
       void recordAuditLog({
         actorUserId: user?.id ?? null,
         actorEmail: user?.email ?? fallbackEmail ?? "unknown",

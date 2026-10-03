@@ -12,6 +12,7 @@ export const SCHOOL_MENU = [
     label: "Проект «Анализ урока»",
     to: "/school/lesson-analysis",
   },
+  { id: "vacancies", label: "Вакансии", to: "/school/vacancies" },
   { id: "feedback", label: "Отзывы и пожелания", to: "/school/feedback" },
 ] as const;
 

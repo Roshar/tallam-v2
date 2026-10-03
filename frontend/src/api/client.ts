@@ -16,6 +16,12 @@ import type {
   WorkersResponse,
 } from "../types/school";
 import type {
+  VacancyDetail,
+  VacancyFiltersMeta,
+  VacancyListResponse,
+  VacancyPayload,
+} from "../types/vacancy";
+import type {
   AdminDashboard,
   AdminAuditLogOptions,
   AdminAuditLogsResponse,
@@ -488,6 +494,58 @@ export const api = {
 
   schoolProfile() {
     return request<SchoolProfile>("/api/school/profile");
+  },
+
+  vacancyFilters() {
+    return request<VacancyFiltersMeta>("/api/school/vacancies/meta");
+  },
+
+  vacancies(params: {
+    scope: "others" | "mine";
+    subject?: string;
+    areaId?: number;
+    school?: string;
+    salaryFrom?: string;
+    hoursFrom?: string;
+    status?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const search = new URLSearchParams();
+    search.set("scope", params.scope);
+    if (params.subject) search.set("subject", params.subject);
+    if (params.areaId) search.set("areaId", String(params.areaId));
+    if (params.school) search.set("school", params.school);
+    if (params.salaryFrom) search.set("salaryFrom", params.salaryFrom);
+    if (params.hoursFrom) search.set("hoursFrom", params.hoursFrom);
+    if (params.status) search.set("status", params.status);
+    search.set("page", String(params.page ?? 1));
+    search.set("limit", String(params.limit ?? 20));
+    return request<VacancyListResponse>(`/api/school/vacancies?${search}`);
+  },
+
+  vacancy(id: number) {
+    return request<VacancyDetail>(`/api/school/vacancies/${id}`);
+  },
+
+  createVacancy(payload: VacancyPayload) {
+    return request<VacancyDetail>("/api/school/vacancies", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  updateVacancy(id: number, payload: VacancyPayload) {
+    return request<VacancyDetail>(`/api/school/vacancies/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  closeVacancy(id: number) {
+    return request<VacancyDetail>(`/api/school/vacancies/${id}/close`, {
+      method: "POST",
+    });
   },
 
   schoolPresence() {
