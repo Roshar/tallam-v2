@@ -21,6 +21,7 @@ router.get(
   adminController.downloadDatabaseBackup,
 );
 router.get("/online-schools", adminController.onlineSchools);
+router.get("/visits", adminController.schoolVisits);
 router.get("/schools/areas", adminController.schoolAreas);
 router.get("/schools/email-availability", adminController.schoolEmailAvailability);
 router.post(

@@ -48,6 +48,7 @@ import {
   submitSchoolRenewal,
 } from "../services/subscription-renewal.service.js";
 import { changeSchoolCabinetPassword } from "../services/password-reset.service.js";
+import { recordSchoolPresence } from "../services/school-visits.service.js";
 
 function getSchoolId(req: Request): number | null {
   const user = req.session.user;
@@ -99,7 +100,15 @@ export async function schoolDashboard(req: Request, res: Response) {
   }
 }
 
-export async function schoolPresence(_req: Request, res: Response) {
+export async function schoolPresence(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (schoolId && !req.session.impersonator) {
+    try {
+      await recordSchoolPresence(schoolId);
+    } catch (error) {
+      console.error("School presence error:", error);
+    }
+  }
   return res.json({ ok: true });
 }
 

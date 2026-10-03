@@ -11,6 +11,30 @@ export interface AdminRecentSchool {
   status: "on" | "off" | "" | null;
 }
 
+export interface AdminVisitPeriod {
+  schools: number;
+  visits: number;
+  from: string;
+  to: string;
+}
+
+export interface AdminVisitStats {
+  day: AdminVisitPeriod;
+  week: AdminVisitPeriod;
+  month: AdminVisitPeriod;
+  schools: {
+    schoolId: number;
+    schoolName: string;
+    areaName: string | null;
+    visits: number;
+  }[];
+  areas: {
+    areaName: string;
+    schools: number;
+    visits: number;
+  }[];
+}
+
 export interface AdminDashboard {
   schools: number;
   activeSchoolAccounts: number;

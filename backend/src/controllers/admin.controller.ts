@@ -24,6 +24,7 @@ import {
   SchoolRegisterError,
 } from "../services/school-register.service.js";
 import { streamDatabaseBackup } from "../services/database-backup.service.js";
+import { getSchoolVisitStats } from "../services/school-visits.service.js";
 import { purgeSchoolTeachersAndEvaluations } from "../services/school-purge.service.js";
 import {
   activateSchoolCabinet,
@@ -129,6 +130,15 @@ export async function dashboard(_req: Request, res: Response) {
     return res
       .status(500)
       .json({ error: "Не удалось загрузить данные администратора" });
+  }
+}
+
+export async function schoolVisits(_req: Request, res: Response) {
+  try {
+    return res.json(await getSchoolVisitStats());
+  } catch (error) {
+    console.error("Admin school visits error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить посещения" });
   }
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../../api/client";
-import type { AdminDashboard } from "../../types/admin";
+import type { AdminDashboard, AdminVisitStats } from "../../types/admin";
 
 function statusLabel(status: AdminDashboard["recentSchools"][number]["status"]) {
   if (status === "on") {
@@ -13,8 +13,25 @@ function statusLabel(status: AdminDashboard["recentSchools"][number]["status"]) 
   return "Нет кабинета";
 }
 
+function countLabel(value: number, one: string, few: string, many: string) {
+  const lastTwo = value % 100;
+  const last = value % 10;
+  if (lastTwo >= 11 && lastTwo <= 14) return many;
+  if (last === 1) return one;
+  if (last >= 2 && last <= 4) return few;
+  return many;
+}
+
+function periodNote(period: AdminVisitStats["day"]) {
+  const visits = countLabel(period.visits, "заход", "захода", "заходов");
+  if (period.from === period.to) return visits;
+  const schools = `${period.schools} ${countLabel(period.schools, "школа", "школы", "школ")}`;
+  return `${visits}, ${schools}`;
+}
+
 export function AdminDashboardPage() {
   const [dashboard, setDashboard] = useState<AdminDashboard | null>(null);
+  const [visits, setVisits] = useState<AdminVisitStats | null>(null);
   const [error, setError] = useState("");
   const [backupLoading, setBackupLoading] = useState(false);
   const [backupNotice, setBackupNotice] = useState("");
@@ -22,6 +39,9 @@ export function AdminDashboardPage() {
   useEffect(() => {
     api.adminDashboard().then(setDashboard).catch((err: Error) => {
       setError(err.message);
+    });
+    api.adminVisitStats().then(setVisits).catch(() => {
+      /* блок посещений необязателен для остальных цифр */
     });
   }, []);
 
@@ -198,6 +218,88 @@ export function AdminDashboardPage() {
               </div>
             </article>
           </section>
+
+          {visits ? (
+            <section className="admin-panel admin-visits" aria-label="Посещения кабинетов">
+              <div className="admin-panel__header">
+                <div>
+                  <h3>Посещения кабинетов</h3>
+                  <p>
+                    Один заход: школа открыла кабинет в этот день. Повторные
+                    обновления страницы в тот же день не считаются отдельно.
+                  </p>
+                </div>
+              </div>
+              <div className="admin-visits__periods">
+                <article>
+                  <span>Сегодня</span>
+                  <strong>{visits.day.visits}</strong>
+                  <p>{periodNote(visits.day)}</p>
+                </article>
+                <article>
+                  <span>Неделя</span>
+                  <strong>{visits.week.visits}</strong>
+                  <p>{periodNote(visits.week)}</p>
+                </article>
+                <article>
+                  <span>Месяц</span>
+                  <strong>{visits.month.visits}</strong>
+                  <p>{periodNote(visits.month)}</p>
+                </article>
+              </div>
+              <div className="admin-visits__lists">
+                <div>
+                  <h4>Школы за этот месяц</h4>
+                  {visits.schools.length ? (
+                    <ol>
+                      {visits.schools.map((school) => (
+                        <li key={school.schoolId}>
+                          <div>
+                            <Link to={`/admin/schools/${school.schoolId}`}>
+                              {school.schoolName}
+                            </Link>
+                            {school.areaName ? <span>{school.areaName}</span> : null}
+                          </div>
+                          <b>
+                            {school.visits}{" "}
+                            {countLabel(school.visits, "день", "дня", "дней")}
+                          </b>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="admin-panel__empty">
+                      Пока нет заходов. Цифры появятся, когда школы откроют кабинет.
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <h4>Районы за этот месяц</h4>
+                  {visits.areas.length ? (
+                    <ol>
+                      {visits.areas.map((area) => (
+                        <li key={area.areaName}>
+                          <div>
+                            <strong>{area.areaName}</strong>
+                            <span>
+                              {area.schools}{" "}
+                              {countLabel(area.schools, "школа", "школы", "школ")}
+                            </span>
+                          </div>
+                          <b>
+                            {area.visits}{" "}
+                            {countLabel(area.visits, "заход", "захода", "заходов")}
+                          </b>
+                        </li>
+                      ))}
+                    </ol>
+                  ) : (
+                    <p className="admin-panel__empty">Районы появятся вместе с заходами.</p>
+                  )}
+                </div>
+              </div>
+            </section>
+          ) : null}
 
           <div className="admin-dashboard__content-grid">
             <section className="admin-panel">

@@ -801,6 +801,102 @@
   color: var(--color-darkblue);
 }
 
+.admin-visits {
+  margin-bottom: 1.25rem;
+}
+
+.admin-visits__periods {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+  padding: 0 1.25rem 1rem;
+}
+
+.admin-visits__periods article {
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #f7fafc;
+}
+
+.admin-visits__periods span,
+.admin-visits__lists h4 {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.admin-visits__periods strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--color-darkblue);
+  font-size: 1.7rem;
+  line-height: 1.1;
+}
+
+.admin-visits__periods p {
+  margin: 0.25rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.82rem;
+}
+
+.admin-visits__lists {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.admin-visits__lists h4 {
+  margin: 0 0 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.admin-visits__lists ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-visits__lists li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--color-border);
+}
+
+.admin-visits__lists li div {
+  min-width: 0;
+}
+
+.admin-visits__lists a,
+.admin-visits__lists li strong {
+  color: var(--color-darkblue);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-visits__lists a:hover {
+  text-decoration: underline;
+}
+
+.admin-visits__lists li span,
+.admin-visits__lists li b {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-visits__lists li b {
+  flex: 0 0 auto;
+  color: var(--color-darkblue);
+  white-space: nowrap;
+}
+
 .admin-panel__empty {
   margin: 0;
   padding: 2rem;
@@ -1623,7 +1719,9 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .admin-dashboard__content-grid {
+  .admin-dashboard__content-grid,
+  .admin-visits__lists,
+  .admin-visits__periods {
     grid-template-columns: 1fr;
   }
 

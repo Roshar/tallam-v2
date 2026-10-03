@@ -18,6 +18,7 @@ import { ensureEvaluationEmailSchema } from "./services/card-view.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
 import { ensureVacancySchema } from "./services/vacancy.service.js";
+import { ensureSchoolVisitSchema } from "./services/school-visits.service.js";
 import { ensureRecoverySchema } from "./services/password-recovery.service.js";
 import { requireAuth } from "./middleware/auth.js";
 import {
@@ -122,6 +123,9 @@ app.listen(config.port, () => {
   });
   void ensureVacancySchema().catch((error) => {
     console.error("Failed to initialize vacancies schema:", error);
+  });
+  void ensureSchoolVisitSchema().catch((error) => {
+    console.error("Failed to initialize school visit schema:", error);
   });
   void ensureRecoverySchema().catch((error) => {
     console.error("Failed to initialize recovery requests schema:", error);

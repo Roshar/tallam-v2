@@ -37,6 +37,7 @@ import type {
   AdminSubscriptionArea,
   AdminSubscriptionsResponse,
   AdminSupportConversation,
+  AdminVisitStats,
 } from "../types/admin";
 
 export type AccountType = "school" | "methodist" | "admin" | "accountant";
@@ -235,6 +236,10 @@ export const api = {
 
   adminOnlineSchools() {
     return request<{ onlineSchools: number }>("/api/admin/online-schools");
+  },
+
+  adminVisitStats() {
+    return request<AdminVisitStats>("/api/admin/visits");
   },
 
   adminAuditLogOptions() {
