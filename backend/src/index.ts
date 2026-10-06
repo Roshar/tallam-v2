@@ -59,6 +59,12 @@ const sessionStore = new MySQLStore(
 );
 
 app.set("trust proxy", 1);
+app.set("etag", false);
+
+app.use("/api", (_req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 
 app.use(cors({
   origin: config.frontendUrl,

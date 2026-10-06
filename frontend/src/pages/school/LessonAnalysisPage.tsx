@@ -47,7 +47,7 @@ export function LessonAnalysisPage() {
 
         {error ? <div className="alert alert-error">{error}</div> : null}
 
-        {!loading && !project ? (
+        {!loading && !error && !project ? (
           <div className="alert alert-error">
             Проект «Анализ урока» не подключён к вашей школе. Обратитесь в
             техподдержку.
