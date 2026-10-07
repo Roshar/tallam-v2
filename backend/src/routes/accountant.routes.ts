@@ -18,6 +18,15 @@ router.post(
 router.use(requireAuth, requireRole("accountant"));
 router.get("/areas", accountantController.areas);
 router.get("/renewals", accountantController.renewals);
+router.post(
+  "/settlements",
+  auditHttpAction({
+    category: "accountant",
+    action: "accountant.settlement_create",
+    entityType: "contract_settlement",
+  }),
+  accountantController.createSettlement,
+);
 router.get(
   "/renewals/archive",
   auditHttpAction({

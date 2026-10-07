@@ -164,10 +164,17 @@ export const api = {
     );
   },
 
-  accountantRenewals(params?: { areaId?: number; search?: string }) {
+  accountantRenewals(params?: {
+    areaId?: number;
+    search?: string;
+    settlement?: "all" | "pending" | "settled";
+  }) {
     const search = new URLSearchParams();
     if (params?.areaId) search.set("areaId", String(params.areaId));
     if (params?.search) search.set("search", params.search);
+    if (params?.settlement && params.settlement !== "all") {
+      search.set("settlement", params.settlement);
+    }
     const query = search.toString();
     return request<{
       items: Array<{
@@ -177,9 +184,34 @@ export const api = {
         email: string | null;
         status: "paid";
         contractNumber: string | null;
+        settlement: {
+          id: number;
+          contractNumber: string | null;
+          settlementDate: string;
+          label: string;
+        } | null;
       }>;
       archiveLimit: number;
     }>(`/api/status/renewals${query ? `?${query}` : ""}`);
+  },
+
+  createAccountantSettlement(input: {
+    renewalIds: number[];
+    contractNumber: string;
+    settlementDate: string;
+  }) {
+    return request<{
+      settlement: {
+        id: number;
+        contractNumber: string | null;
+        settlementDate: string;
+        label: string;
+        schoolCount: number;
+      };
+    }>("/api/status/settlements", {
+      method: "POST",
+      body: JSON.stringify(input),
+    });
   },
 
   downloadAccountantContract(requestId: number) {
@@ -241,6 +273,54 @@ export const api = {
 
   adminVisitStats() {
     return request<AdminVisitStats>("/api/admin/visits");
+  },
+
+  adminSettlements(params?: {
+    settlement?: "all" | "pending" | "settled";
+    search?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.settlement && params.settlement !== "all") {
+      search.set("settlement", params.settlement);
+    }
+    if (params?.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<{
+      summary: { paid: number; settled: number; waiting: number };
+      items: Array<{
+        renewalId: number;
+        schoolId: number;
+        schoolName: string;
+        area: string | null;
+        email: string | null;
+        settlement: {
+          id: number;
+          contractNumber: string | null;
+          settlementDate: string;
+          label: string;
+        } | null;
+      }>;
+    }>(`/api/admin/settlements${query ? `?${query}` : ""}`);
+  },
+
+  adminSettlement(settlementId: number) {
+    return request<{
+      settlement: {
+        id: number;
+        contractNumber: string | null;
+        settlementDate: string;
+        label: string;
+        createdBy: string;
+        createdAt: string;
+        schools: Array<{
+          renewalId: number;
+          schoolId: number;
+          schoolName: string;
+          area: string | null;
+          email: string | null;
+        }>;
+      };
+    }>(`/api/admin/settlements/${settlementId}`);
   },
 
   adminAuditLogOptions() {

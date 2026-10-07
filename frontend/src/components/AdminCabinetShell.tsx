@@ -8,6 +8,7 @@ const ADMIN_MENU = [
   { label: "Школы", to: "/admin/schools", enabled: true },
   { label: "Подписки", to: "/admin/subscriptions", enabled: true },
   { label: "Продления", to: "/admin/renewals", enabled: true },
+  { label: "Расчёты", to: "/admin/settlements", enabled: true },
   { label: "Отзывы", to: "/admin/feedback", enabled: true },
   { label: "Вакансии", to: "/admin/vacancies", enabled: true },
   { label: "Обращения", to: "/admin/recovery", enabled: true },

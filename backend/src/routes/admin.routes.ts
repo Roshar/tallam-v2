@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as adminController from "../controllers/admin.controller.js";
+import * as settlementController from "../controllers/settlement.controller.js";
 import * as vacancyController from "../controllers/vacancy.controller.js";
 import * as auditLogController from "../controllers/audit-log.controller.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
@@ -71,6 +72,8 @@ router.get("/subscriptions/areas", adminController.subscriptionAreas);
 router.get("/subscriptions/export", adminController.exportSubscriptions);
 router.get("/subscriptions", adminController.subscriptions);
 router.get("/renewals", adminController.renewalRequests);
+router.get("/settlements", settlementController.settlements);
+router.get("/settlements/:settlementId", settlementController.settlement);
 router.get("/renewals/pending-count", adminController.renewalQueueCount);
 router.get(
   "/vacancies",

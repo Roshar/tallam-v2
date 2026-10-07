@@ -9,6 +9,12 @@ import {
   listAccountantRenewals,
 } from "../services/accountant.service.js";
 import {
+  createContractSettlement,
+  parseSettlementFilter,
+  SettlementConflictError,
+  SettlementInputError,
+} from "../services/contract-settlement.service.js";
+import {
   buildRenewalDocument,
   RenewalDocumentUnavailableError,
 } from "../services/subscription-documents.service.js";
@@ -30,6 +36,7 @@ function filters(req: Request) {
   return {
     areaId: Number(req.query.areaId ?? 0) || 0,
     search: String(req.query.search ?? ""),
+    settlement: parseSettlementFilter(String(req.query.settlement ?? "")),
   };
 }
 
@@ -99,6 +106,36 @@ export async function renewals(req: Request, res: Response) {
   } catch (error) {
     console.error("Accountant renewals error:", error);
     return res.status(500).json({ error: "Не удалось загрузить список" });
+  }
+}
+
+export async function createSettlement(req: Request, res: Response) {
+  const body = req.body as {
+    renewalIds?: unknown;
+    contractNumber?: unknown;
+    settlementDate?: unknown;
+  };
+  try {
+    const settlement = await createContractSettlement({
+      renewalIds: body.renewalIds,
+      contractNumber: body.contractNumber,
+      settlementDate: body.settlementDate,
+      createdBy: req.session.user?.email ?? "accountant",
+    });
+    res.locals.auditDetails = {
+      settlementId: settlement.id,
+      schoolCount: settlement.schoolCount,
+    };
+    return res.status(201).json({ settlement });
+  } catch (error) {
+    if (error instanceof SettlementInputError) {
+      return res.status(400).json({ error: error.message });
+    }
+    if (error instanceof SettlementConflictError) {
+      return res.status(409).json({ error: error.message });
+    }
+    console.error("Accountant settlement error:", error);
+    return res.status(500).json({ error: "Не удалось оформить расчёт" });
   }
 }
 

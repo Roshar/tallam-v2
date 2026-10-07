@@ -27,6 +27,7 @@ import { AdminCreateSchoolPage } from "./pages/admin/AdminCreateSchoolPage";
 import { AdminSchoolsPage } from "./pages/admin/AdminSchoolsPage";
 import { AdminSubscriptionsPage } from "./pages/admin/AdminSubscriptionsPage";
 import { AdminRenewalsPage } from "./pages/admin/AdminRenewalsPage";
+import { AdminSettlementsPage } from "./pages/admin/AdminSettlementsPage";
 import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
 import { AdminFeedbackPage } from "./pages/admin/AdminFeedbackPage";
 import { AdminVacanciesPage } from "./pages/admin/AdminVacanciesPage";
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="schools/:schoolId" element={<AdminSchoolDetailPage />} />
             <Route path="subscriptions" element={<AdminSubscriptionsPage />} />
             <Route path="renewals" element={<AdminRenewalsPage />} />
+            <Route path="settlements" element={<AdminSettlementsPage />} />
             <Route path="feedback" element={<AdminFeedbackPage />} />
             <Route path="vacancies" element={<AdminVacanciesPage />} />
             <Route

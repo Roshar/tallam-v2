@@ -1,4 +1,10 @@
 import { query } from "../db/pool.js";
+import {
+  ensureContractSettlementSchema,
+  toSettlementRef,
+  type SettlementFilter,
+  type SettlementRef,
+} from "./contract-settlement.service.js";
 import { ensureSubscriptionRenewalSchema } from "./subscription-renewal.service.js";
 
 export const ACCOUNTANT_ARCHIVE_LIMIT = 200;
@@ -31,6 +37,7 @@ export interface AccountantRenewalRow {
   email: string | null;
   status: "paid";
   contractNumber: string | null;
+  settlement: SettlementRef | null;
 }
 
 export interface AccountantArea {
@@ -43,7 +50,7 @@ function likeTerm(search: string): string | null {
   return value ? `%${value}%` : null;
 }
 
-function filters(areaId: number, search: string) {
+function filters(areaId: number, search: string, settlement: SettlementFilter) {
   const hidden = hiddenSchoolFilter();
   const conditions = ["rr.status = 'paid'", hidden.sql];
   const params: unknown[] = [...hidden.params];
@@ -56,6 +63,8 @@ function filters(areaId: number, search: string) {
     conditions.push("s.school_name LIKE ?");
     params.push(like);
   }
+  if (settlement === "pending") conditions.push("csi.id IS NULL");
+  if (settlement === "settled") conditions.push("csi.id IS NOT NULL");
   return { where: conditions.join(" AND "), params };
 }
 
@@ -73,19 +82,38 @@ const LIST_SQL = `
       LIMIT 1
     ) AS email,
     rr.status,
-    rr.contract_number AS contractNumber
+    rr.contract_number AS contractNumber,
+    cs.id AS settlementId,
+    cs.contract_number AS settlementContractNumber,
+    cs.settlement_date AS settlementDate
   FROM subscription_renewal_requests rr
   JOIN schools s ON s.id_school = rr.school_id
   LEFT JOIN area a ON a.id_area = s.area_id
+  LEFT JOIN contract_settlement_items csi ON csi.renewal_request_id = rr.id
+  LEFT JOIN contract_settlements cs ON cs.id = csi.settlement_id
 `;
 
 export async function listAccountantRenewals(input: {
   areaId: number;
   search: string;
+  settlement?: SettlementFilter;
 }): Promise<AccountantRenewalRow[]> {
   await ensureSubscriptionRenewalSchema();
-  const { where, params } = filters(input.areaId, input.search);
-  const rows = await query<AccountantRenewalRow[]>(
+  await ensureContractSettlementSchema();
+  const { where, params } = filters(
+    input.areaId,
+    input.search,
+    input.settlement ?? "all",
+  );
+  const rows = await query<
+    Array<
+      AccountantRenewalRow & {
+        settlementId: number | null;
+        settlementContractNumber: string | null;
+        settlementDate: Date | string | null;
+      }
+    >
+  >(
     `${LIST_SQL}
      WHERE ${where}
      ORDER BY rr.paid_at DESC, rr.id DESC`,
@@ -98,6 +126,7 @@ export async function listAccountantRenewals(input: {
     email: row.email,
     status: "paid",
     contractNumber: row.contractNumber,
+    settlement: toSettlementRef(row),
   }));
 }
 
@@ -105,6 +134,7 @@ export async function findVisibleAccountantRenewal(
   requestId: number,
 ): Promise<(AccountantRenewalRow & { schoolId: number }) | null> {
   await ensureSubscriptionRenewalSchema();
+  await ensureContractSettlementSchema();
   const hidden = hiddenSchoolFilter();
   const rows = await query<(AccountantRenewalRow & { schoolId: number })[]>(
     `${LIST_SQL}
@@ -122,6 +152,7 @@ export async function findVisibleAccountantRenewal(
     email: row.email,
     status: "paid",
     contractNumber: row.contractNumber,
+    settlement: null,
   };
 }
 
