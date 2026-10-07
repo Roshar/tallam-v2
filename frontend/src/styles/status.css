@@ -61,7 +61,7 @@
 }
 
 .status-page {
-  max-width: 1100px;
+  max-width: 1240px;
   margin: 0 auto;
   padding: 1.5rem 1rem 3rem;
 }
@@ -125,18 +125,78 @@
   font-size: 0.85rem;
 }
 
+.status-table {
+  table-layout: fixed;
+  min-width: 980px;
+}
+
+.status-table th:nth-child(1),
+.status-table td:nth-child(1) {
+  width: 3rem;
+}
+
+.status-table th:nth-child(2),
+.status-table td:nth-child(2) {
+  width: 3.25rem;
+}
+
+.status-table th:nth-child(4),
+.status-table td:nth-child(4) {
+  width: 15rem;
+}
+
+.status-table th:nth-child(5),
+.status-table td:nth-child(5) {
+  width: 7.5rem;
+}
+
+.status-table th:nth-child(6),
+.status-table td:nth-child(6) {
+  width: 12.5rem;
+}
+
+.status-table th:nth-child(7),
+.status-table td:nth-child(7) {
+  width: 8.5rem;
+}
+
+.status-table th:first-child,
+.status-table td:first-child,
+.status-table th:nth-child(2),
+.status-table td:nth-child(2),
+.status-table th:last-child,
+.status-table td:last-child {
+  text-align: center;
+}
+
+.status-table th:first-child,
+.status-table td:first-child {
+  width: 3rem;
+  padding-left: 0.4rem;
+  padding-right: 0.4rem;
+}
+
+.status-table th {
+  white-space: normal;
+  line-height: 1.25;
+}
+
+.status-table td:nth-child(4),
+.status-table td:nth-child(5),
+.status-table td:nth-child(6) {
+  white-space: nowrap;
+}
+
 .status-page .data-table input[type="checkbox"] {
   width: 1rem;
   height: 1rem;
   margin: 0;
 }
 
-.status-check-all {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.78rem;
-  font-weight: 600;
+.status-page .status-table .btn {
+  width: auto;
+  min-width: 0;
+  padding: 0.4rem 0.85rem;
   white-space: nowrap;
 }
 

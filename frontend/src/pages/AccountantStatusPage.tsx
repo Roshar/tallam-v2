@@ -332,27 +332,33 @@ export function AccountantStatusPage() {
       {error ? <div className="alert alert-error">{error}</div> : null}
 
       <div className="table-wrap">
-        <table className="data-table">
+        <table className="data-table status-table">
+          <colgroup>
+            <col className="status-table__check" />
+            <col className="status-table__num" />
+            <col className="status-table__school" />
+            <col className="status-table__mail" />
+            <col className="status-table__state" />
+            <col className="status-table__settlement" />
+            <col className="status-table__file" />
+          </colgroup>
           <thead>
             <tr>
               <th>
-                <label className="status-check-all">
-                  <input
-                    type="checkbox"
-                    aria-label="Выбрать все"
-                    checked={allSelected}
-                    disabled={selectableIds.length === 0}
-                    onChange={toggleAll}
-                  />
-                  <span>Выбрать все</span>
-                </label>
+                <input
+                  type="checkbox"
+                  aria-label="Выбрать все"
+                  checked={allSelected}
+                  disabled={selectableIds.length === 0}
+                  onChange={toggleAll}
+                />
               </th>
               <th>№</th>
               <th>Школа</th>
               <th>Почта</th>
               <th>Статус</th>
               <th>Расчёт по договору</th>
-              <th />
+              <th>Договор и акт</th>
             </tr>
           </thead>
           <tbody>
@@ -392,9 +398,7 @@ export function AccountantStatusPage() {
                       disabled={downloadingId === item.id}
                       onClick={() => void downloadOne(item.id)}
                     >
-                      {downloadingId === item.id
-                        ? "Файл..."
-                        : "Скачать договор и акт"}
+                      {downloadingId === item.id ? "Файл..." : "Скачать"}
                     </button>
                   </td>
                 </tr>
