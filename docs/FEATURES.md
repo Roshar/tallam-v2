@@ -303,6 +303,7 @@
 - **Где:** `backend/src/services/school-purge.service.ts`, `backend/src/services/database-backup.service.ts`, `PATCH /api/admin/schools/:schoolId`, `POST /api/admin/schools/:schoolId/purge-workers`, `GET /api/admin/backup`.
 - **Проверка:** карточка школы → переименовать; `GET /api/admin/backup` под администратором скачивает `.sql.gz`.
 - **Ограничения:** очистка необратима — только для ошибочно заведённых школ.
+- **История:** этим коммитом закрыто осиротение журнала рассылки — `evaluation_email_sends` школы удаляется вместе с её картами (раньше оставались строки, ссылающиеся на несуществующие карты).
 
 ### 7.5 Отзывы школ
 `✅` · введено `c31de9b` (17.09.2026, Cursor)

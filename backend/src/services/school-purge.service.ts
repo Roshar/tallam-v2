@@ -180,6 +180,13 @@ export async function purgeSchoolTeachersAndEvaluations(
       "DELETE FROM evaluation_comments WHERE school_id = ?",
       [schoolId],
     );
+    // Без этой строки журнал отправленных писем оставался осиротевшим:
+    // карты школы удаляются ниже, а записи о рассылке ссылаются на их id.
+    await exec(
+      connection,
+      "DELETE FROM evaluation_email_sends WHERE school_id = ?",
+      [schoolId],
+    );
     await exec(
       connection,
       `DELETE ec FROM evaluation_comments ec
