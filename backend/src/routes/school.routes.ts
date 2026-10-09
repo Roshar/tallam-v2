@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as schoolController from "../controllers/school.controller.js";
+import * as teacherDeleteController from "../controllers/teacher-delete.controller.js";
 import * as vacancyController from "../controllers/vacancy.controller.js";
 import {
   requireAuth,
@@ -198,6 +199,20 @@ router.delete(
     details: (req) => ({ projectId: req.params.projectId }),
   }),
   schoolController.removeWorkerFromProject,
+);
+router.get(
+  "/workers/:teacherId/deletion-preview",
+  teacherDeleteController.previewWorkerDeletion,
+);
+router.delete(
+  "/workers/:teacherId",
+  auditHttpAction({
+    category: "teachers",
+    action: "teacher.delete",
+    entityType: "teacher",
+    entityId: (req) => req.params.teacherId,
+  }),
+  teacherDeleteController.deleteWorker,
 );
 router.get(
   "/projects/lesson-analysis",

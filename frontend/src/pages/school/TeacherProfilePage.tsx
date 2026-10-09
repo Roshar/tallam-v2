@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
+import { DeleteTeacherModal } from "../../components/DeleteTeacherModal";
 import { ProjectStatusBadges } from "../../components/ProjectStatusBadges";
 import { TeacherFormModal } from "../../components/TeacherFormModal";
 import type { TeacherDetail } from "../../types/school";
@@ -31,10 +32,12 @@ function ProfileField({
 
 export function TeacherProfilePage() {
   const { teacherId = "" } = useParams();
+  const navigate = useNavigate();
   const [teacher, setTeacher] = useState<TeacherDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [projectUpdatingId, setProjectUpdatingId] = useState<number | null>(null);
 
   const loadTeacher = useCallback(async () => {
@@ -92,13 +95,22 @@ export function TeacherProfilePage() {
             </Link>
 
             {teacher ? (
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={() => setEditOpen(true)}
-              >
-                Редактировать
-              </button>
+              <div className="teacher-profile__actions">
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={() => setEditOpen(true)}
+                >
+                  Редактировать
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => setDeleteOpen(true)}
+                >
+                  Удалить
+                </button>
+              </div>
             ) : null}
           </div>
 
@@ -234,6 +246,15 @@ export function TeacherProfilePage() {
           teacherId={teacher.id}
           onClose={() => setEditOpen(false)}
           onSuccess={() => void loadTeacher()}
+        />
+      ) : null}
+
+      {teacher ? (
+        <DeleteTeacherModal
+          open={deleteOpen}
+          teacherId={teacher.id}
+          onClose={() => setDeleteOpen(false)}
+          onDeleted={() => navigate("/school/workers", { replace: true })}
         />
       ) : null}
     </>

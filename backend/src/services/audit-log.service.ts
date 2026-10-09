@@ -129,6 +129,11 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "teachers",
+    action: "teacher.delete",
+    label: "Удаление работника",
+  },
+  {
+    category: "teachers",
     action: "teacher.export",
     label: "Экспорт работников",
   },

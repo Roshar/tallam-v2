@@ -205,6 +205,22 @@ export interface TeacherDetailResponse {
   teacher: TeacherDetail;
 }
 
+export interface TeacherDeletionSummary {
+  teacherId: string;
+  fullName: string;
+  evaluations: number;
+  comments: number;
+  projects: number;
+}
+
+export interface TeacherDeletionPreviewResponse {
+  preview: TeacherDeletionSummary;
+}
+
+export interface TeacherDeletionResponse {
+  deleted: TeacherDeletionSummary;
+}
+
 export type WorkersPageLimit = 20 | 50 | 100;
 
 export interface WorkersResponse {

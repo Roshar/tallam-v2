@@ -11,6 +11,8 @@ import type {
   SubmitRenewalPayload,
   SupportThread,
   TeacherDetailResponse,
+  TeacherDeletionPreviewResponse,
+  TeacherDeletionResponse,
   UpdateTeacherPayload,
   WorkerFormOptions,
   WorkersResponse,
@@ -822,6 +824,18 @@ export const api = {
       `/api/school/workers/${teacherId}/projects/${projectId}`,
       { method: "DELETE" },
     );
+  },
+
+  workerDeletionPreview(teacherId: string) {
+    return request<TeacherDeletionPreviewResponse>(
+      `/api/school/workers/${teacherId}/deletion-preview`,
+    );
+  },
+
+  deleteSchoolWorker(teacherId: string) {
+    return request<TeacherDeletionResponse>(`/api/school/workers/${teacherId}`, {
+      method: "DELETE",
+    });
   },
 
   async downloadWorkersBank() {

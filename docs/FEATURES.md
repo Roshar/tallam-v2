@@ -151,6 +151,19 @@
 - **Где:** `frontend/src/pages/school/SchoolFeedbackPage.tsx`, `frontend/src/components/SupportChat.tsx`, `frontend/src/components/SupportContacts.tsx`, `backend/src/services/school-feedback.service.ts`, `GET|POST /api/school/feedback`, `GET /api/school/feedback/unread`, таблицы `school_feedback`, `school_support_messages`.
 - **Проверка:** написать в «Отзывы и пожелания» → ответить из админки → сообщение видно школе.
 
+### 3.7 Удаление работника
+`✅` · введено этим коммитом (09.10.2026, DeepSeek Harness)
+
+- **Что:** на карточке работника есть кнопка «Удалить». Перед удалением показывается, что именно пропадёт: сколько оценок урока, комментариев и участий в проектах. Если терять есть что, удаление требует отдельной галочки подтверждения. Работник удаляется насовсем — следов в базе не остаётся.
+- **Где:** `frontend/src/components/DeleteTeacherModal.tsx`, `frontend/src/pages/school/TeacherProfilePage.tsx`, `backend/src/services/teacher-delete.service.ts`, `backend/src/controllers/teacher-delete.controller.ts`, `GET /api/school/workers/:teacherId/deletion-preview`, `DELETE /api/school/workers/:teacherId`. Затрагивает `teachers`, `teachers_old`, `card_from_project_teacher_mark3`, `card_from_project_teacher_mark2`, `evaluation_comments`, `outside_card`, `outside_card2`, `methodist_static`, `evaluation_email_sends`, таблицы связки из `project_middleware_names`, `discipline_middleware`, `training_kpk`. Новое действие журнала — `teacher.delete`.
+- **Проверка:** карточка работника → «Удалить» → в модалке счётчики → галочка → «Удалить навсегда» → возврат к списку без работника. В `/admin/logs`, категория «Работники», появляется «Удаление работника» с числами.
+- **Ограничения:**
+  - удаление необратимо и уменьшает счётчики оценок на главной странице школы;
+  - затрагивается только база v2 (`tallam_v2`): `old.tallam.ru` работает со своей базой на Beget и не меняется;
+  - таблица `cards` не чистится: в унаследованной схеме у неё `teacher_id int` (легаси-нумерация, не UUID), сравнение со строкой превратилось бы в `teacher_id = 0`. Таблица пуста и в проде, и локально; полная очистка школы по-прежнему чистит её по `school_id`;
+  - `id_card` пересекается между `card_from_project_teacher_mark2` и `card_from_project_teacher_mark3` (локально 2568 совпадений), поэтому зависимые строки удаляются только через JOIN с картой конкретного работника, а не по списку идентификаторов;
+  - работник удаляется только из своей школы: чужой идентификатор отдаёт 404.
+
 ---
 
 ## 4. Проект «Анализ урока»
