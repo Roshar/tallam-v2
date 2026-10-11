@@ -44,11 +44,13 @@ else
 fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
+KEEP_BUILDS=10   # храним последние 5 деплоев: на каждый приходится 2 каталога
 echo "→ Backing up the build currently on the server"
 ssh "${SSH_OPTS[@]}" "$HOST" "mkdir -p $BACKUP_DIR \
   && cp -r $REMOTE_DIR/backend/dist $BACKUP_DIR/backend-$STAMP \
   && cp -r $REMOTE_DIR/frontend/dist $BACKUP_DIR/frontend-$STAMP \
-  && echo '  $BACKUP_DIR/*-$STAMP'"
+  && cd $BACKUP_DIR && ls -1dt *-20* 2>/dev/null | tail -n +$((KEEP_BUILDS + 1)) | xargs -r rm -rf -- \
+  && echo '  $BACKUP_DIR/*-$STAMP (хранятся последние $((KEEP_BUILDS / 2)) деплоев)'"
 
 echo "→ Shipping artifacts"
 # Везём в dist.new и только потом подменяем: если передача оборвётся, на сервере
