@@ -51,10 +51,12 @@ ssh "${SSH_OPTS[@]}" "$HOST" "mkdir -p $BACKUP_DIR \
   && echo '  $BACKUP_DIR/*-$STAMP'"
 
 echo "→ Shipping artifacts"
-tar czf - -C backend dist \
-  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/backend/dist && tar xzf - -C $REMOTE_DIR/backend"
-tar czf - -C frontend dist \
-  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/frontend/dist && tar xzf - -C $REMOTE_DIR/frontend"
+# --no-mac-metadata: иначе macOS-тар тащит xattr-заголовки, и GNU tar на сервере
+#   ругается на каждый файл. --no-same-owner: иначе файлы остаются с локальным uid.
+tar --no-mac-metadata -czf - -C backend dist \
+  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/backend/dist && tar xzf - -C $REMOTE_DIR/backend --no-same-owner"
+tar --no-mac-metadata -czf - -C frontend dist \
+  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/frontend/dist && tar xzf - -C $REMOTE_DIR/frontend --no-same-owner"
 
 echo "→ Restarting the API (old.tallam.ru process is not touched)"
 ssh "${SSH_OPTS[@]}" "$HOST" "pm2 restart tallam-v2 --update-env >/dev/null && sleep 2 && pm2 list --no-color | grep -E 'tallam-v2|index '"
