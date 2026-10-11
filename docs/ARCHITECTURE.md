@@ -36,14 +36,16 @@
 
 Замеры перед закрытием: за сутки 126 запросов, из них 120 — один сканер, остальные — пробы `/.env`; **POST-запросов ноль**, то есть ни одного входа и ни одного сохранения. Живых пользователей не было.
 
-Как закрывали: процесс `index` остановлен и снят с автозапуска (`pm2 stop index && pm2 save`), конфиг `old.tallam.ru` заменён на перенаправление. Код `/home/app` и база Beget `govzalla_t_25` **не тронуты**.
+Как закрывали: процесс остановлен, запись удалена из PM2 и снята с автозапуска (`pm2 delete index && pm2 save` — теперь в `/root/.pm2/dump.pm2` только `tallam-v2`), конфиг `old.tallam.ru` заменён на перенаправление. Код `/home/app` (171 МБ) и база Beget `govzalla_t_25` **не тронуты**.
 
 Вернуть при необходимости:
 
 ```bash
-pm2 start index                     # поднять прежнюю версию на :4000
-# и вернуть в /etc/nginx/sites-available/tallam блок proxy_pass на 127.0.0.1:4000
-# из бэкапа /root/tallam-nginx-<штамп>.bak
+pm2 start /home/app/index.js --name index    # прежняя версия снова слушает :4000
+pm2 save
+# затем в /etc/nginx/sites-available/tallam вернуть блок old.tallam.ru
+# с proxy_pass http://127.0.0.1:4000 из бэкапа /root/tallam-nginx-<штамп>.bak
+nginx -t && systemctl reload nginx
 ```
 
 Если не оплатить VPS и его сотрут через 7 дней, пропадут: MariaDB `tallam_v2`, файл `/home/tallam-v2/.env`, журнал `backend/data/school-passwords.log`, сертификаты и сам сервер. GitHub останется.
@@ -52,7 +54,7 @@ pm2 start index                     # поднять прежнюю версию
 
 Монорепозиторий npm workspaces.
 
-- `frontend`: React 19 + Vite + TypeScript. В разработке проксирует `/api` на `http://localhost:4000`.
+- `frontend`: React 19 + Vite + TypeScript. В разработке проксирует `/api` на `http://localhost:4000` — это локальный API, у прода порт **4001**.
 - `backend`: Express + TypeScript. Компилируется в `backend/dist`.
 - Локальная БД: Docker MySQL 8, порт хоста **3307**, база `govzalla_t_25`, пользователь `tallam`.
 - Прод БД v2: MariaDB 11 на VPS, база `tallam_v2`.
