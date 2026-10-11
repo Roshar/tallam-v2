@@ -87,29 +87,30 @@
 
 ### Деплой
 
-Прод обновляется вручную, автодеплоя нет. Ключ для входа на VPS установлен.
+Автодеплоя нет, но и собирать на сервере **не нужно**: у VPS ~1 ГБ памяти, сборка упирается в предел, а ядро при нехватке памяти убивает не сборку, а самого крупного потребителя — MariaDB. Поэтому артефакты собираются на ноутбуке и привозятся готовыми:
+
+```bash
+npm run deploy
+```
+
+Скрипт [`scripts/deploy.sh`](../scripts/deploy.sh) делает всё по шагам: проверяет, что рабочее дерево чистое, собирает `backend/dist` и `frontend/dist` локально, тянет исходники на сервере через `git pull --ff-only`, при смене `package-lock.json` догоняет зависимости через `npm ci`, складывает текущую сборку сервера в `/var/backups/tallam/dist/`, везёт артефакты через `tar` по ssh (локальный rsync — это openrsync с урезанными возможностями, зависеть от него не хотим), перезапускает только `tallam-v2` и проверяет health и хеши ассетов.
+
+- nginx перезапускать не нужно: он отдаёт `frontend/dist` с диска.
+- Процесс `index` (v1, `old.tallam.ru`) скрипт не трогает.
+- Документация и прочие правки без кода деплоя не требуют: достаточно `git pull` на сервере.
+- **Откат:** вернуть сборку из `/var/backups/tallam/dist/{backend,frontend}-<штамп>` и `pm2 restart tallam-v2 --update-env`. Либо `git reset --hard <предыдущий-коммит>` и деплой заново.
+- Перед деплоем стоит убедиться, что офсайт-бэкап свежий: `npm run backup:fetch`.
+
+Аварийный путь, если под рукой нет ноутбука (помнить про память: прижать heap, чтобы сборка упала явно, а не утянула базу):
 
 ```bash
 ssh root@185.207.0.41
-cd /home/tallam-v2
-git pull --ff-only origin main
-npm ci                  # только если менялись зависимости
-npm run build           # backend tsc, затем frontend vite build
+cd /home/tallam-v2 && git pull --ff-only origin main
+NODE_OPTIONS=--max-old-space-size=384 npm run build
 pm2 restart tallam-v2 --update-env
 ```
 
-Проверка после деплоя:
-
-```bash
-curl -s https://tallam.ru/api/health
-pm2 list                     # tallam-v2 и index должны быть online
-curl -s https://tallam.ru/ | grep -o '/assets/[^"]*'   # хеши должны смениться
-```
-
-- nginx перезапускать не нужно: он отдаёт `frontend/dist` с диска.
-- Документация и прочие правки без кода деплоя не требуют: достаточно `git pull`.
-- **Откат:** `git reset --hard <предыдущий-коммит> && npm run build && pm2 restart tallam-v2 --update-env`.
-- Перед крупным деплоем стоит убедиться, что офсайт-бэкап свежий: `npm run backup:fetch`.
+На сервере включён swap на 2 ГБ (`/swapfile`, `vm.swappiness=10`) — это подушка на случай пиков, в том числе для MariaDB.
 
 ## Чего не делать
 

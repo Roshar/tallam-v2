@@ -48,6 +48,7 @@
 - **Где:** `docs/ARCHITECTURE.md`, `scripts/backup-database.sh`, `scripts/fetch-prod-backup.sh`, `npm run backup:fetch`.
 - **Проверка:** `npm run backup:fetch` → новый `backups/offsite/tallam-offsite-*.tar.gz` с `database.sql.gz`, `production.env`, `school-passwords.log`.
 - **Ограничения:** каталог `backups/` в `.gitignore`; доступ на VPS — по SSH-ключу.
+- **История:** этим коммитом сборка убрана с сервера (у VPS ~1 ГБ памяти, и при нехватке ядро убивает MariaDB, а не сборку) — появился `scripts/deploy.sh` и команда `npm run deploy`; на сервере включён swap на 2 ГБ с `vm.swappiness=10`.
 
 ---
 

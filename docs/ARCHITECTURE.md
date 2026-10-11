@@ -84,19 +84,27 @@ npm run db:import -- backups/offsite/tallam_v2.sql
 
 ### Продакшен (уже существующий VPS)
 
-Код не деплоится сам. Схема такая: коммит в GitHub, на сервере pull и сборка.
+Код не деплоится сам. Схема: коммит в GitHub, сборка **на ноутбуке**, доставка готовых артефактов на сервер.
+
+```bash
+npm run deploy          # scripts/deploy.sh: сборка локально, git pull и tar на сервере, pm2 restart
+```
+
+Так сделано потому, что у VPS ~1 ГБ памяти: сборка на нём упирается в предел, а ядро при нехватке памяти убивает не сборку, а MariaDB. На сервере при этом включён swap на 2 ГБ как подушка.
+
+- nginx продолжает отдавать `frontend/dist`, перезапуск nginx после деплоя не нужен.
+- PM2 запускает уже собранный `backend/dist/index.js`.
+- Старый сайт не трогаем: процесс `index` на 4000.
+- Предыдущая сборка складывается в `/var/backups/tallam/dist/` — оттуда откат.
+
+Аварийный путь без ноутбука (с прижатым heap, чтобы сборка упала явно):
 
 ```bash
 cd /home/tallam-v2
-git pull origin main
-npm ci                  # только если менялись зависимости
-npm run build           # backend tsc, затем frontend vite build
+git pull --ff-only origin main
+NODE_OPTIONS=--max-old-space-size=384 npm run build
 pm2 restart tallam-v2 --update-env
 ```
-
-- nginx продолжает отдавать `frontend/dist`, перезапуск nginx после обычной сборки не нужен.
-- PM2 запускает уже собранный `backend/dist/index.js`.
-- Старый сайт не трогаем: процесс `index` на 4000.
 
 Первый запуск API на новом сервере:
 
