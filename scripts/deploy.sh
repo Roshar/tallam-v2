@@ -51,12 +51,17 @@ ssh "${SSH_OPTS[@]}" "$HOST" "mkdir -p $BACKUP_DIR \
   && echo '  $BACKUP_DIR/*-$STAMP'"
 
 echo "→ Shipping artifacts"
-# --no-mac-metadata: иначе macOS-тар тащит xattr-заголовки, и GNU tar на сервере
-#   ругается на каждый файл. --no-same-owner: иначе файлы остаются с локальным uid.
-tar --no-mac-metadata -czf - -C backend dist \
-  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/backend/dist && tar xzf - -C $REMOTE_DIR/backend --no-same-owner"
-tar --no-mac-metadata -czf - -C frontend dist \
-  | ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/frontend/dist && tar xzf - -C $REMOTE_DIR/frontend --no-same-owner"
+# Везём в dist.new и только потом подменяем: если передача оборвётся, на сервере
+# останется прежняя рабочая сборка. tar тут не годится — он сначала стирает цель,
+# и оборванный поток оставил бы сайт без фронта. Заодно нет возни с macOS-xattr.
+ship_tree() {
+  local name="$1"
+  ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/$name/dist.new"
+  scp -q -r "${SSH_OPTS[@]}" "$name/dist" "$HOST:$REMOTE_DIR/$name/dist.new"
+  ssh "${SSH_OPTS[@]}" "$HOST" "rm -rf $REMOTE_DIR/$name/dist && mv $REMOTE_DIR/$name/dist.new $REMOTE_DIR/$name/dist"
+}
+ship_tree backend
+ship_tree frontend
 
 echo "→ Restarting the API (old.tallam.ru process is not touched)"
 ssh "${SSH_OPTS[@]}" "$HOST" "pm2 restart tallam-v2 --update-env >/dev/null && sleep 2 && pm2 list --no-color | grep -E 'tallam-v2|index '"
