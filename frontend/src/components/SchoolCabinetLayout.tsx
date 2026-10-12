@@ -13,6 +13,7 @@ export const SCHOOL_MENU = [
     to: "/school/lesson-analysis",
   },
   { id: "vacancies", label: "Вакансии", to: "/school/vacancies" },
+  { id: "analytics", label: "Аналитика", to: "/school/analytics" },
   { id: "feedback", label: "Отзывы и пожелания", to: "/school/feedback" },
 ] as const;
 

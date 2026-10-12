@@ -44,7 +44,7 @@ npm run dev                   # API :4000, web :5173
 
 ### Кабинет школы
 
-Горизонтальные вкладки (`SchoolCabinetLayout.tsx`): Главная / База работников / Проект «Анализ урока» / Вакансии / Отзывы и пожелания / Подписка. Сайдбар убран. Ширина контейнера `--container-lg: 1280px`.
+Горизонтальные вкладки (`SchoolCabinetLayout.tsx`): Главная / База работников / Проект «Анализ урока» / Вакансии / **Аналитика** / Отзывы и пожелания / Подписка. Сайдбар убран. Ширина контейнера `--container-lg: 1280px`.
 
 **Главная `/school/cabinet`**
 
@@ -70,7 +70,8 @@ npm run dev                   # API :4000, web :5173
 
 - Список участников: `/school/lesson-analysis`.
 - Отдельная страница состава: `/school/lesson-analysis/members` (два списка +/−).
-- «Профиль в проекте» → `/school/lesson-analysis/teachers/:id` (оценки и фильтры), **не** HR-профиль.
+- «Профиль в проекте» → `/school/lesson-analysis/teachers/:id` (оценки и фильтры + вкладка «Аналитика»), **не** HR-профиль.
+- «Аналитика» в кабинете школы → `/school/analytics`: средний показатель школы, динамика, средние по разделам карты, распределение учителей. Методическая и комплексная карты считаются раздельно, фильтр по учебному году. Подробности — [`docs/FEATURES.md`](docs/FEATURES.md), разделы 3.8 и 4.5.
 - Оценить: `/school/lesson-analysis/teachers/:id/evaluate` → выбор карты `method` | `full` → форма.
 - POST `/api/school/projects/lesson-analysis/teachers/:teacherId/cards`.
 - Карты пишутся в `card_from_project_teacher_mark3` + `outside_card2` (внешний эксперт).

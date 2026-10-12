@@ -154,6 +154,11 @@ export const AUDIT_ACTIONS = [
   },
   {
     category: "lesson_analysis",
+    action: "lesson_analysis.analytics_view",
+    label: "Просмотр аналитики оценок",
+  },
+  {
+    category: "lesson_analysis",
     action: "lesson_analysis.teacher_view",
     label: "Просмотр анализа работника",
   },

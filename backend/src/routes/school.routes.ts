@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as schoolController from "../controllers/school.controller.js";
+import * as analyticsController from "../controllers/analytics.controller.js";
 import * as teacherDeleteController from "../controllers/teacher-delete.controller.js";
 import * as vacancyController from "../controllers/vacancy.controller.js";
 import {
@@ -128,6 +129,14 @@ router.post(
   vacancyController.closeSchoolVacancy,
 );
 router.get("/dashboard", schoolController.schoolDashboard);
+router.get(
+  "/analytics",
+  auditHttpAction({
+    category: "lesson_analysis",
+    action: "lesson_analysis.analytics_view",
+  }),
+  analyticsController.schoolAnalytics,
+);
 router.get("/feedback/unread", schoolController.schoolFeedbackUnread);
 router.get("/feedback", schoolController.schoolFeedbackThread);
 router.post(
@@ -221,6 +230,16 @@ router.get(
     action: "lesson_analysis.list",
   }),
   schoolController.listLessonAnalysis,
+);
+router.get(
+  "/projects/lesson-analysis/teachers/:teacherId/analytics",
+  auditHttpAction({
+    category: "lesson_analysis",
+    action: "lesson_analysis.analytics_view",
+    entityType: "teacher",
+    entityId: (req) => req.params.teacherId,
+  }),
+  analyticsController.teacherAnalytics,
 );
 router.get(
   "/projects/lesson-analysis/teachers/:teacherId",

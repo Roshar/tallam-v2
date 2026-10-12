@@ -1,10 +1,13 @@
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { api } from "../../api/client";
+import { TeacherAnalyticsPanel } from "../../components/TeacherAnalyticsPanel";
 import type {
   EvaluationListItem,
   ProjectTeacherProfileResponse,
 } from "../../types/school";
+
+type TeacherTab = "evaluations" | "analytics";
 
 export function ProjectTeacherPage() {
   const { teacherId = "" } = useParams();
@@ -13,6 +16,7 @@ export function ProjectTeacherPage() {
   const [source, setSource] = useState("");
   const [discipline, setDiscipline] = useState("");
   const [academicYear, setAcademicYear] = useState<number | null>(null);
+  const [tab, setTab] = useState<TeacherTab>("evaluations");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -169,21 +173,56 @@ export function ProjectTeacherPage() {
                 })}
               </div>
 
-              <h3 className="project-teacher__section-title">
-                Список оценок · {selectedYearLabel} учебный год
-              </h3>
+              <div
+                className="analytics-page-tabs"
+                role="tablist"
+                aria-label="Раздел профиля учителя"
+              >
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === "evaluations"}
+                  className={`analytics-page-tabs__item${tab === "evaluations" ? " active" : ""}`}
+                  onClick={() => setTab("evaluations")}
+                >
+                  Оценки
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === "analytics"}
+                  className={`analytics-page-tabs__item${tab === "analytics" ? " active" : ""}`}
+                  onClick={() => setTab("analytics")}
+                >
+                  Аналитика
+                </button>
+              </div>
 
-              <EvaluationsTable
-                evaluations={data.evaluations.filter(
-                  (item) => Number(item.academicYearStart) === selectedYear,
-                )}
-                emptyLabel={`Нет оценок за ${selectedYearLabel} учебный год.`}
-                onOpen={(cardId) =>
-                  navigate(
-                    `/school/lesson-analysis/teachers/${teacherId}/cards/${cardId}`,
-                  )
-                }
-              />
+              {tab === "analytics" ? (
+                <TeacherAnalyticsPanel
+                  teacherId={teacherId}
+                  academicYearStart={selectedYear ?? data.currentAcademicYearStart}
+                  academicYearLabel={selectedYearLabel}
+                />
+              ) : (
+                <>
+                  <h3 className="project-teacher__section-title">
+                    Список оценок · {selectedYearLabel} учебный год
+                  </h3>
+
+                  <EvaluationsTable
+                    evaluations={data.evaluations.filter(
+                      (item) => Number(item.academicYearStart) === selectedYear,
+                    )}
+                    emptyLabel={`Нет оценок за ${selectedYearLabel} учебный год.`}
+                    onOpen={(cardId) =>
+                      navigate(
+                        `/school/lesson-analysis/teachers/${teacherId}/cards/${cardId}`,
+                      )
+                    }
+                  />
+                </>
+              )}
             </section>
           </>
         ) : null}

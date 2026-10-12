@@ -18,6 +18,11 @@ import type {
   WorkersResponse,
 } from "../types/school";
 import type {
+  AnalyticsCardType,
+  SchoolAnalyticsResponse,
+  TeacherAnalyticsResponse,
+} from "../types/analytics";
+import type {
   VacancyDetail,
   VacancyFiltersMeta,
   VacancyListResponse,
@@ -150,6 +155,17 @@ async function downloadFile(path: string, fallbackFilename: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+function analyticsQuery(params: {
+  cardType: AnalyticsCardType;
+  academicYear?: number;
+}): string {
+  const search = new URLSearchParams({ cardType: params.cardType });
+  if (params.academicYear) {
+    search.set("academicYear", String(params.academicYear));
+  }
+  return search.toString();
 }
 
 export const api = {
@@ -836,6 +852,24 @@ export const api = {
     return request<TeacherDeletionResponse>(`/api/school/workers/${teacherId}`, {
       method: "DELETE",
     });
+  },
+
+  schoolAnalytics(params: {
+    cardType: AnalyticsCardType;
+    academicYear?: number;
+  }) {
+    return request<SchoolAnalyticsResponse>(
+      `/api/school/analytics?${analyticsQuery(params)}`,
+    );
+  },
+
+  teacherAnalytics(
+    teacherId: string,
+    params: { cardType: AnalyticsCardType; academicYear?: number },
+  ) {
+    return request<TeacherAnalyticsResponse>(
+      `/api/school/projects/lesson-analysis/teachers/${teacherId}/analytics?${analyticsQuery(params)}`,
+    );
   },
 
   async downloadWorkersBank() {

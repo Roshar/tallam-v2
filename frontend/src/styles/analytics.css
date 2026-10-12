@@ -1,0 +1,348 @@
+/* Аналитика оценок: карточки, полосы по разделам, график и распределение. */
+
+.analytics {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.analytics__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.analytics__period {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Переключатель типа карты */
+
+.analytics-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+}
+
+.analytics-switch__item {
+  padding: 0.45rem 1.1rem;
+  border: none;
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.analytics-switch__item.active {
+  background: var(--color-brightblue);
+  color: #fff;
+}
+
+.analytics-switch__item:disabled {
+  opacity: 0.6;
+}
+
+/* Карточки блоков */
+
+.analytics-card {
+  margin-bottom: var(--space-lg);
+  padding: var(--space-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+
+.analytics-card__header {
+  margin-bottom: var(--space-md);
+}
+
+.analytics-card__title {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--color-darkblue);
+}
+
+.analytics-card__hint {
+  margin: 0.35rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Крупная цифра с изменением */
+
+.analytics-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: var(--space-md);
+}
+
+.analytics-summary__value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--color-darkblue);
+}
+
+.analytics-summary__hint {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.analytics-delta {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-full);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.analytics-delta--up {
+  background: #e8f5ec;
+  color: #1f7a3d;
+}
+
+.analytics-delta--down {
+  background: var(--color-error-bg);
+  color: var(--color-error);
+}
+
+.analytics-delta--flat {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.analytics-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.analytics-empty {
+  margin: 0;
+  padding: var(--space-md) 0;
+  color: var(--color-text-muted);
+}
+
+/* График */
+
+.analytics-chart {
+  width: 100%;
+}
+
+.analytics-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.analytics-chart__grid {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.analytics-chart__axis {
+  fill: var(--color-text-muted);
+  font-size: 11px;
+}
+
+.analytics-chart__line {
+  fill: none;
+  stroke: var(--color-brightblue);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.analytics-chart__dot {
+  fill: #fff;
+  stroke: var(--color-brightblue);
+  stroke-width: 2.5;
+}
+
+.analytics-chart__value {
+  fill: var(--color-darkblue);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Полосы по разделам и распределение */
+
+.analytics-bars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
+.analytics-bars__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.analytics-bars__title {
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+
+.analytics-bars__value {
+  font-weight: 700;
+  color: var(--color-darkblue);
+  white-space: nowrap;
+}
+
+.analytics-bars__track {
+  margin-top: 0.35rem;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg);
+  overflow: hidden;
+}
+
+.analytics-bars__fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.3s ease;
+}
+
+.analytics-bars__fill.analytics-bar--high {
+  background: var(--color-success);
+}
+
+.analytics-bars__fill.analytics-bar--mid {
+  background: var(--color-brightblue);
+}
+
+.analytics-bars__fill.analytics-bar--low {
+  background: var(--color-error);
+}
+
+.analytics-bars__meta {
+  margin-top: 0.3rem;
+  color: var(--color-text-muted);
+  font-size: 0.8rem;
+}
+
+/* Сильные стороны и зоны развития */
+
+.analytics-highlights {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-lg);
+}
+
+.analytics-highlights__title {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+}
+
+.analytics-highlights__title--good {
+  color: #1f7a3d;
+}
+
+.analytics-highlights__title--weak {
+  color: var(--color-error);
+}
+
+.analytics-highlights__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.analytics-highlights__list li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--color-border);
+  font-size: 0.9rem;
+}
+
+.analytics-highlights__list strong {
+  color: var(--color-darkblue);
+}
+
+/* Таблица сравнения */
+
+.analytics-table-wrap {
+  overflow-x: auto;
+}
+
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.analytics-table th,
+.analytics-table td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+}
+
+.analytics-table th {
+  color: var(--color-text-muted);
+  font-weight: 600;
+}
+
+.analytics-table__num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+/* Переключатель «Оценки | Аналитика» в профиле учителя */
+
+.analytics-page-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.analytics-page-tabs__item {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.analytics-page-tabs__item.active {
+  color: var(--color-darkblue);
+  border-bottom-color: var(--color-brightblue);
+}
+
+@media (max-width: 600px) {
+  .analytics-card {
+    padding: var(--space-md);
+  }
+
+  .analytics-summary__value {
+    font-size: 2rem;
+  }
+}

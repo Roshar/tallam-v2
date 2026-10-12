@@ -9,6 +9,7 @@ import { MethodistCabinetPage } from "./pages/MethodistCabinetPage";
 import { SchoolHomePage } from "./pages/school/SchoolHomePage";
 import { SchoolGuidePage } from "./pages/school/SchoolGuidePage";
 import { SchoolFeedbackPage } from "./pages/school/SchoolFeedbackPage";
+import { SchoolAnalyticsPage } from "./pages/school/SchoolAnalyticsPage";
 import { TeacherProfilePage } from "./pages/school/TeacherProfilePage";
 import { WorkersPage } from "./pages/school/WorkersPage";
 import { LessonAnalysisPage } from "./pages/school/LessonAnalysisPage";
@@ -48,6 +49,7 @@ import "./styles/admin.css";
 import "./styles/school-subscription.css";
 import "./styles/status.css";
 import "./styles/vacancies.css";
+import "./styles/analytics.css";
 
 export default function App() {
   return (
@@ -64,6 +66,7 @@ export default function App() {
             <Route path="cabinet" element={<SchoolHomePage />} />
             <Route path="guide" element={<SchoolGuidePage />} />
             <Route path="feedback" element={<SchoolFeedbackPage />} />
+            <Route path="analytics" element={<SchoolAnalyticsPage />} />
             <Route path="vacancies" element={<VacanciesPage />} />
             <Route path="vacancies/new" element={<VacancyFormPage />} />
             <Route path="vacancies/:vacancyId" element={<VacancyViewPage />} />
