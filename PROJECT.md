@@ -176,6 +176,7 @@ npm run dev                   # API :4000, web :5173
 | Инструменты школы | `backend/src/services/school-purge.service.ts`, `services/database-backup.service.ts` |
 | Критерии | `frontend/src/data/evaluationCriteria.ts` |
 | Форма и просмотр оценки | `frontend/src/pages/school/EvaluateFormPage.tsx`, `EvaluationViewPage.tsx`, `styles/evaluate.css` |
+| Аналитика оценок | `backend/src/services/analytics.service.ts`, `services/evaluation-scale.ts`, `controllers/analytics.controller.ts`, `frontend/src/pages/school/SchoolAnalyticsPage.tsx`, `components/TeacherAnalyticsPanel.tsx`, `components/AnalyticsWidgets.tsx`, `components/AnalyticsLineChart.tsx`, `styles/analytics.css` |
 | Новости кабинета | `frontend/src/data/cabinetNews.ts` |
 | Вакансии | `backend/src/services/vacancy.service.ts`, `controllers/vacancy.controller.ts`, `frontend/src/pages/school/VacanciesPage.tsx`, `VacancyFormPage.tsx`, `VacancyViewPage.tsx` |
 
