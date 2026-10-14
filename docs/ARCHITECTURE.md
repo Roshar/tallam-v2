@@ -6,7 +6,7 @@
 
 ## Как устроено сейчас
 
-На VPS `185.207.0.41` работает одна версия сайта — v2. Старая версия закрыта 11 октября 2026.
+На VPS `185.207.0.41` работают два продукта: платформа школ (v2) и таск-менеджер TaskFlow. Старая версия сайта закрыта 11 октября 2026.
 
 ```text
 Браузер
@@ -16,7 +16,11 @@
   │     └─ /api/                127.0.0.1:4001   PM2 процесс tallam-v2
   │                                 └─ MariaDB 127.0.0.1:3306, база tallam_v2
   │
-  └─ https://old.tallam.ru      nginx → 301 на https://tallam.ru
+  ├─ https://old.tallam.ru      nginx → 301 на https://tallam.ru
+  │
+  └─ https://tasks.tallam.ru    nginx
+        └─ всё                   127.0.0.1:4010   PM2 процесс taskflow
+                                    └─ MariaDB там же, база taskflow
 ```
 
 | Что | Где |
@@ -31,6 +35,46 @@
 | Логи PM2 | ротация модулем `pm2-logrotate`: ежедневно, хранятся 30 дней |
 | Журнал systemd | лимит 450 МБ и срок 30 дней (`/etc/systemd/journald.conf.d/99-tallam.conf`) |
 | Swap | `/swapfile`, 1 ГБ, `vm.swappiness=10` — подушка на пики |
+
+### TaskFlow — второй продукт на этом же сервере
+
+Таск-менеджер (Kanban, тикеты, вложения, API-ключи, MCP для AI-агентов). Репозиторий `git@github.com:Roshar/btrw_taskflow.git`, код в `/home/taskflow`.
+
+| Что | Где |
+|---|---|
+| Приложение | Node **22**, `server/dist/index.js`, порт **4010**, PM2 процесс `taskflow` |
+| Фронт | `web/dist`, отдаёт **само приложение** с того же origin (не nginx) |
+| БД | MariaDB там же, база `taskflow`, пользователь `taskflow@127.0.0.1` |
+| Пароль БД | `/root/.taskflow-db-password` (права 600) |
+| Пароль администратора | `/root/.taskflow-admin-password` (права 600), логин `admin@tallam.ru` |
+| Конфиг | `/home/taskflow/.env` (права 600) — приложение читает его из корня репозитория |
+| Вложения | `/home/taskflow/server/storage/uploads` — **на диске**, не в базе |
+| nginx | `/etc/nginx/sites-available/taskflow`, отдельный файл, конфиг tallam.ru не затронут |
+| Зависимости | только production, `pnpm install --prod --filter @taskflow/server` — 42 МБ |
+
+**Два Node на одном сервере.** Системный Node 20 (`/usr/bin/node`) обслуживает tallam-v2 и менять его нельзя. Для TaskFlow рядом поставлен Node 22 в `/opt/node22` (в `/opt/node-v22.23.3-linux-x64`), потому что его прод-зависимости требуют ≥22: `sanitize-html@2.18` (≥22.12) и `file-type@22` (≥22). PM2 запускает процесс с явным интерпретатором:
+
+```bash
+pm2 start /home/taskflow/server/dist/index.js --name taskflow --interpreter /opt/node22/bin/node
+```
+
+**Почему без Docker.** Docker на сервере не установлен, а схема из репозитория TaskFlow (compose: app + MySQL 8.0 + Caddy) требует около 600 МБ памяти — на 956 МБ это вытеснило бы MariaDB в swap и рисковало бы платформой школ. Поэтому TaskFlow использует то, что уже есть: nginx вместо Caddy и существующую MariaDB вместо контейнера с MySQL. Совместимость проверена: миграции применяются на MariaDB 11.8, все 77 собственных тестов TaskFlow проходят.
+
+**Обновление TaskFlow.** На сервере не собираем — по той же причине, что и для v2:
+
+```bash
+# на ноутбуке
+cd /path/to/btrw_taskflow && pnpm build
+scp -r server/dist root@185.207.0.41:/home/taskflow/server/dist.new
+ssh root@185.207.0.41 'rm -rf /home/taskflow/server/dist && mv /home/taskflow/server/dist.new /home/taskflow/server/dist'
+# так же web/dist, затем:
+ssh root@185.207.0.41 'pm2 restart taskflow'
+```
+
+Миграции после обновления: `node /home/taskflow/server/dist/scripts/migrate.js`.
+
+**Что осталось сделать:** переключить A-запись `tasks.tallam.ru` на `185.207.0.41` (сейчас домен смотрит на хостинг Beget `91.106.207.52`) и выпустить сертификат: `certbot --nginx -d tasks.tallam.ru`. Пока сертификата нет, приложение доступно только по HTTP внутри сервера. Второе: без настроенного SMTP не работает регистрация по коду из письма — пользователей пока заводит CLI (`node server/dist/scripts/user-cli.js add`).
+
 
 ### Старая версия (v1) — закрыта
 
