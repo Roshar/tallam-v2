@@ -63,6 +63,53 @@ if [[ -f "$PASSWORD_LOG" ]]; then
   chmod 600 "$WORK/school-passwords.log"
 fi
 
+# --- TaskFlow: второй продукт на этом же сервере -------------------------
+# Вложения TaskFlow лежат на диске, а не в базе, поэтому их нужно архивировать
+# отдельно, иначе картинки не попадут в бэкап. Пароль в DATABASE_URL не должен
+# содержать ':' или '@' — у нас он hex, для другого пароля потребуется правка.
+TASKFLOW_ROOT="/home/taskflow"
+TASKFLOW_ARTIFACTS=()
+if [[ -f "$TASKFLOW_ROOT/.env" ]]; then
+  TF_URL="$(grep -E '^DATABASE_URL=' "$TASKFLOW_ROOT/.env" | head -1 | cut -d= -f2-)"
+  if [[ "$TF_URL" == mysql://* ]]; then
+    TF_REST="${TF_URL#mysql://}"
+    TF_CRED="${TF_REST%%@*}"
+    TF_TAIL="${TF_REST#*@}"
+    TF_USER="${TF_CRED%%:*}"
+    TF_PASS="${TF_CRED#*:}"
+    TF_HOST="${TF_TAIL%%:*}"
+    TF_PORT_DB="${TF_TAIL#*:}"
+    TF_PORT="${TF_PORT_DB%%/*}"
+    TF_DB="${TF_PORT_DB#*/}"
+
+    {
+      printf '[client]\n'
+      printf 'host=%s\n' "$TF_HOST"
+      printf 'port=%s\n' "$TF_PORT"
+      printf 'user=%s\n' "$TF_USER"
+      printf 'password=%s\n' "$TF_PASS"
+    } > "$WORK/my-taskflow.cnf"
+
+    "$DUMP_BIN" --defaults-extra-file="$WORK/my-taskflow.cnf" \
+      --single-transaction \
+      --routines \
+      --triggers \
+      --default-character-set=utf8mb4 \
+      "$TF_DB" \
+      | gzip -c > "$WORK/taskflow.sql.gz"
+
+    cp "$TASKFLOW_ROOT/.env" "$WORK/taskflow.env"
+    chmod 600 "$WORK/taskflow.env"
+    TASKFLOW_ARTIFACTS+=(taskflow.sql.gz taskflow.env)
+
+    TF_UPLOADS="$TASKFLOW_ROOT/server/storage/uploads"
+    if [[ -d "$TF_UPLOADS" ]] && [[ -n "$(ls -A "$TF_UPLOADS" 2>/dev/null)" ]]; then
+      tar -czf "$WORK/taskflow-uploads.tar.gz" -C "$TASKFLOW_ROOT/server/storage" uploads
+      TASKFLOW_ARTIFACTS+=(taskflow-uploads.tar.gz)
+    fi
+  fi
+fi
+
 cat > "$WORK/README.txt" <<EOF
 Tallam v2 offsite backup
 created: $STAMP
@@ -71,12 +118,28 @@ host: $(hostname)
 See docs/ARCHITECTURE.md in the git repo for restore steps.
 EOF
 
+if [[ ${#TASKFLOW_ARTIFACTS[@]} -gt 0 ]]; then
+  cat >> "$WORK/README.txt" <<EOF
+
+Также в архиве TaskFlow (второй продукт на этом сервере):
+  taskflow.sql.gz          — дамп базы $TF_DB
+  taskflow.env             — переменные окружения TaskFlow
+  taskflow-uploads.tar.gz  — вложения (если были)
+EOF
+fi
+
 ARCHIVE="$BACKUP_DIR/tallam-offsite-$STAMP.tar.gz"
-tar -czf "$ARCHIVE" -C "$WORK" \
-  database.sql.gz \
-  production.env \
-  README.txt \
-  $( [[ -f "$WORK/school-passwords.log" ]] && echo school-passwords.log )
+FILES=(database.sql.gz production.env README.txt)
+if [[ -f "$WORK/school-passwords.log" ]]; then
+  FILES+=(school-passwords.log)
+fi
+for artifact in "${TASKFLOW_ARTIFACTS[@]:-}"; do
+  if [[ -n "$artifact" && -f "$WORK/$artifact" ]]; then
+    FILES+=("$artifact")
+  fi
+done
+
+tar -czf "$ARCHIVE" -C "$WORK" "${FILES[@]}"
 
 chmod 600 "$ARCHIVE"
 find "$BACKUP_DIR" -name 'tallam-offsite-*.tar.gz' -mtime +"$KEEP_DAYS" -delete
