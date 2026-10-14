@@ -48,6 +48,7 @@
 | Пароль БД | `/root/.taskflow-db-password` (права 600) |
 | Пароль администратора | `/root/.taskflow-admin-password` (права 600), логин `admin@tallam.ru` |
 | Конфиг | `/home/taskflow/.env` (права 600) — приложение читает его из корня репозитория |
+| Почта | те же доступы, что у Tallam: `smtp.beget.com`, `support@tallam.ru`, отличается только имя отправителя (`TaskFlow <support@tallam.ru>`) |
 | Вложения | `/home/taskflow/server/storage/uploads` — **на диске**, не в базе |
 | nginx | `/etc/nginx/sites-available/taskflow`, отдельный файл, конфиг tallam.ru не затронут |
 | Зависимости | только production, `pnpm install --prod --filter @taskflow/server` — 42 МБ |
@@ -73,7 +74,9 @@ ssh root@185.207.0.41 'pm2 restart taskflow'
 
 Миграции после обновления: `node /home/taskflow/server/dist/scripts/migrate.js`.
 
-**Что осталось сделать:** переключить A-запись `tasks.tallam.ru` на `185.207.0.41` (сейчас домен смотрит на хостинг Beget `91.106.207.52`) и выпустить сертификат: `certbot --nginx -d tasks.tallam.ru`. Пока сертификата нет, приложение доступно только по HTTP внутри сервера. Второе: без настроенного SMTP не работает регистрация по коду из письма — пользователей пока заводит CLI (`node server/dist/scripts/user-cli.js add`).
+**Что осталось сделать:** переключить A-запись `tasks.tallam.ru` на `185.207.0.41` и выпустить сертификат: `certbot --nginx -d tasks.tallam.ru`. Сейчас домен смотрит на хостинг Beget `91.106.207.52`, поэтому приложение доступно только по HTTP внутри сервера. Важно: в зоне Beget уже есть отдельная A-запись для `tasks` (wildcard у домена нет, проверено) — её нужно **изменить**, а не добавлять вторую, иначе адреса будут отдаваться по очереди и сертификат может не выпуститься.
+
+Регистрация по коду из письма работает: проверено запросом кода — запись создаётся в `email_verification_codes` (код хранится хешем, срок 10 минут), письмо уходит через `smtp.beget.com`. Если понадобится отдельный ящик вместо `support@tallam.ru`, меняются три строки в `.env` и `pm2 restart taskflow`.
 
 
 ### Старая версия (v1) — закрыта
