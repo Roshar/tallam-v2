@@ -66,7 +66,7 @@ fi
 # --- TaskFlow: второй продукт на этом же сервере -------------------------
 # Вложения TaskFlow лежат на диске, а не в базе, поэтому их нужно архивировать
 # отдельно, иначе картинки не попадут в бэкап. Пароль в DATABASE_URL не должен
-# содержать ':' или '@' — у нас он hex, для другого пароля потребуется правка.
+# содержать ':' или '@' - у нас он hex, для другого пароля потребуется правка.
 TASKFLOW_ROOT="/home/taskflow"
 TASKFLOW_ARTIFACTS=()
 if [[ -f "$TASKFLOW_ROOT/.env" ]]; then
@@ -122,9 +122,9 @@ if [[ ${#TASKFLOW_ARTIFACTS[@]} -gt 0 ]]; then
   cat >> "$WORK/README.txt" <<EOF
 
 Также в архиве TaskFlow (второй продукт на этом сервере):
-  taskflow.sql.gz          — дамп базы $TF_DB
-  taskflow.env             — переменные окружения TaskFlow
-  taskflow-uploads.tar.gz  — вложения (если были)
+  taskflow.sql.gz          - дамп базы $TF_DB
+  taskflow.env             - переменные окружения TaskFlow
+  taskflow-uploads.tar.gz  - вложения (если были)
 EOF
 fi
 

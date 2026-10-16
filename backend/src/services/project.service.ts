@@ -14,7 +14,7 @@ interface MiddlewareNameRow {
 
 export const LESSON_ANALYSIS_PROJECT_KEY = "lesson-analysis";
 
-/** Псевдо-проект «Не участвует в проекте» — не показываем как участие. */
+/** Псевдо-проект «Не участвует в проекте» - не показываем как участие. */
 export const NO_PROJECT_ID = 1;
 
 export const NO_PROJECT_LABEL = "Не участвует в проекте";

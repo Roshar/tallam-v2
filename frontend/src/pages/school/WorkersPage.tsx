@@ -68,8 +68,8 @@ export function WorkersPage() {
                 Общий список педагогических работников ОО
               </h3>
               <div className="workers-header__meta">
-                <p>Город/Район: {profile?.areaName ?? "—"}</p>
-                <p>Электронный адрес: {profile?.email ?? "—"}</p>
+                <p>Город/Район: {profile?.areaName ?? "-"}</p>
+                <p>Электронный адрес: {profile?.email ?? "-"}</p>
               </div>
             </div>
 

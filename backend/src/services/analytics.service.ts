@@ -19,7 +19,7 @@ import {
  * Проценты считаются той же `percentOf(sum, max)`, что и в карточке
  * (`card-view.service.ts`), поэтому цифры аналитики совпадают с тем, что школа
  * видит внутри самой оценки. Опциональные критерии обрабатываются так же, как в
- * карточке — то есть значение —1 («0» на экране) уменьшает сумму, а 0 («—»)
+ * карточке - то есть значение -1 («0» на экране) уменьшает сумму, а 0 («-»)
  * оставляет максимум в знаменателе.
  */
 
@@ -153,7 +153,7 @@ function formatDateLabel(value: Date | string): string {
   return `${date.getDate()} ${MONTHS_RU[date.getMonth()]} ${date.getFullYear()}`;
 }
 
-/** Учебный год идёт с сентября по август — та же логика, что в проекте. */
+/** Учебный год идёт с сентября по август - та же логика, что в проекте. */
 function academicYearRange(startYear: number): { from: string; to: string } {
   return { from: `${startYear}-09-01`, to: `${startYear + 1}-09-01` };
 }
@@ -392,16 +392,16 @@ function toHighlight(section: SectionAverage): SectionHighlight {
 }
 
 const DISTRIBUTION_BUCKETS = [
-  { id: "90-100", label: "90–100%", min: 90, max: 101 },
-  { id: "80-89", label: "80–89%", min: 80, max: 90 },
-  { id: "70-79", label: "70–79%", min: 70, max: 80 },
-  { id: "60-69", label: "60–69%", min: 60, max: 70 },
+  { id: "90-100", label: "90-100%", min: 90, max: 101 },
+  { id: "80-89", label: "80-89%", min: 80, max: 90 },
+  { id: "70-79", label: "70-79%", min: 70, max: 80 },
+  { id: "60-69", label: "60-69%", min: 60, max: 70 },
   { id: "under-60", label: "ниже 60%", min: -Infinity, max: 60 },
 ];
 
 /**
  * Средний процент школы: берём последнюю оценку каждого учителя за год, чтобы
- * один учитель не учитывался несколько раз. Оконная функция — один запрос
+ * один учитель не учитывался несколько раз. Оконная функция - один запрос
  * вместо N+1.
  */
 async function latestPercentPerTeacher(
@@ -580,7 +580,7 @@ export async function getSchoolAnalytics(
   };
 }
 
-/** Проверка, что оценка вообще существует — для корректных пустых состояний. */
+/** Проверка, что оценка вообще существует - для корректных пустых состояний. */
 export async function schoolHasAnyEvaluations(
   schoolId: number,
 ): Promise<boolean> {

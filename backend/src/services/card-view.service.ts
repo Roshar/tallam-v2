@@ -124,7 +124,7 @@ function scoreNumber(row: CardRow, key: string): number {
 function displayScore(key: string, value: number): string {
   if (OPTIONAL_KEYS.has(key)) {
     if (value === -1) return "0";
-    if (value === 0) return "—";
+    if (value === 0) return "-";
   }
   return String(value);
 }

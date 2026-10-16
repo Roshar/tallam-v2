@@ -27,7 +27,7 @@ function cabinetAccessLabel(accountStatus: AdminSubscription["accountStatus"]) {
 }
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Intl.DateTimeFormat("ru-RU").format(
     new Date(`${value}T00:00:00`),
   );
@@ -336,7 +336,7 @@ export function AdminSubscriptionsPage() {
                       </button>
                     </div>
                   ) : (
-                    "—"
+                    "-"
                   )}
                 </td>
                 <td>
@@ -370,14 +370,14 @@ export function AdminSubscriptionsPage() {
                       </button>
                     </div>
                   ) : (
-                    "—"
+                    "-"
                   )}
                 </td>
                 <td className="admin-subscriptions__period">
                   {item.startsOn && item.endsOn ? (
                     <>
                       <span>{formatDate(item.startsOn)}</span>
-                      <span>—</span>
+                      <span>-</span>
                       <span>{formatDate(item.endsOn)}</span>
                     </>
                   ) : (

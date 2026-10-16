@@ -59,7 +59,7 @@ export function TablePagination({
       <p className="table-pagination__info">
         {total === 0
           ? "Нет записей"
-          : `Показано ${from}–${to} из ${total}`}
+          : `Показано ${from}-${to} из ${total}`}
       </p>
 
       <div className="table-pagination__controls">

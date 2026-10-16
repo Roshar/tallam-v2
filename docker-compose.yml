@@ -12,7 +12,7 @@ services:
       - "3307:3306"
     volumes:
       - tallam_mysql_data:/var/lib/mysql
-      # Init/seed scripts are NOT auto-applied — import a real dump instead:
+      # Init/seed scripts are NOT auto-applied - import a real dump instead:
       # npm run db:import -- database/dumps/production.sql
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
 

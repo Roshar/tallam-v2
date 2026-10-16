@@ -96,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await api.logout();
     } catch {
-      // даже если сессия уже протухла — выходим локально
+      // даже если сессия уже протухла - выходим локально
     }
     setUser(null);
   }, []);

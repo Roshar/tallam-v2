@@ -42,7 +42,7 @@ export function AnalyticsCardTypeSwitch({
   );
 }
 
-/** Порог тот же, что в карточке оценки: 75 — выше базового, 50 — базовый. */
+/** Порог тот же, что в карточке оценки: 75 - выше базового, 50 - базовый. */
 function levelClass(percent: number): string {
   if (percent >= 75) return "analytics-bar--high";
   if (percent >= 50) return "analytics-bar--mid";
@@ -133,7 +133,7 @@ export function AnalyticsHighlights({
           </ul>
         ) : (
           <p className="analytics-empty">
-            Все разделы идут на одном уровне — слабых мест не выделяется.
+            Все разделы идут на одном уровне - слабых мест не выделяется.
           </p>
         )}
       </div>

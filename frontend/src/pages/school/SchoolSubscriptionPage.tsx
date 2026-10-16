@@ -14,7 +14,7 @@ function formatDate(value: string | null): string {
 }
 
 function daysLabel(count: number | null, unit: "left" | "until"): string {
-  if (count === null) return "—";
+  if (count === null) return "-";
   if (count === 0) {
     return unit === "left" ? "истекает сегодня" : "начинается сегодня";
   }

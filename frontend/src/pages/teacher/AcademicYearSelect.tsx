@@ -13,7 +13,7 @@ export function AcademicYearSelect({
   if (years.length <= 1) {
     return (
       <span className="teacher-year teacher-year--static">
-        {years[0]?.label ?? "—"}
+        {years[0]?.label ?? "-"}
       </span>
     );
   }

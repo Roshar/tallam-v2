@@ -20,7 +20,7 @@ function parseCardType(req: Request): CardTypeKind {
   return isCardTypeKind(value) ? value : "method";
 }
 
-/** Год по умолчанию — текущий учебный; заведомо чужие значения отсекаем. */
+/** Год по умолчанию - текущий учебный; заведомо чужие значения отсекаем. */
 function parseAcademicYear(req: Request): number {
   const current = currentAcademicYearStart();
   const raw = String(req.query.academicYear ?? "").trim();

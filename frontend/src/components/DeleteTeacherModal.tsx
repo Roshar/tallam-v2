@@ -119,7 +119,7 @@ export function DeleteTeacherModal({
                   <div>Вместе с работником будет удалено безвозвратно:</div>
                   {losses.map((item) => (
                     <div key={item.label}>
-                      {item.label} — <strong>{item.value}</strong>
+                      {item.label} - <strong>{item.value}</strong>
                     </div>
                   ))}
                   <div>
@@ -128,7 +128,7 @@ export function DeleteTeacherModal({
                 </div>
               ) : (
                 <p className="page-subtitle">
-                  Оценок урока у этого работника нет — удалится только сама
+                  Оценок урока у этого работника нет - удалится только сама
                   карточка.
                 </p>
               )}

@@ -197,7 +197,7 @@ export function AdminSchoolsPage() {
                   </p>
                 </td>
                 <td>{item.area ?? "Район не указан"}</td>
-                <td>{item.email ?? "—"}</td>
+                <td>{item.email ?? "-"}</td>
                 <td>{item.teachersCount}</td>
                 <td>
                   <div className="admin-schools__cabinet">

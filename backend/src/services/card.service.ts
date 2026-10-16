@@ -68,7 +68,7 @@ export function academicYearStartFromDate(date: Date): number {
 }
 
 export function formatAcademicYearLabel(startYear: number): string {
-  return `${startYear}–${startYear + 1}`;
+  return `${startYear}-${startYear + 1}`;
 }
 
 export function visibleAcademicYears(
@@ -89,8 +89,8 @@ function displayAcademicYearStart(date: Date, oldestStart: number): number {
   const year = date.getFullYear();
   const month = date.getMonth() + 1;
   if (month >= 9) return year;
-  // Январь–август первого отображаемого года относим к его вкладке,
-  // иначе оценки весны 2025 пропадают с вкладки 2025–2026.
+  // Январь-август первого отображаемого года относим к его вкладке,
+  // иначе оценки весны 2025 пропадают с вкладки 2025-2026.
   if (year === oldestStart) return oldestStart;
   return year - 1;
 }
@@ -138,7 +138,7 @@ function getSourceLabel(sourceId: number, dbName?: string | null): string {
   if (sourceId === 2) {
     return "Внутришкольная";
   }
-  return dbName?.trim() || "—";
+  return dbName?.trim() || "-";
 }
 
 function getCardTypeLabel(cardType: number): string {
@@ -148,7 +148,7 @@ function getCardTypeLabel(cardType: number): string {
   if (cardType === 2) {
     return "Карта №2 (Методические компетенции)";
   }
-  return "—";
+  return "-";
 }
 
 function getCardLinkType(cardType: number): "full" | "method" {

@@ -921,9 +921,9 @@ export function AdminSchoolDetailPage() {
                       {STATUS_LABELS[subscription.status]}
                     </span>
                   </td>
-                  <td>{subscription.phone ?? "—"}</td>
-                  <td>{subscription.sourceLabel ?? "—"}</td>
-                  <td>{subscription.note ?? "—"}</td>
+                  <td>{subscription.phone ?? "-"}</td>
+                  <td>{subscription.sourceLabel ?? "-"}</td>
+                  <td>{subscription.note ?? "-"}</td>
                   <td>
                     {Number(subscription.isCancelled) === 0 ? (
                       <button
@@ -1249,7 +1249,7 @@ export function AdminSchoolDetailPage() {
             <div className="admin-reset-modal__body">
               <p>
                 Кабинет сразу станет недоступен для входа, даже если срок
-                подписки ещё не истёк. Период подписки сохранится — позже его
+                подписки ещё не истёк. Период подписки сохранится - позже его
                 можно снова активировать на выбранные даты.
               </p>
             </div>

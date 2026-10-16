@@ -147,7 +147,7 @@ async function buildContract(request: RenewalRequest): Promise<Buffer> {
   const meta = documentMeta(request);
   const customer = request.customer;
   const { doc, result } = createPdf(
-    `Договор № ${meta.contractNumber} — ${customer.fullName}`,
+    `Договор № ${meta.contractNumber} - ${customer.fullName}`,
   );
 
   doc.font("Bold").fontSize(13).text(`Договор № ${meta.contractNumber}`, {

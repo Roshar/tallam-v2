@@ -11,7 +11,7 @@ import { pool, query } from "../db/pool.js";
  *
  * Важно: `id_card` пересекается между `card_from_project_teacher_mark2` и
  * `card_from_project_teacher_mark3`, поэтому зависимые строки нельзя удалять
- * по списку идентификаторов — только через JOIN с конкретной таблицей карт.
+ * по списку идентификаторов - только через JOIN с конкретной таблицей карт.
  */
 
 export interface TeacherDeletionSummary {
@@ -44,7 +44,7 @@ const PROTECTED_TABLES = new Set([
   "teachers_old",
 ]);
 
-/** Таблицы карт, у которых `teacher_id` — строка с UUID учителя. */
+/** Таблицы карт, у которых `teacher_id` - строка с UUID учителя. */
 const CARD_TABLES = [
   "card_from_project_teacher_mark3",
   "card_from_project_teacher_mark2",

@@ -1,14 +1,14 @@
 /**
  * Шкала оценки для аналитики: структура разделов обеих карт и их максимумы.
  *
- * Источник структуры — `frontend/src/data/evaluationCriteria.ts` (сами критерии
+ * Источник структуры - `frontend/src/data/evaluationCriteria.ts` (сами критерии
  * и подписи), а значения максимумов совпадают с теми, что уже применяются при
  * показе карточки в `card-view.service.ts` (13 / 33 / 6 / 6 для комплексной,
  * 33 для методической). Формулы расчёта здесь не новые: используется та же
  * `percentOf(sum, max)`, что и в карточке.
  *
  * ВАЖНО: это описание шкалы существует в проекте уже в трёх местах (критерии на
- * фронте, `card-view.service.ts`, `card.service.ts`). Здесь появилось четвёртое —
+ * фронте, `card-view.service.ts`, `card.service.ts`). Здесь появилось четвёртое -
  * сознательно, чтобы не переписывать рабочую логику оценивания. Если шкала
  * изменится, менять нужно все места; проверка ниже не даст молча разойтись
  * суммам разделов и общему максимуму карты.
@@ -25,7 +25,7 @@ export interface ScaleSection {
 
 export interface CardScale {
   type: CardTypeKind;
-  /** Значение `card_type` в базе: 2 — методическая, 1 — комплексная. */
+  /** Значение `card_type` в базе: 2 - методическая, 1 - комплексная. */
   dbCardType: number;
   label: string;
   keys: string[];
@@ -36,8 +36,8 @@ export interface CardScale {
 const range = (prefix: string, count: number): string[] =>
   Array.from({ length: count }, (_, index) => `${prefix}${index + 1}`);
 
-const SUBJECT_KEYS = range("k_1_", 7); // 1.1–1.7
-const METHOD_KEYS = range("k_2_", 22); // 1.1–1.22 внутри методической части
+const SUBJECT_KEYS = range("k_1_", 7); // 1.1-1.7
+const METHOD_KEYS = range("k_2_", 22); // 1.1-1.22 внутри методической части
 const PSYCHO_KEYS = range("k_3_", 3);
 const COMM_KEYS = range("k_4_", 3);
 
@@ -121,7 +121,7 @@ export function isCardTypeKind(value: unknown): value is CardTypeKind {
   return value === "method" || value === "full";
 }
 
-/** В базе `card_type = 2` — методическая, всё остальное — комплексная. */
+/** В базе `card_type = 2` - методическая, всё остальное - комплексная. */
 export function cardTypeFromDb(value: number): CardTypeKind {
   return Number(value) === 2 ? "method" : "full";
 }

@@ -66,7 +66,7 @@ export function TeachersTable({
             <tr key={teacher.id}>
               <td>{rowOffset + index + 1}</td>
               <td>{teacher.fullName}</td>
-              <td>{teacher.position ?? "—"}</td>
+              <td>{teacher.position ?? "-"}</td>
               {showProjectStatus ? (
                 <td className="data-table__project">
                   <ProjectStatusBadges labels={teacher.projectLabels} compact />
@@ -74,8 +74,8 @@ export function TeachersTable({
               ) : null}
               {!compact ? (
                 <>
-                  <td>{teacher.phone ?? "—"}</td>
-                  <td>{teacher.email ?? "—"}</td>
+                  <td>{teacher.phone ?? "-"}</td>
+                  <td>{teacher.email ?? "-"}</td>
                 </>
               ) : null}
               {userInfoBasePath ? (

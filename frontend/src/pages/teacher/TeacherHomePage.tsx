@@ -206,7 +206,7 @@ export function TeacherHomePage() {
       </section>
 
       <p className="teacher-cabinet__link">
-        Все оценки с подробной расшифровкой — в разделе{" "}
+        Все оценки с подробной расшифровкой - в разделе{" "}
         <Link to="/teacher/evaluations">Мои оценки</Link>.
       </p>
     </div>

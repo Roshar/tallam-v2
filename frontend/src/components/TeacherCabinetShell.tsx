@@ -76,7 +76,16 @@ export function TeacherCabinetShell() {
       </main>
 
       <footer className="site-footer">
-        <div className="page-container">Таллам — платформа анализа урока</div>
+        <div className="site-footer__inner page-container">
+          <div>
+            <div>Информационно-аналитическая платформа</div>
+            <div>
+              <span>Техподдержка: </span>
+              <a href="mailto:webrush@mail.ru">webrush@mail.ru</a>
+            </div>
+          </div>
+          <div>© 2020-2026, Tallam</div>
+        </div>
       </footer>
     </div>
   );

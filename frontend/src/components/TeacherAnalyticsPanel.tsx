@@ -79,7 +79,7 @@ export function TeacherAnalyticsPanel({
         ) : !analytics.hasDataInYear ? (
           <p className="analytics-empty">
             За учебный год {academicYearLabel} оценивания по {cardTypeTitle} не
-            проводились. Выберите другой год — оценки за прошлые периоды
+            проводились. Выберите другой год - оценки за прошлые периоды
             сохраняются.
           </p>
         ) : (
@@ -92,12 +92,12 @@ export function TeacherAnalyticsPanel({
                 <AnalyticsDelta delta={analytics.delta} />
                 {analytics.previous ? (
                   <span className="analytics-summary__hint">
-                    предыдущая оценка {analytics.previous.dateLabel} —{" "}
+                    предыдущая оценка {analytics.previous.dateLabel} -{" "}
                     {analytics.previous.percent}%
                   </span>
                 ) : (
                   <span className="analytics-summary__hint">
-                    это первая оценка по этой карте за год — сравнить пока не с
+                    это первая оценка по этой карте за год - сравнить пока не с
                     чем
                   </span>
                 )}

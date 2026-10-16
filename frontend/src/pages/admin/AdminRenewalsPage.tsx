@@ -22,7 +22,7 @@ function notifyRenewalQueueChanged() {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return "—";
+  if (!value) return "-";
   return new Intl.DateTimeFormat("ru-RU").format(
     new Date(`${value.slice(0, 10)}T00:00:00`),
   );
@@ -369,7 +369,7 @@ export function AdminRenewalsPage() {
               {selected.startsOn && selected.endsOn ? (
                 <p className="admin-renewals__period">
                   Период после оплаты: <strong>{formatDate(selected.startsOn)}</strong>
-                  {" — "}
+                  {" - "}
                   <strong>{formatDate(selected.endsOn)}</strong>
                 </p>
               ) : null}

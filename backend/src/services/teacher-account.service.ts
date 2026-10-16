@@ -9,7 +9,7 @@ import { hashPassword } from "./auth.service.js";
  * данные из карточки учителя.
  *
  * Таблица отдельная от `users`, потому что `users.school_id` уникален и рассчитан
- * на одну запись школы, а `users.role` — ENUM под школьные роли. Методисты в этом
+ * на одну запись школы, а `users.role` - ENUM под школьные роли. Методисты в этом
  * проекте тоже живут в своей таблице (`methodists`).
  */
 
@@ -64,7 +64,7 @@ export async function findTeacherAccountByEmail(
 }
 
 /**
- * Создание аккаунта. Используется скриптом первичной настройки, а в будущем —
+ * Создание аккаунта. Используется скриптом первичной настройки, а в будущем -
  * приглашениями. Сам регистрации учителей наружу пока нет.
  */
 export async function createTeacherAccount(input: {
@@ -115,7 +115,7 @@ export interface TeacherCabinetContext {
   disciplines: string[];
 }
 
-/** Карточка учителя и школа — источник всех данных кабинета. */
+/** Карточка учителя и школа - источник всех данных кабинета. */
 export async function getTeacherCabinetContext(
   teacherId: string,
 ): Promise<TeacherCabinetContext | null> {

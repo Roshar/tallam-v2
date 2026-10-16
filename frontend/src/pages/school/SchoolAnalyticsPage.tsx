@@ -58,7 +58,7 @@ export function SchoolAnalyticsPage() {
           <h2 className="page-title">Аналитика</h2>
           <p className="page-subtitle">
             Сводные результаты оценивания учителей школы. Методическая и
-            комплексная карты считаются отдельно — общей оценки по двум картам
+            комплексная карты считаются отдельно - общей оценки по двум картам
             система не выводит.
           </p>
         </header>
@@ -108,7 +108,7 @@ export function SchoolAnalyticsPage() {
           ) : !analytics.hasDataInYear ? (
             <p className="analytics-empty">
               За учебный год {analytics.academicYearLabel} оценивания по{" "}
-              {cardTypeTitle} не проводились. Выберите другой год — оценки за
+              {cardTypeTitle} не проводились. Выберите другой год - оценки за
               прошлые периоды сохраняются.
             </p>
           ) : (
@@ -136,7 +136,7 @@ export function SchoolAnalyticsPage() {
                   </p>
                 ) : (
                   <p className="analytics-note">
-                    За предыдущий учебный год данных нет — сравнить пока не с
+                    За предыдущий учебный год данных нет - сравнить пока не с
                     чем.
                   </p>
                 )}

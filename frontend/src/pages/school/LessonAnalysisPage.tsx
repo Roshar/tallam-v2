@@ -30,7 +30,7 @@ export function LessonAnalysisPage() {
               {project?.name ?? "Проект «Анализ урока»"}
             </h2>
             <p className="page-subtitle">
-              Учителя, участвующие в проекте — по ним проводится анализ уроков
+              Учителя, участвующие в проекте - по ним проводится анализ уроков
             </p>
           </div>
           {!loading && project ? (

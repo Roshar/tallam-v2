@@ -3,7 +3,7 @@ import { api } from "../../api/client";
 import type { TeacherCabinetResponse } from "../../types/teacher-cabinet";
 
 /**
- * Профиль учителя. Данные read-only: источник — карточка учителя в школе,
+ * Профиль учителя. Данные read-only: источник - карточка учителя в школе,
  * менять её из кабинета нельзя (ни школу, ни административные поля).
  */
 export function TeacherAccountPage() {
@@ -39,21 +39,21 @@ export function TeacherAccountPage() {
   const { context } = cabinet;
   const rows: Array<{ label: string; value: string }> = [
     { label: "ФИО", value: context.fullName },
-    { label: "Школа", value: context.schoolName || "—" },
-    { label: "Должность", value: context.position || "—" },
+    { label: "Школа", value: context.schoolName || "-" },
+    { label: "Должность", value: context.position || "-" },
     {
       label: "Предметы",
-      value: context.disciplines.length > 0 ? context.disciplines.join(", ") : "—",
+      value: context.disciplines.length > 0 ? context.disciplines.join(", ") : "-",
     },
-    { label: "Email", value: context.email || "—" },
-    { label: "Телефон", value: context.phone || "—" },
+    { label: "Email", value: context.email || "-" },
+    { label: "Телефон", value: context.phone || "-" },
   ];
 
   return (
     <div className="teacher-cabinet">
       <h1 className="teacher-section-title">Профиль</h1>
       <p className="teacher-section-hint">
-        Данные заполняет школа. Если что-то нужно изменить — обратитесь к
+        Данные заполняет школа. Если что-то нужно изменить - обратитесь к
         администрации школы.
       </p>
 

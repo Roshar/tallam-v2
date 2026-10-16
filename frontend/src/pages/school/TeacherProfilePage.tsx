@@ -25,7 +25,7 @@ function ProfileField({
   return (
     <div className="profile-field">
       <dt className="profile-field__label">{label}</dt>
-      <dd className="profile-field__value">{value ?? "—"}</dd>
+      <dd className="profile-field__value">{value ?? "-"}</dd>
     </div>
   );
 }

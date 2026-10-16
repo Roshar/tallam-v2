@@ -24,7 +24,7 @@ export function SiteFooter() {
           <span>Техподдержка: </span>
           <a href="mailto:webrush@mail.ru">webrush@mail.ru</a>
         </div>
-        <div>© 2020–2026, Tallam</div>
+        <div>© 2020-2026, Tallam</div>
       </div>
     </footer>
   );

@@ -203,7 +203,7 @@ export function SchoolRenewalPanel({
               <div>
                 <dt>Новый период</dt>
                 <dd>
-                  {formatDate(request.startsOn)}–{formatDate(request.endsOn)}
+                  {formatDate(request.startsOn)}-{formatDate(request.endsOn)}
                 </dd>
               </div>
             ) : null}

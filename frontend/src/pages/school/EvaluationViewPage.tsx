@@ -285,9 +285,9 @@ export function EvaluationViewPage() {
           <thead>
             <tr>
               <th className="evaluate-table__label">
-                Критерии оценки урока (2 балла — признак проявляется в полной мере,
-                но не регулярно; 1 балл — признак проявляется не в полной мере; 0
-                баллов — признак не проявляется. «—» — материал урока не позволяет
+                Критерии оценки урока (2 балла - признак проявляется в полной мере,
+                но не регулярно; 1 балл - признак проявляется не в полной мере; 0
+                баллов - признак не проявляется. «-» - материал урока не позволяет
                 организовать такую работу)
               </th>
               <th className="evaluate-table__score">Оценивание в баллах</th>
@@ -317,7 +317,7 @@ export function EvaluationViewPage() {
                             {item.code}. {item.title}
                           </td>
                           <td className="evaluate-table__score">
-                            {detail.displayedScores[item.key] ?? "—"}
+                            {detail.displayedScores[item.key] ?? "-"}
                           </td>
                         </tr>
                       ))}
@@ -330,8 +330,8 @@ export function EvaluationViewPage() {
                       <td>
                         Результат:
                         <small>
-                          100–75% — выше базового, 74–50% — базовый уровень,
-                          49–0% — ниже базового
+                          100-75% - выше базового, 74-50% - базовый уровень,
+                          49-0% - ниже базового
                         </small>
                       </td>
                       <td className="evaluate-table__score">

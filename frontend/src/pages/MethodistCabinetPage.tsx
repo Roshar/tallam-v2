@@ -40,7 +40,7 @@ export function MethodistCabinetPage() {
           <div className="cabinet-welcome">
             <p className="cabinet-welcome__title">Раздел в разработке</p>
             <p className="cabinet-welcome__text">
-              Следующий этап — просмотр школ, проверка оценочных карт и
+              Следующий этап - просмотр школ, проверка оценочных карт и
               аналитика по методистам.
             </p>
           </div>

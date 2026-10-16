@@ -3,7 +3,7 @@
 #
 # Why not build on the server: the VPS has ~1 GB of RAM and no headroom. A build
 # spike pushes it to the limit, and the kernel OOM killer does not care that the
-# build is disposable — it picks the largest consumer, which is MariaDB. Shipping
+# build is disposable - it picks the largest consumer, which is MariaDB. Shipping
 # a locally built dist keeps the server out of it entirely.
 #
 # Usage: npm run deploy
@@ -54,7 +54,7 @@ ssh "${SSH_OPTS[@]}" "$HOST" "mkdir -p $BACKUP_DIR \
 
 echo "→ Shipping artifacts"
 # Везём в dist.new и только потом подменяем: если передача оборвётся, на сервере
-# останется прежняя рабочая сборка. tar тут не годится — он сначала стирает цель,
+# останется прежняя рабочая сборка. tar тут не годится - он сначала стирает цель,
 # и оборванный поток оставил бы сайт без фронта. Заодно нет возни с macOS-xattr.
 ship_tree() {
   local name="$1"
