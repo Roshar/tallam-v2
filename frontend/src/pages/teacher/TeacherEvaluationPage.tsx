@@ -41,6 +41,8 @@ export function TeacherEvaluationPage() {
   const [detail, setDetail] = useState<EvaluationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     const id = Number(cardId);
@@ -105,6 +107,22 @@ export function TeacherEvaluationPage() {
     };
   }, [detail]);
 
+  async function handleDownload() {
+    const id = Number(cardId);
+    if (!Number.isInteger(id) || id <= 0) return;
+    setDownloading(true);
+    setDownloadError("");
+    try {
+      await api.teacherEvaluationRecommendations(id);
+    } catch (err) {
+      setDownloadError(
+        err instanceof Error ? err.message : "Не удалось скачать рекомендации",
+      );
+    } finally {
+      setDownloading(false);
+    }
+  }
+
   if (loading) {
     return <div className="loading-state">Загрузка оценки...</div>;
   }
@@ -144,11 +162,27 @@ export function TeacherEvaluationPage() {
         </div>
       </header>
 
-      <p className="teacher-evaluation__who">
-        {detail.hasEvaluatorIdentity
-          ? `Оценивание: ${detail.evaluatorLabel}`
-          : detail.sourceLabel}
-      </p>
+      <div className="teacher-evaluation__actions">
+        <p className="teacher-evaluation__who">
+          {detail.hasEvaluatorIdentity
+            ? `Оценивание: ${detail.evaluatorLabel}`
+            : detail.sourceLabel}
+        </p>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => void handleDownload()}
+          disabled={downloading}
+        >
+          {downloading
+            ? "Готовим файл..."
+            : "Скачать методические рекомендации (PDF)"}
+        </button>
+      </div>
+
+      {downloadError ? (
+        <div className="alert alert-error">{downloadError}</div>
+      ) : null}
 
       <section aria-labelledby="criteria-explained">
         <h2 id="criteria-explained" className="teacher-section-title">

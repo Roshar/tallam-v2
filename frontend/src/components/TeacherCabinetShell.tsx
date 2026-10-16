@@ -51,17 +51,21 @@ export function TeacherCabinetShell() {
 
       <nav className="cabinet-tabs" aria-label="Разделы кабинета">
         <div className="cabinet-tabs__inner page-container">
-          {TEACHER_SECTIONS.map((section) => (
-            <NavLink
-              key={section.to}
-              to={section.to}
-              className={({ isActive }) =>
-                `cabinet-tabs__link${isActive ? " active" : ""}`
-              }
-            >
-              {section.label}
-            </NavLink>
-          ))}
+          <ul className="cabinet-menu">
+            {TEACHER_SECTIONS.map((section) => (
+              <li key={section.to}>
+                <NavLink
+                  to={section.to}
+                  end={section.to === "/teacher/cabinet"}
+                  className={({ isActive }) =>
+                    `cabinet-menu__item${isActive ? " active" : ""}`
+                  }
+                >
+                  {section.label}
+                </NavLink>
+              </li>
+            ))}
+          </ul>
         </div>
       </nav>
 

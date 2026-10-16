@@ -1,5 +1,8 @@
 import type { Request, Response } from "express";
-import { getEvaluationDetail } from "../services/card-view.service.js";
+import {
+  buildRecommendationsPdf,
+  getEvaluationDetail,
+} from "../services/card-view.service.js";
 import { getTeacherAnalytics } from "../services/analytics.service.js";
 import {
   getTeacherCabinetContext,
@@ -174,5 +177,47 @@ export async function evaluationDetail(req: Request, res: Response) {
   } catch (error) {
     console.error("Teacher evaluation detail error:", error);
     return res.status(500).json({ error: "Не удалось загрузить оценку" });
+  }
+}
+
+/**
+ * Методические рекомендации по своей оценке — тот же PDF, что школа скачивает
+ * из карточки. Учитель получает его только для своих оценок: карта ищется по
+ * идентификатору из сессии, поэтому чужой id вернёт 404.
+ */
+export async function evaluationRecommendations(req: Request, res: Response) {
+  const context = await loadContext(req, res);
+  if (!context) return;
+
+  const cardId = Number.parseInt(String(req.params.cardId ?? ""), 10);
+  if (!Number.isInteger(cardId) || cardId <= 0) {
+    return res.status(400).json({ error: "Некорректная оценка" });
+  }
+
+  try {
+    const detail = await getEvaluationDetail(
+      context.schoolId,
+      context.teacherId,
+      cardId,
+    );
+    if (!detail) {
+      return res.status(404).json({ error: "Оценка не найдена" });
+    }
+
+    const buffer = await buildRecommendationsPdf(detail);
+    const safeName = detail.teacher.fullName.replace(/\s+/g, "-");
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(
+        `rekomendacii-${safeName}.pdf`,
+      )}`,
+    );
+    return res.send(buffer);
+  } catch (error) {
+    console.error("Teacher recommendations error:", error);
+    return res
+      .status(500)
+      .json({ error: "Не удалось сформировать методические рекомендации" });
   }
 }

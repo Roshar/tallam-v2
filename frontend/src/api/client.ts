@@ -1064,4 +1064,12 @@ export const api = {
       `/api/teacher/evaluations/${cardId}`,
     );
   },
+
+  /** Методические рекомендации по своей оценке — тот же PDF, что у школы. */
+  teacherEvaluationRecommendations(cardId: number) {
+    return downloadFile(
+      `/api/teacher/evaluations/${cardId}/recommendations`,
+      "rekomendacii.pdf",
+    );
+  },
 };

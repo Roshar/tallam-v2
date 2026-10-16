@@ -15,5 +15,9 @@ router.get("/cabinet", teacherCabinetController.cabinet);
 router.get("/analytics", teacherCabinetController.analytics);
 router.get("/evaluations", teacherCabinetController.evaluations);
 router.get("/evaluations/:cardId", teacherCabinetController.evaluationDetail);
+router.get(
+  "/evaluations/:cardId/recommendations",
+  teacherCabinetController.evaluationRecommendations,
+);
 
 export default router;
