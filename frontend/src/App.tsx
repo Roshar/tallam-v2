@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { AdminCabinetShell } from "./components/AdminCabinetShell";
 import { SchoolCabinetShell } from "./components/SchoolCabinetShell";
+import { TeacherCabinetShell } from "./components/TeacherCabinetShell";
 import { LoginPage } from "./pages/LoginPage";
 import { ForgotPasswordPage } from "./pages/ForgotPasswordPage";
 import { ResetPasswordPage } from "./pages/ResetPasswordPage";
@@ -11,6 +12,10 @@ import { SchoolGuidePage } from "./pages/school/SchoolGuidePage";
 import { SchoolFeedbackPage } from "./pages/school/SchoolFeedbackPage";
 import { SchoolAnalyticsPage } from "./pages/school/SchoolAnalyticsPage";
 import { TeacherProfilePage } from "./pages/school/TeacherProfilePage";
+import { TeacherHomePage } from "./pages/teacher/TeacherHomePage";
+import { TeacherEvaluationsPage } from "./pages/teacher/TeacherEvaluationsPage";
+import { TeacherEvaluationPage } from "./pages/teacher/TeacherEvaluationPage";
+import { TeacherAccountPage } from "./pages/teacher/TeacherAccountPage";
 import { WorkersPage } from "./pages/school/WorkersPage";
 import { LessonAnalysisPage } from "./pages/school/LessonAnalysisPage";
 import { LessonAnalysisMembersPage } from "./pages/school/LessonAnalysisMembersPage";
@@ -50,6 +55,7 @@ import "./styles/school-subscription.css";
 import "./styles/status.css";
 import "./styles/vacancies.css";
 import "./styles/analytics.css";
+import "./styles/teacher-cabinet.css";
 
 export default function App() {
   return (
@@ -94,6 +100,14 @@ export default function App() {
               path="lesson-analysis/teachers/:teacherId/evaluate/:cardType"
               element={<EvaluateFormPage />}
             />
+          </Route>
+
+          <Route path="/teacher" element={<TeacherCabinetShell />}>
+            <Route index element={<Navigate to="/teacher/cabinet" replace />} />
+            <Route path="cabinet" element={<TeacherHomePage />} />
+            <Route path="evaluations" element={<TeacherEvaluationsPage />} />
+            <Route path="evaluations/:cardId" element={<TeacherEvaluationPage />} />
+            <Route path="profile" element={<TeacherAccountPage />} />
           </Route>
 
           <Route path="/methodist/cabinet" element={<MethodistCabinetPage />} />

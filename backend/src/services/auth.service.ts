@@ -1,6 +1,10 @@
 import bcrypt from "bcryptjs";
 import { query } from "../db/pool.js";
 import type { SessionUser, UserRole } from "../types/session.js";
+import {
+  findTeacherAccountByEmail,
+  getTeacherCabinetContext,
+} from "./teacher-account.service.js";
 
 interface DbUser {
   id: number;
@@ -104,8 +108,34 @@ export async function findMethodistByEmail(
 export async function authenticate(
   email: string,
   password: string,
-  accountType: "school" | "methodist",
+  accountType: "school" | "methodist" | "teacher",
 ): Promise<SessionUser | null> {
+  if (accountType === "teacher") {
+    const account = await findTeacherAccountByEmail(email);
+    if (!account || account.status !== "on") {
+      return null;
+    }
+    if (!(await passwordsMatch(password, account.password))) {
+      return null;
+    }
+    // Школа берётся из карточки учителя: в аккаунте только логин, пароль
+    // и связь с карточкой, никаких копий данных учителя.
+    const context = await getTeacherCabinetContext(account.id_teacher);
+    if (!context) {
+      return null;
+    }
+    return {
+      id: Number(account.id),
+      idUser: null,
+      email: account.email,
+      role: "teacher",
+      schoolId: context.schoolId,
+      status: "on",
+      accountType: "teacher",
+      teacherId: account.id_teacher,
+    };
+  }
+
   if (accountType === "school") {
     const user = await findSchoolUserByEmail(email);
     if (!user) {

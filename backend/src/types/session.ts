@@ -3,7 +3,8 @@ export type UserRole =
   | "admin"
   | "moder"
   | "methodist"
-  | "accountant";
+  | "accountant"
+  | "teacher";
 
 export type SchoolCabinetAccess = "full" | "billing";
 
@@ -14,8 +15,14 @@ export interface SessionUser {
   role: UserRole;
   schoolId: number;
   status: "on" | "off";
-  accountType: "school" | "methodist" | "admin" | "accountant";
+  accountType: "school" | "methodist" | "admin" | "accountant" | "teacher";
   cabinetAccess?: SchoolCabinetAccess;
+  /**
+   * Для accountType = "teacher": карточка учителя, к которой привязан аккаунт.
+   * Все запросы кабинета учителя ограничиваются этим значением, поэтому
+   * подставить чужой идентификатор через URL невозможно.
+   */
+  teacherId?: string;
   firstname?: string;
   surname?: string;
   patronymic?: string;

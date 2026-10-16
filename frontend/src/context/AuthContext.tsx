@@ -15,7 +15,7 @@ interface AuthContextValue {
   login: (
     email: string,
     password: string,
-    accountType: "school" | "methodist",
+    accountType: "school" | "methodist" | "teacher",
   ) => Promise<void>;
   loginAccountant: (
     login: string,
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     async (
       email: string,
       password: string,
-      accountType: "school" | "methodist",
+      accountType: "school" | "methodist" | "teacher",
     ) => {
       const { user: loggedInUser } = await api.login(email, password, accountType);
       setUser(loggedInUser);

@@ -3,7 +3,7 @@ import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { schoolLandingPath } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-type Tab = "school" | "methodist";
+type Tab = "school" | "methodist" | "teacher";
 
 export function LoginPage() {
   const { user, loading, login } = useAuth();
@@ -36,6 +36,9 @@ export function LoginPage() {
     }
     if (user.accountType === "methodist") {
       return <Navigate to="/methodist/cabinet" replace />;
+    }
+    if (user.accountType === "teacher") {
+      return <Navigate to="/teacher/cabinet" replace />;
     }
   }
 
@@ -105,6 +108,15 @@ export function LoginPage() {
               onClick={() => setTab("methodist")}
             >
               Методист
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={tab === "teacher"}
+              className={`segmented-tabs__btn${tab === "teacher" ? " active" : ""}`}
+              onClick={() => setTab("teacher")}
+            >
+              Учитель
             </button>
           </div>
 

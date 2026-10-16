@@ -27,7 +27,7 @@ export async function login(req: Request, res: Response) {
   const { email, password, accountType } = req.body as {
     email?: string;
     password?: string;
-    accountType?: "school" | "methodist";
+    accountType?: "school" | "methodist" | "teacher";
   };
 
   if (!email?.trim() || !password || !accountType) {

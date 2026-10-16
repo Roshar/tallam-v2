@@ -1,0 +1,310 @@
+/* Личный кабинет учителя. Стили дополняют общие: шапка, меню и таблицы
+   используют существующие классы Таллама (cabinet-nav, data-table и т.д.). */
+
+.teacher-cabinet {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-bottom: 32px;
+}
+
+.teacher-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #1f2a44 0%, #2b3a5c 100%);
+  color: #fff;
+}
+
+.teacher-hero__eyebrow {
+  margin: 0 0 4px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.teacher-hero__name {
+  margin: 0 0 6px;
+  font-size: 26px;
+  line-height: 1.2;
+}
+
+.teacher-hero__meta {
+  margin: 0;
+  opacity: 0.85;
+}
+
+.teacher-year {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.teacher-year--static {
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.14);
+  font-size: 15px;
+}
+
+.teacher-year__label {
+  opacity: 0.75;
+}
+
+.teacher-year__select {
+  min-width: 190px;
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-size: 15px;
+}
+
+.teacher-year__select option {
+  color: #1f2a44;
+}
+
+.teacher-section-title {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+
+.teacher-section-hint {
+  margin: 0;
+  color: var(--text-muted, #6b7280);
+  font-size: 14px;
+}
+
+.teacher-section-head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.teacher-results {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.teacher-result {
+  padding: 18px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  background: var(--surface, #fff);
+}
+
+.teacher-result--active {
+  border-color: #2b3a5c;
+  box-shadow: 0 0 0 1px rgba(43, 58, 92, 0.25);
+}
+
+.teacher-result__title {
+  margin: 0 0 10px;
+  font-size: 15px;
+  color: var(--text-muted, #6b7280);
+  font-weight: 600;
+}
+
+.teacher-result__value {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 0 0 6px;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.teacher-result__date,
+.teacher-result__prev,
+.teacher-result__count {
+  margin: 0 0 4px;
+  font-size: 14px;
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-result__empty {
+  margin: 8px 0 0;
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-cabinet__link {
+  margin: 0;
+  font-size: 14px;
+}
+
+.teacher-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 14px;
+}
+
+.teacher-filters__btn {
+  padding: 7px 14px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.teacher-filters__btn.active {
+  border-color: #2b3a5c;
+  background: #2b3a5c;
+  color: #fff;
+}
+
+.teacher-evaluations__value,
+.teacher-evaluation__value {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.teacher-evaluations__action {
+  text-align: right;
+}
+
+.teacher-back {
+  font-size: 14px;
+}
+
+.teacher-evaluation__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 18px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+}
+
+.teacher-evaluation__score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.teacher-evaluation__percent {
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.teacher-evaluation__sum {
+  font-size: 13px;
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-evaluation__who {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-explained {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.teacher-explained__col {
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+}
+
+.teacher-explained__col--good {
+  border-color: #16a34a;
+}
+
+.teacher-explained__col--low {
+  border-color: #dc2626;
+}
+
+.teacher-explained__col h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
+.teacher-explained__col ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.teacher-explained__mark {
+  display: inline-block;
+  margin-left: 6px;
+  color: var(--text-muted, #6b7280);
+  white-space: nowrap;
+}
+
+.teacher-explained__empty {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-evaluation__max {
+  color: var(--text-muted, #6b7280);
+}
+
+.teacher-evaluation__comment {
+  margin-top: 10px;
+  padding: 16px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.teacher-profile {
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.teacher-profile__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border, #e5e7eb);
+}
+
+.teacher-profile__row:last-child {
+  border-bottom: none;
+}
+
+.teacher-profile__row dt {
+  min-width: 160px;
+  color: var(--text-muted, #6b7280);
+  font-size: 14px;
+}
+
+.teacher-profile__row dd {
+  margin: 0;
+  font-size: 15px;
+}

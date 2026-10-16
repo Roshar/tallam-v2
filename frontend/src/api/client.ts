@@ -23,6 +23,10 @@ import type {
   TeacherAnalyticsResponse,
 } from "../types/analytics";
 import type {
+  TeacherCabinetResponse,
+  TeacherEvaluationsResponse,
+} from "../types/teacher-cabinet";
+import type {
   VacancyDetail,
   VacancyFiltersMeta,
   VacancyListResponse,
@@ -47,7 +51,7 @@ import type {
   AdminVisitStats,
 } from "../types/admin";
 
-export type AccountType = "school" | "methodist" | "admin" | "accountant";
+export type AccountType = "school" | "methodist" | "admin" | "accountant" | "teacher";
 export type SchoolCabinetAccess = "full" | "billing";
 
 export interface User {
@@ -250,7 +254,11 @@ export const api = {
     );
   },
 
-  login(email: string, password: string, accountType: "school" | "methodist") {
+  login(
+    email: string,
+    password: string,
+    accountType: "school" | "methodist" | "teacher",
+  ) {
     return request<{ user: User }>("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password, accountType }),
@@ -1027,6 +1035,33 @@ export const api = {
         method: "POST",
         body: JSON.stringify({ password, confirmPassword }),
       },
+    );
+  },
+
+  /** Личный кабинет учителя. Все методы работают только со своим аккаунтом. */
+  teacherCabinet(academicYear?: number) {
+    const query = academicYear ? `?academicYear=${academicYear}` : "";
+    return request<TeacherCabinetResponse>(`/api/teacher/cabinet${query}`);
+  },
+
+  teacherCabinetAnalytics(cardType: AnalyticsCardType, academicYear?: number) {
+    const params = new URLSearchParams({ cardType });
+    if (academicYear) params.set("academicYear", String(academicYear));
+    return request<TeacherAnalyticsResponse>(
+      `/api/teacher/analytics?${params.toString()}`,
+    );
+  },
+
+  teacherEvaluations(academicYear?: number) {
+    const query = academicYear ? `?academicYear=${academicYear}` : "";
+    return request<TeacherEvaluationsResponse>(
+      `/api/teacher/evaluations${query}`,
+    );
+  },
+
+  teacherEvaluation(cardId: number) {
+    return request<{ detail: EvaluationDetail }>(
+      `/api/teacher/evaluations/${cardId}`,
     );
   },
 };
