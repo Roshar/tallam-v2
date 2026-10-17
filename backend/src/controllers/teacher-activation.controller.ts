@@ -6,6 +6,7 @@ import {
   getActivationPreview,
   revokeTeacherAccount,
   sendActivationCode,
+  sendTeacherInvite,
 } from "../services/teacher-activation.service.js";
 
 /**
@@ -140,6 +141,37 @@ export async function invite(req: Request, res: Response) {
   } catch (error) {
     console.error("Activation invite error:", error);
     return res.status(500).json({ error: "Не удалось создать приглашения" });
+  }
+}
+
+/** Одно письмо конкретному учителю. Школа подтверждает адрес вручную. */
+export async function sendInvite(req: Request, res: Response) {
+  const schoolId = req.session.user?.schoolId;
+  const userId = req.session.user?.id;
+  if (!schoolId || !userId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+
+  const { teacherId } = req.body as { teacherId?: unknown };
+  if (typeof teacherId !== "string" || !teacherId.trim()) {
+    return res.status(400).json({ error: "Не указан учитель" });
+  }
+
+  try {
+    const result = await sendTeacherInvite({
+      schoolId,
+      createdBy: userId,
+      idTeacher: teacherId.trim(),
+    });
+    if ("error" in result) {
+      return res
+        .status(result.status)
+        .json({ error: result.error, reason: result.reason ?? null });
+    }
+    return res.json({ ok: true, sentTo: result.sentTo });
+  } catch (error) {
+    console.error("Activation send error:", error);
+    return res.status(500).json({ error: "Не удалось отправить письмо" });
   }
 }
 

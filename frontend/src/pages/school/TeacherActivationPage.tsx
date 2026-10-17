@@ -5,12 +5,20 @@ import { api } from "../../api/client";
  * Школьная страница активации кабинетов учителей: сводка, список и приглашения.
  * Школа может раздать ссылки вручную - это работает даже там, где почта в
  * карточке учителя устарела или общая на всю школу.
+ *
+ * Письма отправляются только по одному и только по кнопке в строке: почтам из
+ * карточек доверять нельзя, на общий ящик письмо не уходит.
  */
 interface TeacherRow {
   idTeacher: string;
   fullName: string;
   email: string | null;
   status: "activated" | "invited" | "none";
+  cardEmail: string | null;
+  emailShared: boolean;
+  emailIsSchool: boolean;
+  inviteSentAt: string | null;
+  inviteSendCount: number;
 }
 
 interface Overview {
@@ -18,6 +26,7 @@ interface Overview {
   withEmail: number;
   activated: number;
   invited: number;
+  sent: number;
   teachers: TeacherRow[];
   currentInviteLinks: Array<{ idTeacher: string; link: string }>;
 }
@@ -38,6 +47,7 @@ export function TeacherActivationPage() {
 
   async function load() {
     setLoading(true);
+    setError("");
     try {
       setData(await api.schoolActivationOverview());
     } catch (err) {
@@ -59,14 +69,16 @@ export function TeacherActivationPage() {
     return map;
   }, [data]);
 
-  async function handleInviteAll() {
+  /** Готовит ссылки без отправки писем: их школа раздает сама. */
+  async function handlePrepareAll() {
     setBusy(true);
     setNotice("");
+    setError("");
     try {
       const { links: created } = await api.schoolActivationInvite({ all: true });
       setNotice(
         created.length > 0
-          ? `Приглашения готовы: ${created.length}. Ссылки скопированы.`
+          ? `Ссылки готовы: ${created.length}. Письма не отправлялись.`
           : "Некого приглашать: все учителя уже активированы или приглашены.",
       );
       if (created.length > 0) {
@@ -82,6 +94,29 @@ export function TeacherActivationPage() {
     }
   }
 
+  /** Ссылка одному учителю - построчная кнопка, а не массовое приглашение. */
+  async function handlePrepareOne(teacherId: string) {
+    setBusy(true);
+    setNotice("");
+    setError("");
+    try {
+      const { links: created } = await api.schoolActivationInvite({
+        teacherIds: [teacherId],
+      });
+      if (created.length === 0) {
+        setNotice("Ссылку не удалось подготовить");
+        return;
+      }
+      await navigator.clipboard.writeText(created[0].link).catch(() => undefined);
+      setNotice(`Ссылка для ${created[0].fullName} готова и скопирована`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось создать ссылку");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleCopy(teacherId: string) {
     const link = links.get(teacherId);
     if (!link) return;
@@ -89,8 +124,34 @@ export function TeacherActivationPage() {
     setNotice("Ссылка скопирована");
   }
 
+  /** Письмо одному учителю: сначала школа подтверждает адрес. */
+  async function handleSend(row: TeacherRow) {
+    const address = row.cardEmail;
+    if (!address) return;
+    const confirmed = window.confirm(
+      `Отправить приглашение на ${address}?\n\n` +
+        "Письмо уйдет именно на этот адрес, повторно отправить его нельзя. " +
+        "Убедитесь, что это личная почта учителя, а не общий школьный ящик.",
+    );
+    if (!confirmed) return;
+
+    setBusy(true);
+    setNotice("");
+    setError("");
+    try {
+      const result = await api.schoolActivationSendInvite(row.idTeacher);
+      setNotice(`Приглашение отправлено на ${result.sentTo}`);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось отправить письмо");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function handleRevoke(teacherId: string) {
     setBusy(true);
+    setError("");
     try {
       await api.schoolActivationRevoke(teacherId);
       setNotice("Доступ закрыт");
@@ -105,8 +166,11 @@ export function TeacherActivationPage() {
   if (loading && !data) {
     return <div className="loading-state">Загрузка...</div>;
   }
-  if (error || !data) {
-    return <div className="alert alert-error">{error || "Нет данных"}</div>;
+  if (error && !data) {
+    return <div className="alert alert-error">{error}</div>;
+  }
+  if (!data) {
+    return <div className="alert alert-error">Нет данных</div>;
   }
 
   const percent =
@@ -129,9 +193,9 @@ export function TeacherActivationPage() {
           type="button"
           className="btn btn-primary"
           disabled={busy}
-          onClick={() => void handleInviteAll()}
+          onClick={() => void handlePrepareAll()}
         >
-          {busy ? "Готовим..." : "Пригласить всех неактивированных"}
+          {busy ? "Готовим..." : "Подготовить ссылки"}
         </button>
       </div>
 
@@ -151,12 +215,17 @@ export function TeacherActivationPage() {
           <p className="stat-card__value">{data.invited}</p>
         </div>
         <div className="stat-card">
+          <p className="stat-card__label">Писем отправлено</p>
+          <p className="stat-card__value">{data.sent}</p>
+        </div>
+        <div className="stat-card">
           <p className="stat-card__label">Есть почта в карточке</p>
           <p className="stat-card__value">{data.withEmail}</p>
         </div>
       </div>
 
       {notice ? <div className="alert alert-success">{notice}</div> : null}
+      {error ? <div className="alert alert-error">{error}</div> : null}
 
       <div className="teacher-filters">
         {([
@@ -187,44 +256,83 @@ export function TeacherActivationPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr key={row.idTeacher}>
-                <td>{row.fullName}</td>
-                <td>{row.email ?? "нет"}</td>
-                <td>{STATUS_LABEL[row.status]}</td>
-                <td className="teacher-evaluations__action">
-                  {row.status === "invited" ? (
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      onClick={() => void handleCopy(row.idTeacher)}
-                    >
-                      Скопировать ссылку
-                    </button>
-                  ) : null}
-                  {row.status === "none" ? (
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      disabled={busy}
-                      onClick={() => void handleInviteAll()}
-                    >
-                      Пригласить
-                    </button>
-                  ) : null}
-                  {row.status === "activated" ? (
-                    <button
-                      type="button"
-                      className="btn btn-ghost"
-                      disabled={busy}
-                      onClick={() => void handleRevoke(row.idTeacher)}
-                    >
-                      Закрыть доступ
-                    </button>
-                  ) : null}
-                </td>
-              </tr>
-            ))}
+            {rows.map((row) => {
+              const canSend =
+                row.status !== "activated" &&
+                Boolean(row.cardEmail) &&
+                !row.emailShared &&
+                !row.emailIsSchool &&
+                !row.inviteSentAt;
+              return (
+                <tr key={row.idTeacher}>
+                  <td>{row.fullName}</td>
+                  <td>
+                    <div>{row.email ?? "нет"}</div>
+                    {row.status !== "activated" && row.emailIsSchool ? (
+                      <div className="teacher-section-hint">
+                        почта школы, только вручную
+                      </div>
+                    ) : null}
+                    {row.status !== "activated" &&
+                    row.emailShared &&
+                    !row.emailIsSchool ? (
+                      <div className="teacher-section-hint">
+                        общий адрес, только вручную
+                      </div>
+                    ) : null}
+                    {row.status !== "activated" && row.inviteSentAt ? (
+                      <div className="teacher-section-hint">
+                        письмо отправлено {row.inviteSentAt}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td>{STATUS_LABEL[row.status]}</td>
+                  <td className="teacher-evaluations__action">
+                    <div className="teacher-actions">
+                      {row.status === "invited" ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          onClick={() => void handleCopy(row.idTeacher)}
+                        >
+                          Скопировать ссылку
+                        </button>
+                      ) : null}
+                      {row.status === "none" ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          disabled={busy}
+                          onClick={() => void handlePrepareOne(row.idTeacher)}
+                        >
+                          Пригласить
+                        </button>
+                      ) : null}
+                      {canSend ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          disabled={busy}
+                          onClick={() => void handleSend(row)}
+                        >
+                          Отправить приглашение
+                        </button>
+                      ) : null}
+                      {row.status === "activated" ? (
+                        <button
+                          type="button"
+                          className="btn btn-ghost"
+                          disabled={busy}
+                          onClick={() => void handleRevoke(row.idTeacher)}
+                        >
+                          Закрыть доступ
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

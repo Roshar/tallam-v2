@@ -1110,11 +1110,17 @@ export const api = {
       withEmail: number;
       activated: number;
       invited: number;
+      sent: number;
       teachers: Array<{
         idTeacher: string;
         fullName: string;
         email: string | null;
         status: "activated" | "invited" | "none";
+        cardEmail: string | null;
+        emailShared: boolean;
+        emailIsSchool: boolean;
+        inviteSentAt: string | null;
+        inviteSendCount: number;
       }>;
       currentInviteLinks: Array<{ idTeacher: string; link: string }>;
     }>("/api/teacher-activation/school/overview");
@@ -1127,6 +1133,14 @@ export const api = {
       method: "POST",
       body: JSON.stringify(payload),
     });
+  },
+
+  /** Письмо одному учителю. Школа уже подтвердила адрес вручную. */
+  schoolActivationSendInvite(teacherId: string) {
+    return request<{ ok: boolean; sentTo: string }>(
+      "/api/teacher-activation/school/invite/send",
+      { method: "POST", body: JSON.stringify({ teacherId }) },
+    );
   },
 
   schoolActivationRevoke(teacherId: string) {

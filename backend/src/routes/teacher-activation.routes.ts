@@ -18,6 +18,7 @@ router.post("/activate/:token/complete", activationController.complete);
 router.use("/school", requireAuth, requireRole("school"));
 router.get("/school/overview", activationController.overview);
 router.post("/school/invite", activationController.invite);
+router.post("/school/invite/send", activationController.sendInvite);
 router.post("/school/revoke", activationController.revoke);
 
 export default router;

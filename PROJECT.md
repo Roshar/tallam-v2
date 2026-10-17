@@ -156,6 +156,7 @@ npm run dev                   # API :4000, web :5173
 - Вход `/teacher/cabinet` (вкладка «Учитель» на странице входа): свои результаты по двум картам раздельно, динамика, сильные стороны и зоны развития, история оценок и расшифровка оценки с объяснением балла. Профиль read-only.
 - Аккаунты учителей - в отдельной таблице `teacher_accounts` (логин, пароль и связь с карточкой `teachers`), а не в `users`: там `school_id` уникален и рассчитан на одну запись школы. Так же устроены методисты (`methodists`).
 - Тестовый аккаунт: Ахмедов Ахмед Ахмедович (школа 483), `akhmedov@tallam.test` / `teacher123`; создаётся скриптом `scripts/create-teacher-account.mjs`. Подробности - [`docs/FEATURES.md`](docs/FEATURES.md), раздел 11.1.
+- Кабинет открывается по персональной ссылке: школа готовит ссылки и может отправить приглашение одному учителю письмом, а учитель на странице активации подтверждает свою почту кодом и задает пароль. Письма на общие школьные ящики и на логин самой школы не уходят - такие ссылки раздают вручную. Подробности - разделы 11.2 и 11.3.
 - Исходные сроки и телефоны подписок импортированы локально из Numbers без паролей. Импортёр принимает безопасный JSON: `npm run db:import-subscriptions -- /path/to/subscriptions.json`.
 - Новые таблицы v2 поднимаются при старте API (`ensure*Schema`) и лежат в `database/init/`.
 
@@ -167,6 +168,7 @@ npm run dev                   # API :4000, web :5173
 | API-клиент | `frontend/src/api/client.ts` |
 | Оболочки кабинетов | `frontend/src/components/SchoolCabinetLayout.tsx`, `AdminCabinetShell.tsx`, `TeacherCabinetShell.tsx` |
 | Кабинет учителя | `backend/src/routes/teacher.routes.ts`, `services/teacher-account.service.ts`, `services/teacher-cabinet.service.ts`, `frontend/src/pages/teacher/`, `styles/teacher-cabinet.css` |
+| Активация кабинета учителя | `backend/src/routes/teacher-activation.routes.ts`, `services/teacher-activation.service.ts`, `frontend/src/pages/school/TeacherActivationPage.tsx`, `frontend/src/pages/teacher/TeacherActivationPage.tsx`, `database/init/15-teacher-invites.sql` |
 | School API | `backend/src/routes/school.routes.ts`, `controllers/school.controller.ts`, `services/school.service.ts` |
 | Подписка школы | `frontend/src/pages/school/SchoolSubscriptionPage.tsx`, `styles/school-subscription.css`, `backend/src/services/school-subscription.service.ts` |
 | Оформление продления | `backend/src/services/subscription-renewal.service.ts`, `services/subscription-documents.service.ts`, `database/init/07-subscription-renewal-requests.sql` |
