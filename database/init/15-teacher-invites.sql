@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS `teacher_invites` (
   `code_expires_at` timestamp NULL,
   `code_attempts` int(11) NOT NULL DEFAULT 0,
   `used_at` timestamp NULL,
+  `sent_at` timestamp NULL,
+  `send_count` int(11) NOT NULL DEFAULT 0,
   `expires_at` timestamp NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

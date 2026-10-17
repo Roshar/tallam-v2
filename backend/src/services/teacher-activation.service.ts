@@ -30,6 +30,8 @@ export interface InviteRow {
   code_attempts: number;
   used_at: Date | null;
   expires_at: Date;
+  sent_at: Date | null;
+  send_count: number;
   /** Считается в базе: сравнение времени в JS ломается на разнице часовых поясов. */
   is_active: number;
   code_valid: number;
@@ -58,6 +60,8 @@ export async function ensureTeacherInviteSchema(): Promise<void> {
         code_expires_at timestamp NULL,
         code_attempts int(11) NOT NULL DEFAULT 0,
         used_at timestamp NULL,
+        sent_at timestamp NULL,
+        send_count int(11) NOT NULL DEFAULT 0,
         expires_at timestamp NOT NULL,
         created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (id),
@@ -92,7 +96,7 @@ export async function findInvite(token: string): Promise<InviteRow | null> {
   await ensureTeacherInviteSchema();
   const rows = await query<InviteRow[]>(
     `SELECT id, token, id_teacher, school_id, code_hash, code_email,
-            code_expires_at, code_attempts, used_at, expires_at,
+            code_expires_at, code_attempts, used_at, expires_at, sent_at, send_count,
             (used_at IS NULL AND expires_at > NOW()) AS is_active,
             (code_expires_at IS NOT NULL AND code_expires_at > NOW()) AS code_valid
      FROM teacher_invites
@@ -175,13 +179,12 @@ export async function createInvites(input: {
   schoolId: number;
   createdBy: number;
   teacherIds: string[];
-}): Promise<Array<{ idTeacher: string; fullName: string; link: string; emailed: boolean }>> {
+}): Promise<Array<{ idTeacher: string; fullName: string; link: string }>> {
   await ensureTeacherInviteSchema();
   const result: Array<{
     idTeacher: string;
     fullName: string;
     link: string;
-    emailed: boolean;
   }> = [];
 
   for (const idTeacher of input.teacherIds) {
@@ -213,36 +216,7 @@ export async function createInvites(input: {
     }
 
     const link = activationLink(token);
-    const cardEmail = teacher.email?.trim() || null;
-    let emailed = false;
-
-    if (cardEmail) {
-      try {
-        await sendMail({
-          to: cardEmail,
-          subject: "Личный кабинет учителя Tallam",
-          text: [
-            `Здравствуйте, ${fullName(teacher)}.`,
-            "",
-            "Школа открыла вам доступ в личный кабинет Tallam.",
-            "Там ваши оценки, динамика результатов и методические рекомендации.",
-            "",
-            `Активировать кабинет: ${link}`,
-            "",
-            "Ссылка персональная. Если вы не ожидали это письмо, просто не открывайте ссылку.",
-          ].join("\n"),
-          html: `<p>Здравствуйте, ${fullName(teacher)}.</p>
-<p>Школа открыла вам доступ в личный кабинет Tallam. Там ваши оценки, динамика результатов и методические рекомендации.</p>
-<p><a href="${link}">Активировать кабинет</a></p>
-<p>Ссылка персональная и действует ${INVITE_TTL_DAYS} дней.</p>`,
-        });
-        emailed = true;
-      } catch (error) {
-        console.error("Teacher invite email error:", error);
-      }
-    }
-
-    result.push({ idTeacher, fullName: fullName(teacher), link, emailed });
+    result.push({ idTeacher, fullName: fullName(teacher), link });
   }
 
   return result;
