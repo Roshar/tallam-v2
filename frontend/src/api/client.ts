@@ -1066,6 +1066,76 @@ export const api = {
   },
 
   /** Методические рекомендации по своей оценке - тот же PDF, что у школы. */
+  /** Активация кабинета учителя (публичные методы, работают по ссылке-токену). */
+  teacherActivationPreview(token: string) {
+    return request<{
+      teacher: {
+        fullName: string;
+        schoolName: string;
+        position: string | null;
+        cardEmail: string | null;
+      };
+      summary: {
+        evaluations: number;
+        latestPercent: number | null;
+        latestDate: string | null;
+        lastCardType: string | null;
+      };
+    }>(`/api/teacher-activation/activate/${token}`);
+  },
+
+  teacherActivationCode(token: string, email: string) {
+    return request<{ ok: boolean; message: string }>(
+      `/api/teacher-activation/activate/${token}/code`,
+      { method: "POST", body: JSON.stringify({ email }) },
+    );
+  },
+
+  teacherActivationComplete(
+    token: string,
+    email: string,
+    code: string,
+    password: string,
+  ) {
+    return request<{ ok: boolean }>(
+      `/api/teacher-activation/activate/${token}/complete`,
+      { method: "POST", body: JSON.stringify({ email, code, password }) },
+    );
+  },
+
+  /** Школьная сторона: сводка, приглашения, отзыв доступа. */
+  schoolActivationOverview() {
+    return request<{
+      total: number;
+      withEmail: number;
+      activated: number;
+      invited: number;
+      teachers: Array<{
+        idTeacher: string;
+        fullName: string;
+        email: string | null;
+        status: "activated" | "invited" | "none";
+      }>;
+      currentInviteLinks: Array<{ idTeacher: string; link: string }>;
+    }>("/api/teacher-activation/school/overview");
+  },
+
+  schoolActivationInvite(payload: { teacherIds?: string[]; all?: boolean }) {
+    return request<{
+      links: Array<{ idTeacher: string; fullName: string; link: string; emailed: boolean }>;
+    }>("/api/teacher-activation/school/invite", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  schoolActivationRevoke(teacherId: string) {
+    return request<{ ok: boolean }>("/api/teacher-activation/school/revoke", {
+      method: "POST",
+      body: JSON.stringify({ teacherId }),
+    });
+  },
+
   teacherEvaluationRecommendations(cardId: number) {
     return downloadFile(
       `/api/teacher/evaluations/${cardId}/recommendations`,

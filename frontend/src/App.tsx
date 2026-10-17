@@ -16,6 +16,8 @@ import { TeacherHomePage } from "./pages/teacher/TeacherHomePage";
 import { TeacherEvaluationsPage } from "./pages/teacher/TeacherEvaluationsPage";
 import { TeacherEvaluationPage } from "./pages/teacher/TeacherEvaluationPage";
 import { TeacherAccountPage } from "./pages/teacher/TeacherAccountPage";
+import { TeacherActivationPage as TeacherActivationPublicPage } from "./pages/teacher/TeacherActivationPage";
+import { TeacherActivationPage as SchoolTeacherActivationPage } from "./pages/school/TeacherActivationPage";
 import { WorkersPage } from "./pages/school/WorkersPage";
 import { LessonAnalysisPage } from "./pages/school/LessonAnalysisPage";
 import { LessonAnalysisMembersPage } from "./pages/school/LessonAnalysisMembersPage";
@@ -66,6 +68,7 @@ export default function App() {
           <Route path="/auth" element={<LoginPage />} />
           <Route path="/auth/forgot" element={<ForgotPasswordPage />} />
           <Route path="/auth/reset/:token" element={<ResetPasswordPage />} />
+          <Route path="/teacher/activate/:token" element={<TeacherActivationPublicPage />} />
 
           <Route path="/school" element={<SchoolCabinetShell />}>
             <Route path="subscription" element={<SchoolSubscriptionPage />} />
@@ -73,6 +76,7 @@ export default function App() {
             <Route path="guide" element={<SchoolGuidePage />} />
             <Route path="feedback" element={<SchoolFeedbackPage />} />
             <Route path="analytics" element={<SchoolAnalyticsPage />} />
+            <Route path="teacher-activation" element={<SchoolTeacherActivationPage />} />
             <Route path="vacancies" element={<VacanciesPage />} />
             <Route path="vacancies/new" element={<VacancyFormPage />} />
             <Route path="vacancies/:vacancyId" element={<VacancyViewPage />} />

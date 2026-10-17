@@ -12,6 +12,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
 import teacherRoutes from "./routes/teacher.routes.js";
+import teacherActivationRoutes from "./routes/teacher-activation.routes.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
 import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
@@ -23,6 +24,7 @@ import { ensureVacancySchema } from "./services/vacancy.service.js";
 import { ensureSchoolVisitSchema } from "./services/school-visits.service.js";
 import { ensureRecoverySchema } from "./services/password-recovery.service.js";
 import { ensureTeacherAccountSchema } from "./services/teacher-account.service.js";
+import { ensureTeacherInviteSchema } from "./services/teacher-activation.service.js";
 import { requireAuth } from "./middleware/auth.js";
 import {
   isSafeOutboxName,
@@ -98,6 +100,7 @@ app.use("/api/status", accountantRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/school", schoolRoutes);
 app.use("/api/teacher", teacherRoutes);
+app.use("/api/teacher-activation", teacherActivationRoutes);
 
 if (config.isDev) {
   app.get("/api/dev/outbox/:file", requireAuth, (req, res) => {
@@ -145,6 +148,9 @@ app.listen(config.port, () => {
   });
   void ensureTeacherAccountSchema().catch((error) => {
     console.error("Failed to initialize teacher accounts schema:", error);
+  });
+  void ensureTeacherInviteSchema().catch((error) => {
+    console.error("Failed to initialize teacher invites schema:", error);
   });
   void ensureAllSchoolsHaveLessonAnalysisProject()
     .then((count) => {

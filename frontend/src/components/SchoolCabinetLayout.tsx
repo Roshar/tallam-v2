@@ -14,6 +14,11 @@ export const SCHOOL_MENU = [
   },
   { id: "vacancies", label: "Вакансии", to: "/school/vacancies" },
   { id: "analytics", label: "Аналитика", to: "/school/analytics" },
+              {
+                id: "teacher-activation",
+                to: "/school/teacher-activation",
+                label: "Кабинеты учителей",
+              },
   { id: "feedback", label: "Отзывы и пожелания", to: "/school/feedback" },
 ] as const;
 
