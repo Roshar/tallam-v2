@@ -2044,3 +2044,54 @@
   color: var(--color-text-muted);
   font-size: 0.8rem;
 }
+
+/* Готовые тексты для школ: карточка с инструкцией и кнопкой копирования. */
+.admin-instructions__card {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+  border: 1px solid #e3e9f2;
+  border-radius: var(--radius-md, 14px);
+  background: #fff;
+}
+
+.admin-instructions__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-instructions__head h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: #1f2a44;
+}
+
+.admin-instructions__head p {
+  margin: 0;
+  max-width: 720px;
+  color: var(--text-muted, #6b7280);
+  font-size: 0.9rem;
+}
+
+.admin-instructions__head .btn {
+  width: auto;
+  white-space: nowrap;
+}
+
+.admin-instructions__text {
+  margin: 0;
+  padding: 1.25rem;
+  border: 1px solid #e3e9f2;
+  border-radius: 12px;
+  background: #f7f9fc;
+  color: #1f2a44;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

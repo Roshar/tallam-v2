@@ -13,6 +13,7 @@ const ADMIN_MENU = [
   { label: "Вакансии", to: "/admin/vacancies", enabled: true },
   { label: "Обращения", to: "/admin/recovery", enabled: true },
   { label: "Логи", to: "/admin/logs", enabled: true },
+  { label: "Инструкции", to: "/admin/instructions", enabled: true },
   { label: "Проекты", to: "/admin/projects", enabled: false },
   { label: "Методисты", to: "/admin/methodists", enabled: false },
 ] as const;
