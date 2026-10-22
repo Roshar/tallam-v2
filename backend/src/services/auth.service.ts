@@ -84,8 +84,15 @@ export async function hashPassword(plain: string): Promise<string> {
 export async function findSchoolUserByEmail(
   email: string,
 ): Promise<DbUser | null> {
+  // Почта в users не уникальна: школы заводили повторно, и на один адрес могут
+  // приходиться две записи. Без сортировки MySQL отдавала первую, часто уже
+  // отключенную, и вход ломался. Активный аккаунт должен идти первым.
   const rows = await query<DbUser[]>(
-    "SELECT id, id_user, email, password, status, school_id, role FROM users WHERE email = ? LIMIT 1",
+    `SELECT id, id_user, email, password, status, school_id, role
+     FROM users
+     WHERE email = ?
+     ORDER BY status = 'on' DESC, id ASC
+     LIMIT 1`,
     [email.trim()],
   );
   return rows[0] ?? null;
