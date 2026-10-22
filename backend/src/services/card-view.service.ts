@@ -1,5 +1,6 @@
 import { createRequire } from "node:module";
 import PDFDocument from "pdfkit";
+import { buildEvaluationFormPdf } from "./evaluation-form-pdf.service.js";
 import { pool, query } from "../db/pool.js";
 import { sendMail } from "./email.service.js";
 import {
@@ -691,9 +692,29 @@ export async function sendEvaluationToTeacher(
   schoolId: number,
   detail: EvaluationDetail,
   email: string,
+  options: { attachForm?: boolean } = {},
 ): Promise<{ previewUrl: string | null }> {
   await assertEvaluationEmailAllowed(schoolId, detail.id, email);
   const pdf = await buildRecommendationsPdf(detail);
+  // Анкета с оценками по критериям уходит только по галочке школы: по умолчанию
+  // письмо короткое, с итогом и рекомендациями.
+  const attachments = [
+    {
+      filename: `rekomendacii-${detail.id}.pdf`,
+      content: pdf,
+      contentType: "application/pdf",
+    },
+  ];
+  if (options.attachForm) {
+    attachments.push({
+      filename: `anketa-${detail.id}.pdf`,
+      content: await buildEvaluationFormPdf(detail),
+      contentType: "application/pdf",
+    });
+  }
+  const attachmentsLine = options.attachForm
+    ? "К письму приложены методические рекомендации и анкета с оценками по критериям."
+    : "Методические рекомендации приложены к письму.";
   const blockLines = detail.blocks
     .map((block) => `${block.title}: ${block.percent}% - ${block.level}`)
     .join("\n");
@@ -715,7 +736,7 @@ export async function sendEvaluationToTeacher(
       ``,
       blockLines,
       ``,
-      `Методические рекомендации приложены к письму.`,
+      attachmentsLine,
       ``,
       DO_NOT_REPLY,
     ].join("\n"),
@@ -736,16 +757,10 @@ export async function sendEvaluationToTeacher(
             `${escapeHtml(block.title)}: <strong>${block.percent}%</strong> - ${escapeHtml(block.level)}`,
         )
         .join("<br>")}</p>
-      <p>Методические рекомендации приложены к письму.</p>
+      <p>${escapeHtml(attachmentsLine)}</p>
       <p style="color:#5c6b7a;font-size:13px;">${escapeHtml(DO_NOT_REPLY)}</p>
     `,
-    attachments: [
-      {
-        filename: `rekomendacii-${detail.id}.pdf`,
-        content: pdf,
-        contentType: "application/pdf",
-      },
-    ],
+    attachments,
   });
   await rememberEvaluationEmail(schoolId, detail.id, email);
   return sent;

@@ -21,6 +21,7 @@ export function EvaluationViewPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [saveEmailToCard, setSaveEmailToCard] = useState(false);
+  const [attachForm, setAttachForm] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -139,6 +140,7 @@ export function EvaluationViewPage() {
     setEmailError("");
     setEmail(detail?.teacher.email ?? "");
     setSaveEmailToCard(false);
+    setAttachForm(false);
     setEmailOpen(true);
   }
 
@@ -169,6 +171,7 @@ export function EvaluationViewPage() {
         detail.id,
         email.trim(),
         saveEmailToCard && emailIsNew,
+        attachForm,
       );
       setPreviewUrl(result.previewUrl ?? "");
       if (result.emailSaved) {
@@ -529,6 +532,16 @@ export function EvaluationViewPage() {
                   Сейчас в карточке учителя указан {cardEmail}
                 </p>
               ) : null}
+              <label className="evaluation-email__attach">
+                <input
+                  type="checkbox"
+                  checked={attachForm}
+                  onChange={(event) => setAttachForm(event.target.checked)}
+                />
+                <span>
+                  Приложить анкету с оценками по критериям отдельным файлом
+                </span>
+              </label>
               <div className="modal-actions">
                 <button
                   type="button"
