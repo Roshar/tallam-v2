@@ -525,7 +525,7 @@ export function EvaluationViewPage() {
                 </label>
               ) : null}
               {cardEmail && emailIsNew ? (
-                <p className="evaluate-extras__hint">
+                <p className="evaluation-email__hint">
                   Сейчас в карточке учителя указан {cardEmail}
                 </p>
               ) : null}

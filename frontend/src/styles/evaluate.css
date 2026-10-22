@@ -876,9 +876,16 @@
   display: flex;
   gap: 8px;
   align-items: flex-start;
+  margin-top: 12px;
   font-size: 14px;
   color: #1f2a44;
   cursor: pointer;
+}
+
+.evaluation-email__hint {
+  margin: 8px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
 }
 
 .evaluation-email__save input {
