@@ -629,18 +629,12 @@ export async function updateLessonAnalysisEvaluationComment(
 
 export async function emailLessonAnalysisEvaluation(req: Request, res: Response) {
   const { schoolId, teacherId, cardId } = parseCardParams(req);
-  const body = req.body as {
-    email?: unknown;
-    saveEmail?: unknown;
-    attachForm?: unknown;
-  };
+  const body = req.body as { email?: unknown; saveEmail?: unknown };
   const email = String(body?.email ?? "")
     .trim()
     .toLowerCase();
   // Школа может попросить запомнить новый адрес в карточке учителя.
   const saveEmail = body?.saveEmail === true;
-  // И приложить к письму анкету с оценками по критериям.
-  const attachForm = body?.attachForm === true;
 
   if (!schoolId) {
     res.locals.auditDetails = { error: "Доступ только для школы" };
@@ -661,9 +655,7 @@ export async function emailLessonAnalysisEvaluation(req: Request, res: Response)
       res.locals.auditDetails = { error: "Оценка не найдена" };
       return res.status(404).json({ error: "Оценка не найдена" });
     }
-    const result = await sendEvaluationToTeacher(schoolId, detail, email, {
-      attachForm,
-    });
+    const result = await sendEvaluationToTeacher(schoolId, detail, email);
 
     let emailSaved = false;
     if (saveEmail) {
@@ -673,12 +665,7 @@ export async function emailLessonAnalysisEvaluation(req: Request, res: Response)
         // Письмо уже ушло: ошибка сохранения карточки не должна его отменять.
         console.error("Save teacher email error:", error);
       }
-    }
-    if (saveEmail || attachForm) {
-      res.locals.auditDetails = {
-        ...(saveEmail ? { savedEmail: emailSaved } : {}),
-        ...(attachForm ? { attachForm: true } : {}),
-      };
+      res.locals.auditDetails = { savedEmail: emailSaved };
     }
 
     return res.json({

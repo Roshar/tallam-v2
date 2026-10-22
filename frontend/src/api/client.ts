@@ -987,7 +987,6 @@ export const api = {
     cardId: number,
     email: string,
     saveEmail = false,
-    attachForm = false,
   ) {
     return request<{
       ok: boolean;
@@ -997,7 +996,7 @@ export const api = {
       `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/email`,
       {
         method: "POST",
-        body: JSON.stringify({ email, saveEmail, attachForm }),
+        body: JSON.stringify({ email, saveEmail }),
       },
     );
   },

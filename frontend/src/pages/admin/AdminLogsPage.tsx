@@ -38,7 +38,6 @@ function detailLabel(key: string): string {
     recipient: "Получатель",
     error: "Ошибка",
     savedEmail: "Адрес сохранён в карточке",
-    attachForm: "Анкета приложена",
   };
   return labels[key] ?? key;
 }

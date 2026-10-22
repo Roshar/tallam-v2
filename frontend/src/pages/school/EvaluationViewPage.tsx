@@ -21,8 +21,6 @@ export function EvaluationViewPage() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [email, setEmail] = useState("");
   const [saveEmailToCard, setSaveEmailToCard] = useState(false);
-  const [attachForm, setAttachForm] = useState(false);
-  const [attachHintOpen, setAttachHintOpen] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -141,8 +139,6 @@ export function EvaluationViewPage() {
     setEmailError("");
     setEmail(detail?.teacher.email ?? "");
     setSaveEmailToCard(false);
-    setAttachForm(false);
-    setAttachHintOpen(false);
     setEmailOpen(true);
   }
 
@@ -173,7 +169,6 @@ export function EvaluationViewPage() {
         detail.id,
         email.trim(),
         saveEmailToCard && emailIsNew,
-        attachForm,
       );
       setPreviewUrl(result.previewUrl ?? "");
       if (result.emailSaved) {
@@ -532,33 +527,6 @@ export function EvaluationViewPage() {
               {cardEmail && emailIsNew ? (
                 <p className="evaluation-email__hint">
                   Сейчас в карточке учителя указан {cardEmail}
-                </p>
-              ) : null}
-              <button
-                type="button"
-                className="evaluation-email__info"
-                onClick={() => setAttachHintOpen((value) => !value)}
-                aria-expanded={attachHintOpen}
-              >
-                Что отправляется по умолчанию?
-              </button>
-              <label className="evaluation-email__attach">
-                <input
-                  type="checkbox"
-                  checked={attachForm}
-                  onChange={(event) => setAttachForm(event.target.checked)}
-                />
-                <span>
-                  Приложить анкету с оценками по критериям отдельным файлом
-                </span>
-              </label>
-              {attachHintOpen ? (
-                <p className="evaluation-email__hint">
-                  Без этой галочки учитель получит письмо с итогом по разделам
-                  и PDF с методическими рекомендациями. Если при оценивании
-                  оставили комментарий, он тоже будет в рекомендациях. Анкета с
-                  оценками по критериям - это отдельный PDF со всеми критериями
-                  и баллами, она прикладывается только при отметке.
                 </p>
               ) : null}
               <div className="modal-actions">
