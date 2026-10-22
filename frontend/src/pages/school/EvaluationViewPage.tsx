@@ -20,6 +20,7 @@ export function EvaluationViewPage() {
   const [emailOpen, setEmailOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const [saveEmailToCard, setSaveEmailToCard] = useState(false);
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [downloading, setDownloading] = useState(false);
@@ -55,7 +56,7 @@ export function EvaluationViewPage() {
   }, [teacherId, numericCardId]);
 
   useEffect(() => {
-    if (notice !== "Письмо успешно отправлено") return;
+    if (!notice.startsWith("Письмо успешно отправлено")) return;
     noticeRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }, [notice]);
 
@@ -63,6 +64,11 @@ export function EvaluationViewPage() {
     () => (detail?.cardType === "full" ? FULL_GROUPS : METHOD_GROUPS),
     [detail?.cardType],
   );
+
+  // Если школа вписала адрес, которого нет в карточке, предлагаем его запомнить.
+  const cardEmail = detail?.teacher.email?.trim().toLowerCase() ?? "";
+  const enteredEmail = email.trim().toLowerCase();
+  const emailIsNew = enteredEmail !== "" && enteredEmail !== cardEmail;
 
   function openCommentEditor() {
     setCommentError("");
@@ -132,6 +138,7 @@ export function EvaluationViewPage() {
   function openEmailModal() {
     setEmailError("");
     setEmail(detail?.teacher.email ?? "");
+    setSaveEmailToCard(false);
     setEmailOpen(true);
   }
 
@@ -161,9 +168,19 @@ export function EvaluationViewPage() {
         teacherId,
         detail.id,
         email.trim(),
+        saveEmailToCard && emailIsNew,
       );
       setPreviewUrl(result.previewUrl ?? "");
-      setNotice("Письмо успешно отправлено");
+      if (result.emailSaved) {
+        const saved = email.trim().toLowerCase();
+        setDetail({
+          ...detail,
+          teacher: { ...detail.teacher, email: saved },
+        });
+        setNotice("Письмо успешно отправлено. Адрес сохранён в карточке учителя");
+      } else {
+        setNotice("Письмо успешно отправлено");
+      }
       setEmailOpen(false);
     } catch (err) {
       setEmailError(
@@ -492,6 +509,26 @@ export function EvaluationViewPage() {
                 onChange={(event) => setEmail(event.target.value)}
                 placeholder="teacher@school.ru"
               />
+              {emailIsNew ? (
+                <label className="evaluation-email__save">
+                  <input
+                    type="checkbox"
+                    checked={saveEmailToCard}
+                    onChange={(event) =>
+                      setSaveEmailToCard(event.target.checked)
+                    }
+                  />
+                  <span>
+                    Сохранить этот адрес в карточке учителя, чтобы в следующий
+                    раз он подставлялся сам
+                  </span>
+                </label>
+              ) : null}
+              {cardEmail && emailIsNew ? (
+                <p className="evaluate-extras__hint">
+                  Сейчас в карточке учителя указан {cardEmail}
+                </p>
+              ) : null}
               <div className="modal-actions">
                 <button
                   type="button"

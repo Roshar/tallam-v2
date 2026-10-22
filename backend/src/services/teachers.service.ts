@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import type { ResultSetHeader } from "mysql2";
 import { randomUUID } from "node:crypto";
 import { query } from "../db/pool.js";
 import {
@@ -490,6 +491,25 @@ export async function getSchoolTeacher(
     },
     projectMemberships,
   );
+}
+
+/**
+ * Сохранить только почту учителя.
+ *
+ * Адрес приходит из формы отправки оценки: школа вписала новый ящик, и он нужен
+ * в карточке, чтобы следующий раз подставлялся сам. Остальные поля карточки не
+ * трогаем, поэтому не идем через updateSchoolTeacher с полным телом.
+ */
+export async function saveTeacherEmail(
+  schoolId: number,
+  teacherId: string,
+  email: string,
+): Promise<boolean> {
+  const result = await query<ResultSetHeader>(
+    "UPDATE teachers SET email = ? WHERE id_teacher = ? AND school_id = ?",
+    [email.trim().toLowerCase(), teacherId, schoolId],
+  );
+  return Number(result.affectedRows ?? 0) > 0;
 }
 
 export async function updateSchoolTeacher(

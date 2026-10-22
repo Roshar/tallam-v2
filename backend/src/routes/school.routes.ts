@@ -299,6 +299,12 @@ router.post(
     action: "lesson_analysis.evaluation_email",
     entityType: "card",
     entityId: (req) => req.params.cardId,
+    // В журнале видно, на какой адрес ушла оценка: школа часто вводит его вручную.
+    details: (req) => {
+      const email = (req.body as { email?: unknown })?.email;
+      if (typeof email !== "string" || !email.trim()) return null;
+      return { recipient: email.trim().toLowerCase() };
+    },
   }),
   schoolController.emailLessonAnalysisEvaluation,
 );
