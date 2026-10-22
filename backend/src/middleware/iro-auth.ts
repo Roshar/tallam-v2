@@ -10,8 +10,12 @@ export function requireIroAuth(req: Request, res: Response, next: NextFunction) 
 
 export function requireIroRole(...roles: IroRole[]) {
   return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.session.iroUser) return res.status(401).json({ error: "Требуется авторизация ИРО" });
-    if (!roles.includes(req.session.iroUser.role)) return res.status(403).json({ error: "Недостаточно прав" });
+    if (!req.session.iroUser) {
+      return res.status(401).json({ error: "Требуется авторизация ИРО" });
+    }
+    if (!roles.includes(req.session.iroUser.role)) {
+      return res.status(403).json({ error: "Недостаточно прав" });
+    }
     next();
   };
 }
