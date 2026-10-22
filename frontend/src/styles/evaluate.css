@@ -907,3 +907,19 @@
   margin-top: 2px;
   flex-shrink: 0;
 }
+
+.evaluation-email__info {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-darkblue);
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.evaluation-email__info:hover {
+  opacity: 0.75;
+}
