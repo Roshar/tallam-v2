@@ -121,6 +121,44 @@ nginx -t && systemctl reload nginx
 
 ## Стек приложения
 
+### Поддомен iro.tallam.ru
+
+IRO frontend собирается локально в `/home/tallam-v2/iro-frontend/dist`. Он использует тот же процесс API на `127.0.0.1:4001`, но только namespace `/api/iro` и отдельную host-only cookie `iro_smad`. DNS, nginx и сертификат в рамках этапа 1 не применяются. После согласования владельцем подготовить DNS A-запись на `185.207.0.41`, выпустить отдельный сертификат и добавить конфигурацию:
+
+```nginx
+server {
+    listen 80;
+    server_name iro.tallam.ru;
+    return 301 https://$host$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name iro.tallam.ru;
+
+    ssl_certificate /etc/letsencrypt/live/iro.tallam.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/iro.tallam.ru/privkey.pem;
+
+    root /home/tallam-v2/iro-frontend/dist;
+    index index.html;
+
+    location /api/iro/ {
+        proxy_pass http://127.0.0.1:4001;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+}
+```
+
+Перед перезагрузкой: `certbot certonly --nginx -d iro.tallam.ru`, затем `nginx -t`. Скрипт `scripts/deploy.sh` сохраняет и доставляет `iro-frontend/dist` вместе с двумя существующими сборками, но сам nginx и DNS не меняет.
+
 Монорепозиторий npm workspaces.
 
 - `frontend`: React 19 + Vite + TypeScript. В разработке проксирует `/api` на `http://localhost:4000` — это локальный API, у прода порт **4001**.

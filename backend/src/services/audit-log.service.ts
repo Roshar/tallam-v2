@@ -5,6 +5,8 @@ import { query } from "../db/pool.js";
 export type AuditStatus = "success" | "failure";
 
 export const AUDIT_ACTIONS = [
+  { category: "iro", action: "iro.auth.login", label: "ИРО: вход" },
+  { category: "iro", action: "iro.auth.logout", label: "ИРО: выход" },
   { category: "auth", action: "auth.login", label: "Авторизация" },
   {
     category: "accountant",
@@ -570,4 +572,3 @@ export async function listAuditLogs(input: {
     },
   };
 }
-

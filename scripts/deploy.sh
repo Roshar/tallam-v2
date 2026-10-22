@@ -44,13 +44,14 @@ else
 fi
 
 STAMP="$(date +%Y%m%d-%H%M%S)"
-KEEP_BUILDS=10   # храним последние 5 деплоев: на каждый приходится 2 каталога
+KEEP_BUILDS=15   # храним последние 5 деплоев: на каждый приходится 3 каталога
 echo "→ Backing up the build currently on the server"
 ssh "${SSH_OPTS[@]}" "$HOST" "mkdir -p $BACKUP_DIR \
   && cp -r $REMOTE_DIR/backend/dist $BACKUP_DIR/backend-$STAMP \
   && cp -r $REMOTE_DIR/frontend/dist $BACKUP_DIR/frontend-$STAMP \
+  && if [[ -d $REMOTE_DIR/iro-frontend/dist ]]; then cp -r $REMOTE_DIR/iro-frontend/dist $BACKUP_DIR/iro-frontend-$STAMP; fi \
   && cd $BACKUP_DIR && ls -1dt *-20* 2>/dev/null | tail -n +$((KEEP_BUILDS + 1)) | xargs -r rm -rf -- \
-  && echo '  $BACKUP_DIR/*-$STAMP (хранятся последние $((KEEP_BUILDS / 2)) деплоев)'"
+  && echo '  $BACKUP_DIR/*-$STAMP (хранятся последние 5 деплоев)'"
 
 echo "→ Shipping artifacts"
 # Везём в dist.new и только потом подменяем: если передача оборвётся, на сервере
@@ -64,6 +65,7 @@ ship_tree() {
 }
 ship_tree backend
 ship_tree frontend
+ship_tree iro-frontend
 
 echo "→ Restarting the API (old.tallam.ru process is not touched)"
 ssh "${SSH_OPTS[@]}" "$HOST" "pm2 restart tallam-v2 --update-env >/dev/null && sleep 2 && pm2 list --no-color | grep -E 'tallam-v2|index '"
@@ -76,4 +78,4 @@ curl -fsS -m 20 https://tallam.ru/ | grep -oE '/assets/[A-Za-z0-9._-]+' | sort -
 
 echo
 echo "DEPLOY_OK $STAMP"
-echo "Rollback: restore $BACKUP_DIR/{backend,frontend}-$STAMP and pm2 restart tallam-v2"
+echo "Rollback: restore $BACKUP_DIR/{backend,frontend,iro-frontend}-$STAMP and pm2 restart tallam-v2"

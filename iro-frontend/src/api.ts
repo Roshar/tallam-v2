@@ -1,0 +1,3 @@
+export interface User { email:string; role:"iro_viewer"|"iro_methodologist"|"iro_admin"; firstName:string; lastName:string }
+let unauthorized=()=>{}; export const setUnauthorized=(fn:()=>void)=>{unauthorized=fn};
+export async function api<T>(path:string,options?:RequestInit):Promise<T>{const response=await fetch(`/api/iro${path}`,{credentials:"include",headers:{"Content-Type":"application/json",...(options?.headers||{})},...options});if(response.status===401)unauthorized();const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Ошибка запроса");return data as T;}

@@ -6,6 +6,18 @@ export type UserRole =
   | "accountant";
 
 export type SchoolCabinetAccess = "full" | "billing";
+export type IroRole = "iro_viewer" | "iro_methodologist" | "iro_admin";
+export interface IroSessionUser {
+  id: number;
+  iroUserId: number;
+  email: string;
+  role: IroRole;
+  status: "on" | "off";
+  accountType: "iro";
+  firstName: string;
+  lastName: string;
+  patronymic: string | null;
+}
 
 export interface SessionUser {
   id: number;
@@ -29,5 +41,6 @@ declare module "express-session" {
   interface SessionData {
     user?: SessionUser;
     impersonator?: SessionUser;
+    iroUser?: IroSessionUser;
   }
 }

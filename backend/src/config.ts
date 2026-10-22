@@ -17,6 +17,7 @@ function requireEnv(name: string): string {
 export const config = {
   port: Number(process.env.APP_PORT ?? 4000),
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:5173",
+  iroFrontendUrl: process.env.IRO_FRONTEND_URL ?? "http://localhost:5174",
   isDev: process.env.NODE_ENV !== "production",
   db: {
     host: requireEnv("DATABASE_HOST"),
@@ -29,6 +30,10 @@ export const config = {
     name: process.env.SESSION_NAME ?? "smad",
     secret: requireEnv("SESSION_SECRET"),
     lifetime: Number(process.env.SESSION_LIFETIME ?? 7_200_000),
+  },
+  iroSession: {
+    name: "iro_smad",
+    secret: process.env.IRO_SESSION_SECRET ?? requireEnv("SESSION_SECRET"),
   },
   subscriptionDataEncryptionKey:
     process.env.SUBSCRIPTION_DATA_ENCRYPTION_KEY ?? requireEnv("SESSION_SECRET"),

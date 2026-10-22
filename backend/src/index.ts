@@ -11,6 +11,8 @@ import accountantRoutes from "./routes/accountant.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
 import authRoutes from "./routes/auth.routes.js";
 import schoolRoutes from "./routes/school.routes.js";
+import iroRoutes from "./routes/iro.routes.js";
+import { ensureIroSchema } from "./services/iro-schema.service.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
 import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
@@ -68,12 +70,28 @@ app.use("/api", (_req, res, next) => {
 });
 
 app.use(cors({
-  origin: config.frontendUrl,
+  origin: [config.frontendUrl, config.iroFrontendUrl],
   credentials: true,
 }));
 
 app.use(express.json());
 app.use(cookieParser());
+app.use("/api/iro", session({
+  name: config.iroSession.name,
+  secret: config.iroSession.secret,
+  resave: false,
+  rolling: true,
+  saveUninitialized: false,
+  store: sessionStore,
+  cookie: {
+    path: "/api/iro",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: !config.isDev,
+    maxAge: config.session.lifetime,
+  },
+}));
+app.use("/api/iro", iroRoutes);
 app.use(session({
   name: config.session.name,
   secret: config.session.secret,
@@ -139,6 +157,9 @@ app.listen(config.port, () => {
   });
   void ensureRecoverySchema().catch((error) => {
     console.error("Failed to initialize recovery requests schema:", error);
+  });
+  void ensureIroSchema().catch((error) => {
+    console.error("Failed to initialize IRO schema:", error);
   });
   void ensureAllSchoolsHaveLessonAnalysisProject()
     .then((count) => {
