@@ -61,6 +61,7 @@
 - **Что:** вход школы и методиста по email и паролю. Сессия в MySQL, cookie `smad`. Роль берётся из `users.role`; администратор после входа попадает на `/admin/cabinet`. Школа входит только через вкладку «Школа».
 - **Где:** `backend/src/routes/auth.routes.ts`, `backend/src/services/auth.service.ts`, `backend/src/middleware/auth.ts`, таблица `sessions`, `frontend/src/pages/LoginPage.tsx`, `frontend/src/context/AuthContext.tsx`, `POST /api/auth/login`, `GET /api/auth/me`.
 - **Проверка:** вход `test@test.ru` / `123456` → кабинет школы; вход администратора → `/admin/cabinet`.
+- **История:** `60c8701` - при дублях логина вход выбирает активный аккаунт (`ORDER BY status = 'on' DESC, id ASC`). До этого MySQL отдавала первую строку без сортировки, и школа могла попасть в старую отключенную запись или получить «Неверный логин или пароль». Причина дублей - `users.email` без уникального индекса; сами дубли вычищены на проде 22.10.2026.
 
 ### 2.2 Смена пароля школой
 `✅` · введено `c966a2e` (09.09.2026, Cursor)
