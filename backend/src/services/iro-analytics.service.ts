@@ -1,8 +1,5 @@
 import { query } from "../db/pool.js";
-import {
-  academicYearStartFromDate,
-  formatAcademicYearLabel,
-} from "./card.service.js";
+import { academicYearStartFromDate } from "./card.service.js";
 import {
   scaleFor,
   sumKeysSql,
@@ -28,16 +25,26 @@ export async function getAcademicYears() {
     "SELECT DISTINCT create_mark_date AS date FROM card_from_project_teacher_mark3",
   );
   const current = academicYearStartFromDate(new Date());
-  const years = new Set(
-    rows.map((row) => academicYearStartFromDate(new Date(row.date))),
-  );
+  const minYear = current - 10;
+  const maxAcademicYearEnd = current + 1;
+  const years = new Set<number>();
+
+  for (const row of rows) {
+    const date = new Date(row.date);
+    if (Number.isNaN(date.getTime())) continue;
+
+    const startYear = academicYearStartFromDate(date);
+    if (startYear >= minYear && startYear + 1 <= maxAcademicYearEnd) {
+      years.add(startYear);
+    }
+  }
   years.add(current);
 
   return [...years]
     .sort((a, b) => b - a)
     .map((startYear) => ({
       startYear,
-      label: formatAcademicYearLabel(startYear),
+      label: `${startYear}-${startYear + 1}`,
       isCurrent: startYear === current,
     }));
 }

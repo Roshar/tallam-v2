@@ -4,6 +4,12 @@ import { api } from "../api";
 interface AcademicYear {
   startYear: number;
   label: string;
+  isCurrent: boolean;
+}
+
+function currentAcademicYearStart() {
+  const now = new Date();
+  return now.getMonth() >= 8 ? now.getFullYear() : now.getFullYear() - 1;
 }
 
 function useAcademicYears() {
@@ -25,7 +31,10 @@ export function YearSelect({ value, onChange }: YearSelectProps) {
   const years = useAcademicYears();
 
   useEffect(() => {
-    if (!value && years[0]) onChange(years[0].startYear);
+    if (!value && years.length) {
+      const current = years.find((year) => year.isCurrent);
+      onChange(current?.startYear ?? currentAcademicYearStart());
+    }
   }, [years, value, onChange]);
 
   return (
