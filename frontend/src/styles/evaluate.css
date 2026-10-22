@@ -870,3 +870,18 @@
     margin: 8mm 10mm;
   }
 }
+
+/* Предложение запомнить новый адрес почты в карточке учителя. */
+.evaluation-email__save {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  font-size: 14px;
+  color: #1f2a44;
+  cursor: pointer;
+}
+
+.evaluation-email__save input {
+  margin-top: 2px;
+  flex-shrink: 0;
+}

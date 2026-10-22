@@ -986,12 +986,17 @@ export const api = {
     teacherId: string,
     cardId: number,
     email: string,
+    saveEmail = false,
   ) {
-    return request<{ ok: boolean; previewUrl?: string | null }>(
+    return request<{
+      ok: boolean;
+      previewUrl?: string | null;
+      emailSaved?: boolean;
+    }>(
       `/api/school/projects/lesson-analysis/teachers/${teacherId}/cards/${cardId}/email`,
       {
         method: "POST",
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, saveEmail }),
       },
     );
   },

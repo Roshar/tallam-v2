@@ -35,6 +35,9 @@ function detailLabel(key: string): string {
     schools: "Школы",
     areaId: "Район",
     search: "Поиск",
+    recipient: "Получатель",
+    error: "Ошибка",
+    savedEmail: "Адрес сохранён в карточке",
   };
   return labels[key] ?? key;
 }
@@ -312,6 +315,10 @@ export function AdminLogsPage() {
                     <td>
                       {actionLabels.get(item.action) ?? item.action}
                       <small>{item.action}</small>
+                      {typeof item.details?.recipient === "string" &&
+                      item.details.recipient ? (
+                        <small>Кому: {item.details.recipient}</small>
+                      ) : null}
                     </td>
                     <td>
                       <span

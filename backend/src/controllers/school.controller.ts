@@ -12,6 +12,7 @@ import {
   getSchoolTeacher,
   getWorkerFormOptions,
   listSchoolTeachers,
+  saveTeacherEmail,
   updateSchoolTeacher,
   type CreateTeacherInput,
   type UpdateTeacherInput,
@@ -628,32 +629,53 @@ export async function updateLessonAnalysisEvaluationComment(
 
 export async function emailLessonAnalysisEvaluation(req: Request, res: Response) {
   const { schoolId, teacherId, cardId } = parseCardParams(req);
+  const body = req.body as { email?: unknown; saveEmail?: unknown };
+  const email = String(body?.email ?? "")
+    .trim()
+    .toLowerCase();
+  // Школа может попросить запомнить новый адрес в карточке учителя.
+  const saveEmail = body?.saveEmail === true;
+
   if (!schoolId) {
+    res.locals.auditDetails = { error: "Доступ только для школы" };
     return res.status(403).json({ error: "Доступ только для школы" });
   }
   if (!teacherId || !Number.isInteger(cardId) || cardId <= 0) {
+    res.locals.auditDetails = { error: "Некорректные параметры оценки" };
     return res.status(400).json({ error: "Некорректные параметры оценки" });
   }
-
-  const email = String((req.body as { email?: string })?.email ?? "")
-    .trim()
-    .toLowerCase();
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    res.locals.auditDetails = { error: "Укажите корректный адрес электронной почты" };
     return res.status(400).json({ error: "Укажите корректный адрес электронной почты" });
   }
 
   try {
     const detail = await getEvaluationDetail(schoolId, teacherId, cardId);
     if (!detail) {
+      res.locals.auditDetails = { error: "Оценка не найдена" };
       return res.status(404).json({ error: "Оценка не найдена" });
     }
     const result = await sendEvaluationToTeacher(schoolId, detail, email);
+
+    let emailSaved = false;
+    if (saveEmail) {
+      try {
+        emailSaved = await saveTeacherEmail(schoolId, teacherId, email);
+      } catch (error) {
+        // Письмо уже ушло: ошибка сохранения карточки не должна его отменять.
+        console.error("Save teacher email error:", error);
+      }
+      res.locals.auditDetails = { savedEmail: emailSaved };
+    }
+
     return res.json({
       ok: true,
       previewUrl: result.previewUrl,
+      emailSaved,
     });
   } catch (error) {
     if (error instanceof EvaluationMailLimitError) {
+      res.locals.auditDetails = { error: error.message };
       return res.status(error.status).json({ error: error.message });
     }
     const message = error instanceof Error ? error.message : "";
@@ -661,9 +683,11 @@ export async function emailLessonAnalysisEvaluation(req: Request, res: Response)
       message.includes("Почтовый сервер не настроен") ||
       message.includes("Локальная почта не запущена")
     ) {
+      res.locals.auditDetails = { error: message };
       return res.status(503).json({ error: message });
     }
     console.error("Email evaluation error:", error);
+    res.locals.auditDetails = { error: "Не удалось отправить письмо" };
     return res.status(500).json({ error: "Не удалось отправить письмо" });
   }
 }
