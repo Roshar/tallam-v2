@@ -2,6 +2,8 @@ import { Router } from "express";
 import * as schoolController from "../controllers/school.controller.js";
 import * as analyticsController from "../controllers/analytics.controller.js";
 import * as teacherDeleteController from "../controllers/teacher-delete.controller.js";
+import * as selectionController from "../controllers/selection.controller.js";
+import * as dossierController from "../controllers/dossier.controller.js";
 import * as vacancyController from "../controllers/vacancy.controller.js";
 import {
   requireAuth,
@@ -317,6 +319,88 @@ router.delete(
     entityId: (req) => req.params.cardId,
   }),
   schoolController.deleteLessonAnalysisEvaluation,
+);
+
+// --- Списки учителей (E1) -------------------------------------------------
+router.get("/selections/fields", selectionController.selectionOptionsHandler);
+router.get(
+  "/selections/presets",
+  selectionController.selectionPresetsHandler,
+);
+router.get(
+  "/selections/presets/:presetKey/rows",
+  auditHttpAction({
+    category: "selections",
+    action: "СПИСОК:готовый",
+    entityType: "selection",
+    entityId: (req) => req.params.presetKey,
+  }),
+  selectionController.selectionPresetRowsHandler,
+);
+router.post(
+  "/selections/preview",
+  selectionController.selectionPreviewHandler,
+);
+router.post(
+  "/selections/export",
+  auditHttpAction({ category: "selections", action: "СПИСОК:выгрузка" }),
+  selectionController.selectionExportHandler,
+);
+router.get(
+  "/selections",
+  auditHttpAction({ category: "selections", action: "СПИСОК:раздел" }),
+  selectionController.selectionListHandler,
+);
+router.post(
+  "/selections",
+  auditHttpAction({
+    category: "selections",
+    action: "СПИСОК:создание",
+    entityType: "selection",
+  }),
+  selectionController.selectionCreateHandler,
+);
+router.get(
+  "/selections/:id/export",
+  auditHttpAction({
+    category: "selections",
+    action: "СПИСОК:выгрузка сохранённого",
+    entityType: "selection",
+    entityId: (req) => req.params.id,
+  }),
+  selectionController.selectionSavedExportHandler,
+);
+router.get(
+  "/selections/:id",
+  auditHttpAction({
+    category: "selections",
+    action: "СПИСОК:просмотр",
+    entityType: "selection",
+    entityId: (req) => req.params.id,
+  }),
+  selectionController.selectionGetHandler,
+);
+router.delete(
+  "/selections/:id",
+  auditHttpAction({
+    category: "selections",
+    action: "СПИСОК:удаление",
+    entityType: "selection",
+    entityId: (req) => req.params.id,
+  }),
+  selectionController.selectionDeleteHandler,
+);
+
+// --- Дело учителя (E4) ----------------------------------------------------
+router.get(
+  "/workers/:teacherId/dossier",
+  auditHttpAction({
+    category: "teachers",
+    action: "teacher.dossier_view",
+    entityType: "teacher",
+    entityId: (req) => req.params.teacherId,
+  }),
+  dossierController.teacherDossierHandler,
 );
 
 export default router;

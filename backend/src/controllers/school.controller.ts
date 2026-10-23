@@ -51,6 +51,7 @@ import {
 } from "../services/subscription-renewal.service.js";
 import { changeSchoolCabinetPassword } from "../services/password-reset.service.js";
 import { recordSchoolPresence } from "../services/school-visits.service.js";
+import { getSchoolSignals } from "../services/school-signals.service.js";
 
 function getSchoolId(req: Request): number | null {
   const user = req.session.user;
@@ -84,10 +85,11 @@ export async function schoolDashboard(req: Request, res: Response) {
   }
 
   try {
-    const [schoolName, teachersCount, evaluations] = await Promise.all([
+    const [schoolName, teachersCount, evaluations, signals] = await Promise.all([
       getSchoolName(schoolId),
       countTeachers(schoolId),
       getSchoolEvaluationYearStats(schoolId, 3),
+      getSchoolSignals(schoolId).catch(() => null),
     ]);
 
     return res.json({
@@ -95,6 +97,7 @@ export async function schoolDashboard(req: Request, res: Response) {
       teachersCount,
       schoolId,
       evaluations,
+      signals,
     });
   } catch (error) {
     console.error("School dashboard error:", error);

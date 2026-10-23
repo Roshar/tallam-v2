@@ -16,6 +16,12 @@ export interface TeacherListItem {
   projectLabels: string[];
 }
 
+export interface SchoolSignals {
+  neverEvaluated: number;
+  attention: number;
+  staleEvaluated: number;
+}
+
 export interface SchoolDashboard {
   schoolName: string | null;
   teachersCount: number;
@@ -24,6 +30,7 @@ export interface SchoolDashboard {
     years: Array<{ year: number; count: number }>;
     total: number;
   };
+  signals: SchoolSignals | null;
 }
 
 export type SupportAuthorRole = "school" | "admin";

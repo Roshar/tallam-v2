@@ -18,6 +18,15 @@ import type {
   WorkersResponse,
 } from "../types/school";
 import type {
+  SelectionFilter,
+  SelectionMeta,
+  SelectionPreview,
+  SelectionPreset,
+  SelectionRow,
+  SavedSelection,
+} from "../types/selection";
+import type { TeacherDossier } from "../types/dossier";
+import type {
   AnalyticsCardType,
   SchoolAnalyticsResponse,
   TeacherAnalyticsResponse,
@@ -155,6 +164,40 @@ async function downloadFile(path: string, fallbackFilename: string) {
   link.download = filename;
   link.click();
   URL.revokeObjectURL(url);
+}
+
+
+async function downloadBlob(path: string, init?: RequestInit) {
+  const response = await fetch(path, {
+    credentials: "include",
+    ...init,
+    headers: { "Content-Type": "application/json", ...(init?.headers ?? {}) },
+  });
+  if (!response.ok) {
+    if (response.status === 401) handleUnauthorizedResponse(path);
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 403) handleSubscriptionRequired(data);
+    throw new Error(
+      typeof data.error === "string" ? data.error : "Ошибка скачивания",
+    );
+  }
+  const blob = await response.blob();
+  const disposition = response.headers.get("Content-Disposition") ?? "";
+  const match = disposition.match(/filename\*=UTF-8''(.+)/);
+  const filename = match ? decodeURIComponent(match[1]) : "Список.xlsx";
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export interface SelectionExportPayload {
+  title?: string;
+  filters?: SelectionFilter[];
+  columns?: string[];
+  presetKey?: string | null;
 }
 
 function analyticsQuery(params: {
@@ -598,6 +641,70 @@ export const api = {
 
   schoolProfile() {
     return request<SchoolProfile>("/api/school/profile");
+  },
+
+  selectionMeta() {
+    return request<SelectionMeta>("/api/school/selections/fields");
+  },
+
+  selectionPresets() {
+    return request<{ presets: SelectionPreset[] }>(
+      "/api/school/selections/presets",
+    );
+  },
+
+  selectionPresetRows(presetKey: string) {
+    return request<{ total: number; rows: SelectionRow[] }>(
+      `/api/school/selections/presets/${encodeURIComponent(presetKey)}/rows`,
+    );
+  },
+
+  selectionPreview(payload: {
+    filters: SelectionFilter[];
+    columns: string[];
+  }) {
+    return request<SelectionPreview>("/api/school/selections/preview", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  selectionExport(payload: SelectionExportPayload) {
+    return downloadBlob("/api/school/selections/export", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  savedSelections() {
+    return request<{ items: SavedSelection[] }>("/api/school/selections");
+  },
+
+  createSelection(payload: {
+    title: string;
+    filters: SelectionFilter[];
+    columns: string[];
+  }) {
+    return request<{ selection: SavedSelection }>("/api/school/selections", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  deleteSelection(id: number) {
+    return request<{ ok: boolean }>(`/api/school/selections/${id}`, {
+      method: "DELETE",
+    });
+  },
+
+  savedSelectionExport(id: number) {
+    return downloadBlob(`/api/school/selections/${id}/export`);
+  },
+
+  teacherDossier(teacherId: string) {
+    return request<{ dossier: TeacherDossier }>(
+      `/api/school/workers/${encodeURIComponent(teacherId)}/dossier`,
+    );
   },
 
   vacancyFilters() {

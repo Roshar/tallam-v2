@@ -751,3 +751,294 @@
     padding: 0;
   }
 }
+
+/* Главная новость: мягкая акцентная карточка над компактным списком. */
+.school-home__featured {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin-bottom: 1.35rem;
+  padding: 1.05rem 1.15rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-darkblue);
+  border-radius: var(--radius-md);
+  background: var(--color-bg);
+}
+
+.school-home__featured-top {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.school-home__featured-badge {
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--color-darkblue);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.school-home__featured-top time {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+
+.school-home__featured-title {
+  margin: 0;
+  font-size: 1.06rem;
+  color: var(--color-darkblue);
+}
+
+.school-home__featured-text {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+.school-home__featured-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.3rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: var(--radius-sm);
+  background: var(--color-darkblue);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.school-home__featured-cta:hover {
+  background: var(--color-darkblue-hover);
+  color: #fff;
+}
+
+/* Главная школы: рабочий дашборд вместо презентации продукта. */
+.school-home__hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  margin-bottom: 1rem;
+}
+
+.school-home__hero-copy {
+  min-width: 0;
+}
+
+.school-home__title {
+  margin: 0 0 0.35rem;
+  font-size: 1.4rem;
+}
+
+.school-home__lead {
+  margin: 0;
+  font-size: 0.98rem;
+}
+
+.school-home__hero-actions {
+  align-items: center;
+}
+
+.school-home__hero-actions .btn-outline {
+  background: #fff;
+}
+
+@media (max-width: 900px) {
+  .school-home__hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.school-home__dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+@media (max-width: 900px) {
+  .school-home__dashboard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.school-home__metrics {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+@media (max-width: 560px) {
+  .school-home__metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.school-home__metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fbfdff;
+  text-decoration: none;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.school-home__metric:hover {
+  border-color: var(--color-darkblue);
+  background: #fff;
+}
+
+.school-home__metric-value {
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--color-darkblue);
+}
+
+.school-home__metric-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.school-home__metric-note {
+  margin-top: 0.15rem;
+  font-size: 0.72rem;
+  color: var(--color-text-muted);
+}
+
+.school-home__quick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fbfdff;
+}
+
+.school-home__quick-title {
+  margin: 0 0 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.school-home__action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  color: var(--color-darkblue);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.school-home__action:hover {
+  background: var(--color-lightblue);
+  border-color: var(--color-darkblue);
+}
+
+.school-home__hint {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 0.9rem;
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-sm);
+  background: #fbfdff;
+  font-size: 0.86rem;
+  color: var(--color-text-muted);
+}
+
+.school-home__hint a {
+  color: var(--color-darkblue);
+  font-weight: 600;
+}
+
+.school-home__hint button {
+  margin-left: auto;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.school-home__details {
+  margin: 0 0 1.75rem;
+  padding: 0.9rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: #fbfdff;
+}
+
+.school-home__details summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-darkblue);
+}
+
+.school-home__details[open] summary {
+  margin-bottom: 0.75rem;
+}
+
+.school-home__details-body p {
+  margin: 0 0 0.7rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--color-text);
+}
+
+.school-home__details-body .school-home__cards {
+  margin: 0.85rem 0;
+}
+
+.school-home__details .school-home__card-type {
+  padding: 0.8rem 0.9rem;
+}
+
+/* Уведомление об обновлении внизу: одна строка вместо большой плашки. */
+.school-home__footnote .maintenance-notice {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.school-home__footnote .maintenance-notice__title {
+  display: inline;
+  margin-right: 0.35rem;
+  font-size: 0.72rem;
+}
+
+.school-home__footnote .maintenance-notice p {
+  display: inline;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+}

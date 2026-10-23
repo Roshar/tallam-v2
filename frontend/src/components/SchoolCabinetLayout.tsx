@@ -7,6 +7,7 @@ import { useSchool } from "../context/SchoolContext";
 export const SCHOOL_MENU = [
   { id: "home", label: "Главная", to: "/school/cabinet" },
   { id: "workers", label: "База работников", to: "/school/workers" },
+  { id: "selections", label: "Списки", to: "/school/selections" },
   {
     id: "lesson-analysis",
     label: "Проект «Анализ урока»",

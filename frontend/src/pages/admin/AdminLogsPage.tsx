@@ -38,6 +38,12 @@ function detailLabel(key: string): string {
     recipient: "Получатель",
     error: "Ошибка",
     savedEmail: "Адрес сохранён в карточке",
+    selectionId: "Список №",
+    selectionTitle: "Список",
+    conditions: "Условий",
+    columns: "Колонок",
+    rows: "Строк",
+    preset: "Готовый список",
   };
   return labels[key] ?? key;
 }

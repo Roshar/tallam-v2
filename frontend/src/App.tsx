@@ -12,6 +12,8 @@ import { SchoolFeedbackPage } from "./pages/school/SchoolFeedbackPage";
 import { SchoolAnalyticsPage } from "./pages/school/SchoolAnalyticsPage";
 import { TeacherProfilePage } from "./pages/school/TeacherProfilePage";
 import { WorkersPage } from "./pages/school/WorkersPage";
+import { SelectionsPage } from "./pages/school/SelectionsPage";
+import { TeacherDossierPage } from "./pages/school/TeacherDossierPage";
 import { LessonAnalysisPage } from "./pages/school/LessonAnalysisPage";
 import { LessonAnalysisMembersPage } from "./pages/school/LessonAnalysisMembersPage";
 import { ProjectTeacherPage } from "./pages/school/ProjectTeacherPage";
@@ -50,6 +52,8 @@ import "./styles/school-subscription.css";
 import "./styles/status.css";
 import "./styles/vacancies.css";
 import "./styles/analytics.css";
+import "./styles/selections.css";
+import "./styles/dossier.css";
 
 export default function App() {
   return (
@@ -72,6 +76,11 @@ export default function App() {
             <Route path="vacancies/:vacancyId" element={<VacancyViewPage />} />
             <Route path="vacancies/:vacancyId/edit" element={<VacancyFormPage />} />
             <Route path="workers" element={<WorkersPage />} />
+            <Route path="selections" element={<SelectionsPage />} />
+            <Route
+              path="workers/:teacherId/dossier"
+              element={<TeacherDossierPage />}
+            />
             <Route path="workers/:teacherId" element={<TeacherProfilePage />} />
             <Route path="lesson-analysis" element={<LessonAnalysisPage />} />
             <Route

@@ -19,6 +19,7 @@ import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.ser
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
 import { ensureContractSettlementSchema } from "./services/contract-settlement.service.js";
 import { ensureVacancySchema } from "./services/vacancy.service.js";
+import { ensureSelectionSchema } from "./services/selection.service.js";
 import { ensureSchoolVisitSchema } from "./services/school-visits.service.js";
 import { ensureRecoverySchema } from "./services/password-recovery.service.js";
 import { requireAuth } from "./middleware/auth.js";
@@ -130,6 +131,9 @@ app.listen(config.port, () => {
   });
   void ensureVacancySchema().catch((error) => {
     console.error("Failed to initialize vacancies schema:", error);
+  });
+  void ensureSelectionSchema().catch((error) => {
+    console.error("Failed to initialize saved selections schema:", error);
   });
   void ensureContractSettlementSchema().catch((error) => {
     console.error("Failed to initialize contract settlements schema:", error);

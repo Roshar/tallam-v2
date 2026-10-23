@@ -7,9 +7,21 @@ export interface CabinetNewsItem {
   text: string;
   tag: "новое" | "в работе" | "план";
   tagKind: "new" | "progress" | "plan";
+  /** Главная новость: показывается отдельной карточкой над компактным списком. */
+  featured?: boolean;
+  cta?: { label: string; to: string };
 }
 
 export const CABINET_NEWS: CabinetNewsItem[] = [
+  {
+    date: "Октябрь 2026",
+    title: "Списки учителей",
+    text: "Готовые списки учителей и собственные подборки по заданным условиям. Данные обновляются автоматически, любой список можно выгрузить в Excel.",
+    tag: "новое",
+    tagKind: "new",
+    featured: true,
+    cta: { label: "Открыть списки", to: "/school/selections" },
+  },
   {
     date: "Октябрь 2026",
     title: "Раздел «Аналитика»",
@@ -53,3 +65,12 @@ export const CABINET_NEWS: CabinetNewsItem[] = [
     tagKind: "progress",
   },
 ];
+
+/** Главная новость блока: отдельная карточка над компактным списком. */
+export const FEATURED_NEWS: CabinetNewsItem | null =
+  CABINET_NEWS.find((item) => item.featured) ?? null;
+
+/** Остальные новости: обычный компактный формат. */
+export const CABINET_NEWS_REST: CabinetNewsItem[] = CABINET_NEWS.filter(
+  (item) => !item.featured,
+);
