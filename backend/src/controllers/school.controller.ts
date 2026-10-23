@@ -46,6 +46,7 @@ import {
 } from "../services/subscription-documents.service.js";
 import {
   getLatestSchoolRenewal,
+  RenewalNotDueError,
   submitSchoolRenewal,
 } from "../services/subscription-renewal.service.js";
 import { changeSchoolCabinetPassword } from "../services/password-reset.service.js";
@@ -874,6 +875,9 @@ export async function submitRenewal(req: Request, res: Response) {
     const request = await submitSchoolRenewal(schoolId, req.body);
     return res.status(201).json({ request });
   } catch (error) {
+    if (error instanceof RenewalNotDueError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     const message =
       error instanceof Error ? error.message : "Не удалось отправить заявку";
     if (

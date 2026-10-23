@@ -43,6 +43,7 @@ import {
   countAwaitingRenewalConfirmations,
   getRenewalRequest,
   listRenewalRequests,
+  RenewalNotDueError,
   markRenewalPaid,
   type RenewalStatus,
 } from "../services/subscription-renewal.service.js";
@@ -767,6 +768,9 @@ export async function payRenewal(req: Request, res: Response) {
     const request = await markRenewalPaid(requestId, req.session.user!.id);
     return res.json({ request });
   } catch (error) {
+    if (error instanceof RenewalNotDueError) {
+      return res.status(error.status).json({ error: error.message });
+    }
     const message =
       error instanceof Error ? error.message : "Не удалось подтвердить оплату";
     if (message.includes("Отменён") || message.includes("не найдена")) {

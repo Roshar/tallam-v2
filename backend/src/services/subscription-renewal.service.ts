@@ -82,6 +82,17 @@ interface PeriodEndRow {
 }
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+/**
+ * Новую заявку принимаем только за 30 дней до конца оплаченного периода.
+ * Иначе форма, оставленная открытой в старой вкладке, создает вторую оплату
+ * поверх уже продленной подписки: школа платит дважды за следующие годы.
+ */
+const RENEWAL_WINDOW_DAYS = 30;
+
+export class RenewalNotDueError extends Error {
+  status = 409;
+}
+
 const encryptionKey = crypto
   .createHash("sha256")
   .update(config.subscriptionDataEncryptionKey)
@@ -501,6 +512,34 @@ export async function getLatestSchoolRenewal(
   return rows[0] ? mapRequest(rows[0]) : null;
 }
 
+/**
+ * Проверяет, что продление действительно пора оформлять. Смотрит на самый
+ * поздний действующий период подписки: если до его конца больше 30 дней,
+ * новая заявка или подтверждение оплаты отклоняются.
+ */
+async function assertRenewalDue(
+  connection: PoolConnection,
+  schoolId: number,
+): Promise<void> {
+  const [rows] = await connection.query<
+    (RowDataPacket & { endsOnLabel: string | null; daysLeft: number | null })[]
+  >(
+    `SELECT DATE_FORMAT(MAX(ends_on), '%d.%m.%Y') AS endsOnLabel,
+            MAX(DATEDIFF(ends_on, CURDATE())) AS daysLeft
+     FROM school_subscriptions
+     WHERE school_id = ?
+       AND is_cancelled = 0
+       AND ends_on >= CURDATE()`,
+    [schoolId],
+  );
+  const daysLeft = Number(rows[0]?.daysLeft ?? 0);
+  if (daysLeft > RENEWAL_WINDOW_DAYS) {
+    throw new RenewalNotDueError(
+      `Подписка оплачена до ${rows[0]?.endsOnLabel}. Продление откроется за ${RENEWAL_WINDOW_DAYS} дней до окончания.`,
+    );
+  }
+}
+
 export async function submitSchoolRenewal(
   schoolId: number,
   input: Partial<RenewalCustomerData> & { consent?: boolean },
@@ -526,6 +565,7 @@ export async function submitSchoolRenewal(
       `SELECT id_school FROM schools WHERE id_school = ? FOR UPDATE`,
       [schoolId],
     );
+    await assertRenewalDue(connection, schoolId);
     const [editableRows] = await connection.query<
       (RowDataPacket & {
         id: number;
@@ -646,6 +686,9 @@ export async function markRenewalPaid(
     if (row.status === "cancelled") {
       throw new Error("Отменённую заявку нельзя подтвердить");
     }
+    // Заявка могла быть создана до проверки или в старой вкладке: не продлеваем
+    // подписку, которая и так оплачена дальше 30 дней.
+    await assertRenewalDue(connection, schoolId);
 
     const customer = decryptCustomer(row);
     const numbers =

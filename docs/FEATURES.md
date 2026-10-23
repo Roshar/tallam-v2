@@ -265,6 +265,7 @@
 - **Где:** `frontend/src/components/SchoolRenewalPanel.tsx`, `backend/src/services/subscription-renewal.service.ts`, `GET|POST /api/school/subscription/renewal`, `GET /api/school/subscription/renewal/:requestId/contract`, таблицы `subscription_renewal_requests`, `subscription_document_sequences`, `database/init/07-subscription-renewal-requests.sql`.
 - **Проверка:** «Подписка» → заполнить форму продления → получить черновики документов.
 - **Ограничения:** без `SUBSCRIPTION_DATA_ENCRYPTION_KEY` старые заявки не расшифровываются; менять ключ на живой базе нельзя.
+- **История:** этим коммитом — заявку нельзя подать и оплату нельзя подтвердить, пока подписка оплачена более чем на 30 дней вперёд. Защита стоит в `submitSchoolRenewal` и `markRenewalPaid` внутри транзакции и закрывает повторную подачу из старой вкладки, из-за которой у школы появились две оплаченные заявки подряд.
 
 ### 6.3 Договор и акт
 `✅` · введено `6fd9cd9` (14.09.2026, Cursor)
