@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
 import { api } from "../../api/client";
+import { resetLinkMessage } from "../../utils/resetLinkMessage";
 import { useAuth } from "../../context/AuthContext";
 import type {
   AdminPasswordResetLink,
@@ -197,10 +198,10 @@ export function AdminSchoolDetailPage() {
   async function copyResetLink() {
     if (!resetLink) return;
     try {
-      await navigator.clipboard.writeText(resetLink.resetUrl);
+      await navigator.clipboard.writeText(resetLinkMessage(resetLink));
       setCopied(true);
     } catch {
-      setError("Не удалось скопировать ссылку. Выделите её вручную.");
+      setError("Не удалось скопировать текст. Выделите ссылку вручную.");
     }
   }
 
@@ -981,14 +982,16 @@ export function AdminSchoolDetailPage() {
             </div>
             <div className="admin-reset-modal__body">
               <p>
-                Передайте эту ссылку школе. Она действует до{" "}
+                Передайте школе ссылку и готовый текст для копирования. Ссылка
+                одноразовая, действует 24 часа - до{" "}
                 <strong>
                   {new Intl.DateTimeFormat("ru-RU", {
                     dateStyle: "medium",
                     timeStyle: "short",
                   }).format(new Date(resetLink.expiresAt))}
-                </strong>{" "}
-                и может быть использована один раз.
+                </strong>
+                . После сохранения нового пароля она станет недействительной,
+                логин остается прежним.
               </p>
               <input
                 className="form-input admin-reset-modal__link"
@@ -1010,7 +1013,7 @@ export function AdminSchoolDetailPage() {
                 className="btn btn-primary"
                 onClick={() => void copyResetLink()}
               >
-                {copied ? "Скопировано" : "Скопировать ссылку"}
+                {copied ? "Скопировано" : "Скопировать текст со ссылкой"}
               </button>
             </div>
           </div>

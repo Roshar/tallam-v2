@@ -41,7 +41,7 @@ export const config = {
     previewUrl: process.env.SMTP_PREVIEW_URL ?? "",
   },
   passwordReset: {
-    expiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 60),
+    expiresMinutes: Number(process.env.PASSWORD_RESET_EXPIRES_MINUTES ?? 1440),
   },
   schoolPasswordLog:
     process.env.SCHOOL_PASSWORD_LOG ??
