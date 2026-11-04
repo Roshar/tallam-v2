@@ -9,7 +9,13 @@ import { useState } from "react";
  */
 const STORAGE_KEY = "tallam-incident-2026-11-hidden";
 
-export function IncidentNotice({ className = "" }: { className?: string }) {
+export function IncidentNotice({
+  className = "",
+  compact = false,
+}: {
+  className?: string;
+  compact?: boolean;
+}) {
   const [hidden, setHidden] = useState(() => {
     try {
       return window.localStorage.getItem(STORAGE_KEY) === "1";
@@ -27,6 +33,52 @@ export function IncidentNotice({ className = "" }: { className?: string }) {
     } catch {
       // Приватный режим: скрываем до перезагрузки.
     }
+  }
+
+  if (compact) {
+    return (
+      <section
+        className={`incident-notice incident-notice--compact ${className}`.trim()}
+        role="status"
+        aria-label="Сообщение о восстановлении работы"
+      >
+        <div className="incident-notice__icon" aria-hidden="true">
+          !
+        </div>
+        <div className="incident-notice__body">
+          <h2 className="incident-notice__title">
+            Восстановление работы Tallam после кибератаки
+          </h2>
+          <p>
+            В ночь с 1 на 2 ноября провайдер Beget подвергся масштабной
+            кибератаке, сервер платформы утрачен. Мы восстановили работу из
+            резервной копии от <strong>22 октября</strong>; данные после этой
+            даты могли не сохраниться.
+          </p>
+          <p>
+            Если не хватает данных или оплаченный доступ не отображается,
+            напишите: Telegram{" "}
+            <a
+              href="https://t.me/nakata_katsu"
+              target="_blank"
+              rel="noreferrer"
+            >
+              @nakata_katsu
+            </a>
+            , Email <a href="mailto:webrush@mail.ru">webrush@mail.ru</a> -
+            проверим и <strong>сразу восстановим доступ</strong>.
+          </p>
+        </div>
+        <button
+          type="button"
+          className="incident-notice__close"
+          aria-label="Скрыть сообщение"
+          onClick={dismiss}
+        >
+          ×
+        </button>
+      </section>
+    );
   }
 
   return (

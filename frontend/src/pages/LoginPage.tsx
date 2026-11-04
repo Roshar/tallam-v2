@@ -75,8 +75,8 @@ export function LoginPage() {
         </ul>
       </aside>
 
+      <IncidentNotice className="incident-notice--auth" compact />
       <section className="auth-panel">
-        <IncidentNotice className="incident-notice--auth" />
         <div className="auth-mobile-header">
           <h1 className="auth-mobile-header__logo">Tallam</h1>
         </div>

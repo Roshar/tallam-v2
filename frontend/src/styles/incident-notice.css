@@ -81,10 +81,63 @@
 }
 
 .incident-notice--auth {
-  max-width: 520px;
-  font-size: 13px;
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(900px, calc(100% - 32px));
+  max-width: 900px;
+  margin: 0;
+  z-index: 20;
+  box-shadow: 0 10px 30px rgba(122, 22, 22, 0.1);
+}
+
+.incident-notice--compact {
+  padding: 10px 40px 10px 14px;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+
+.incident-notice--compact .incident-notice__title {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.incident-notice--compact p {
+  margin-bottom: 3px;
+}
+
+.incident-notice--compact .incident-notice__more {
+  margin-top: 2px;
+  font-size: 12.5px;
+}
+
+.incident-notice--compact .incident-notice__more summary {
+  cursor: pointer;
+  color: #8b1a1a;
+}
+
+.incident-notice--compact .incident-notice__more p {
+  margin-top: 6px;
+}
+
+@media (max-width: 900px) {
+  .incident-notice--auth {
+    position: static;
+    transform: none;
+    width: auto;
+    max-width: none;
+    margin: 12px 12px 0;
+    box-shadow: none;
+  }
 }
 
 .incident-notice--wide {
   max-width: none;
+}
+
+@media (max-height: 900px) and (min-width: 901px) {
+  .auth-panel {
+    padding-top: 150px;
+  }
 }
