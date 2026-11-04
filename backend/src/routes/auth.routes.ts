@@ -2,6 +2,7 @@ import { Router } from "express";
 import * as authController from "../controllers/auth.controller.js";
 import * as passwordResetController from "../controllers/password-reset.controller.js";
 import { requireAuth } from "../middleware/auth.js";
+import { loginRateLimit } from "../middleware/login-rate-limit.js";
 import { auditHttpAction } from "../services/audit-log.service.js";
 
 const router = Router();
@@ -14,6 +15,7 @@ router.post(
     actorEmail: (req) => String(req.body?.email ?? ""),
     details: (req) => ({ requestedAccountType: req.body?.accountType }),
   }),
+  loginRateLimit,
   authController.login,
 );
 router.post(

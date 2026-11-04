@@ -1,6 +1,7 @@
 import { Router } from "express";
 import * as accountantController from "../controllers/accountant.controller.js";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { loginRateLimit } from "../middleware/login-rate-limit.js";
 import { auditHttpAction } from "../services/audit-log.service.js";
 
 const router = Router();
@@ -12,6 +13,7 @@ router.post(
     action: "auth.accountant_login",
     actorEmail: (req) => String(req.body?.login ?? "").slice(0, 150),
   }),
+  loginRateLimit,
   accountantController.login,
 );
 
