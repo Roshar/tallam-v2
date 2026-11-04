@@ -54,6 +54,7 @@ import "./styles/vacancies.css";
 import "./styles/analytics.css";
 import "./styles/selections.css";
 import "./styles/dossier.css";
+import "./styles/incident-notice.css";
 
 export default function App() {
   return (

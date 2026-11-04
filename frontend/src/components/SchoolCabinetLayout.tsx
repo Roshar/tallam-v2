@@ -1,3 +1,4 @@
+import { IncidentNotice } from "./IncidentNotice";
 import { useEffect, useState, type ReactNode } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { api } from "../api/client";
@@ -185,7 +186,10 @@ export function SchoolCabinetLayout({
       </header>
 
       <main className="cabinet-main">
-        <div className="page-container cabinet-content">{children}</div>
+        <div className="page-container cabinet-content">
+          <IncidentNotice className="incident-notice--wide" />
+          {children}
+        </div>
       </main>
 
       <footer className="site-footer">

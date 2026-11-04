@@ -2,6 +2,7 @@ import { FormEvent, useMemo, useState } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { schoolLandingPath } from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { IncidentNotice } from "../components/IncidentNotice";
 
 type Tab = "school" | "methodist";
 
@@ -75,6 +76,7 @@ export function LoginPage() {
       </aside>
 
       <section className="auth-panel">
+        <IncidentNotice className="incident-notice--auth" />
         <div className="auth-mobile-header">
           <h1 className="auth-mobile-header__logo">Tallam</h1>
         </div>
