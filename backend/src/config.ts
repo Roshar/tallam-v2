@@ -46,6 +46,9 @@ export const config = {
   schoolPasswordLog:
     process.env.SCHOOL_PASSWORD_LOG ??
     path.resolve(__dirname, "../data/school-passwords.log"),
+  paymentDocsDir:
+    process.env.PAYMENT_DOCS_DIR ??
+    path.resolve(__dirname, "../data/payment-docs"),
   accountant: {
     login: (
       process.env.ACCOUNTANT_LOGIN ||

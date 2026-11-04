@@ -32,11 +32,20 @@ function maskedPassport(series: string, number: string): string {
   return `${series.slice(0, 2)}•• •••${number.slice(-3)}`;
 }
 
+function formatMoney(value: number): string {
+  return new Intl.NumberFormat("ru-RU", {
+    style: "currency",
+    currency: "RUB",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export function AdminRenewalsPage() {
   const [data, setData] = useState<AdminRenewalsResponse | null>(null);
   const [selected, setSelected] = useState<AdminRenewalRequest | null>(null);
   const [page, setPage] = useState(1);
   const [status, setStatus] = useState("all");
+  const [manualOnly, setManualOnly] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -51,13 +60,21 @@ export function AdminRenewalsPage() {
     setLoading(true);
     setError("");
     try {
-      setData(await api.adminRenewals({ page, limit: PAGE_SIZE, status, search }));
+      setData(
+        await api.adminRenewals({
+          page,
+          limit: PAGE_SIZE,
+          status,
+          search,
+          manualOnly,
+        }),
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Не удалось загрузить заявки");
     } finally {
       setLoading(false);
     }
-  }, [page, search, status]);
+  }, [page, search, status, manualOnly]);
 
   useEffect(() => {
     void load();
@@ -103,6 +120,19 @@ export function AdminRenewalsPage() {
       setError(err instanceof Error ? err.message : "Не удалось подтвердить оплату");
     } finally {
       setActionLoading(false);
+    }
+  }
+
+  async function downloadManual() {
+    if (!selected?.manual) return;
+    setDownloading(true);
+    setError("");
+    try {
+      await api.downloadAdminManualActivationDocument(selected.manual.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Не удалось скачать файл");
+    } finally {
+      setDownloading(false);
     }
   }
 
@@ -170,6 +200,25 @@ export function AdminRenewalsPage() {
           <option value="paid">Оплачено</option>
           <option value="cancelled">Отменено</option>
         </select>
+        <label className="admin-renewals__manual-filter">
+          <input
+            type="checkbox"
+            checked={manualOnly}
+            onChange={(event) => {
+              setPage(1);
+              setManualOnly(event.target.checked);
+            }}
+          />
+          Только после аварии
+        </label>
+        {data?.manualStats.count ? (
+          <span className="admin-renewals__manual-stats">
+            Подключено после аварии: {data.manualStats.count}
+            {data.manualStats.totalAmount
+              ? ` на ${formatMoney(data.manualStats.totalAmount)}`
+              : ""}
+          </span>
+        ) : null}
       </section>
 
       <div className="admin-renewals__workspace">
@@ -204,6 +253,11 @@ export function AdminRenewalsPage() {
                         {item.schoolName}
                       </button>
                       <small>{item.customerName}</small>
+                      {item.manual ? (
+                        <span className="admin-renewals__manual-badge">
+                          После аварии
+                        </span>
+                      ) : null}
                     </td>
                     <td>{formatDate(item.createdAt)}</td>
                     <td>
@@ -277,6 +331,43 @@ export function AdminRenewalsPage() {
                 </span>
               </div>
 
+              {selected.manual ? (
+                <div className="admin-renewals__manual-info">
+                  <p className="admin-renewals__manual-title">
+                    Подключено вручную после аварии
+                  </p>
+                  <p>
+                    Сумма:{" "}
+                    <strong>
+                      {selected.manual.amount === null
+                        ? "не указана"
+                        : formatMoney(selected.manual.amount)}
+                    </strong>
+                  </p>
+                  {selected.manual.paidOn ? (
+                    <p>
+                      Дата оплаты:{" "}
+                      <strong>{formatDate(selected.manual.paidOn)}</strong>
+                    </p>
+                  ) : null}
+                  {selected.manual.note ? (
+                    <p>Комментарий: {selected.manual.note}</p>
+                  ) : null}
+                  {selected.manual.hasDocument ? (
+                    <button
+                      type="button"
+                      className="btn btn-ghost"
+                      disabled={downloading}
+                      onClick={() => void downloadManual()}
+                    >
+                      {downloading ? "Подготовка..." : "Открыть платежку"}
+                    </button>
+                  ) : (
+                    <p>Платежный документ не приложен</p>
+                  )}
+                </div>
+              ) : (
+                <>
               <div className="admin-renewals__privacy">
                 <span>Персональные данные</span>
                 <button
@@ -339,8 +430,10 @@ export function AdminRenewalsPage() {
                   </dd>
                 </div>
               </dl>
+                </>
+              )}
 
-              {selected.status === "paid" ? (
+              {selected.status === "paid" && !selected.manual ? (
                 <div className="admin-renewals__document-actions">
                   <button
                     type="button"
@@ -351,7 +444,7 @@ export function AdminRenewalsPage() {
                     {downloading ? "Подготовка..." : "Договор и акт"}
                   </button>
                 </div>
-              ) : (
+              ) : selected.status === "paid" && selected.manual ? null : (
                 <p className="admin-renewals__period">
                   Договор и акт станут доступны после подтверждения оплаты.
                 </p>
@@ -360,10 +453,13 @@ export function AdminRenewalsPage() {
               <p className="admin-renewals__period">
                 Договор:{" "}
                 <strong>
-                  {selected.contractNumber
-                    ? `№ ${selected.contractNumber}`
-                    : "ещё не присвоен"}
+                  {selected.manual
+                    ? "не формировался"
+                    : selected.contractNumber
+                      ? `№ ${selected.contractNumber}`
+                      : "ещё не присвоен"}
                 </strong>
+                {selected.manual ? " (подключение после аварии)" : ""}
               </p>
 
               {selected.startsOn && selected.endsOn ? (

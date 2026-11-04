@@ -1,5 +1,8 @@
 import ExcelJS from "exceljs";
 import type { Request, Response } from "express";
+import path from "node:path";
+import { unlink } from "node:fs/promises";
+import { config } from "../config.js";
 import {
   countOnlineSchools,
   getAdminDashboard,
@@ -39,6 +42,10 @@ import {
   buildRenewalDocument,
   RenewalDocumentUnavailableError,
 } from "../services/subscription-documents.service.js";
+import {
+  createManualActivation,
+  getManualActivationDocument,
+} from "../services/manual-activation.service.js";
 import {
   countAwaitingRenewalConfirmations,
   getRenewalRequest,
@@ -623,6 +630,92 @@ export async function activateSchool(req: Request, res: Response) {
   }
 }
 
+export async function createManualActivationHandler(
+  req: Request,
+  res: Response,
+) {
+  const schoolId = parseSchoolId(req);
+  if (!schoolId) {
+    return res.status(400).json({ error: "Некорректный идентификатор школы" });
+  }
+
+  const body = req.body as {
+    startsOn?: string;
+    endsOn?: string;
+    amount?: string;
+    paidOn?: string;
+    phone?: string;
+    note?: string;
+  };
+  const file = req.file
+    ? {
+        originalName: req.file.originalname,
+        mime: req.file.mimetype,
+        size: req.file.size,
+        storedName: req.file.filename,
+      }
+    : null;
+
+  try {
+    await createManualActivation({
+      schoolId,
+      startsOn: String(body.startsOn ?? ""),
+      endsOn: String(body.endsOn ?? ""),
+      amount:
+        body.amount === undefined || body.amount === ""
+          ? null
+          : Number(body.amount),
+      paidOn: body.paidOn ?? null,
+      phone: body.phone ?? null,
+      note: body.note ?? null,
+      document: file,
+      adminUserId: req.session.user!.id,
+    });
+    return res.json(await getAdminSchoolDetail(schoolId));
+  } catch (error) {
+    if (req.file) {
+      await unlink(req.file.path).catch(() => undefined);
+    }
+    const message =
+      error instanceof Error
+        ? error.message
+        : "Не удалось подключить школу";
+    const status = message.includes("не найдена") ? 404 : 400;
+    console.error("Admin manual activation error:", error);
+    return res.status(status).json({ error: message });
+  }
+}
+
+export async function downloadManualActivationDocument(
+  req: Request,
+  res: Response,
+) {
+  const activationId = Number(req.params.activationId);
+  if (!Number.isInteger(activationId) || activationId <= 0) {
+    return res.status(400).json({ error: "Некорректный идентификатор" });
+  }
+
+  try {
+    const document = await getManualActivationDocument(activationId);
+    if (!document) {
+      return res.status(404).json({ error: "Документ не найден" });
+    }
+    const filePath = path.join(config.paymentDocsDir, document.storedName);
+    return res.download(
+      filePath,
+      document.originalName || `Платежка-${activationId}`,
+      (error) => {
+        if (error && !res.headersSent) {
+          return res.status(404).json({ error: "Документ не найден" });
+        }
+      },
+    );
+  } catch (error) {
+    console.error("Admin manual activation document error:", error);
+    return res.status(500).json({ error: "Не удалось скачать документ" });
+  }
+}
+
 export async function createSubscription(req: Request, res: Response) {
   const schoolId = parseSchoolId(req);
   if (!schoolId) {
@@ -734,6 +827,7 @@ export async function renewalRequests(req: Request, res: Response) {
         limit: Number(req.query.limit ?? 20) || 20,
         status,
         search: String(req.query.search ?? ""),
+        manualOnly: req.query.manualOnly === "1",
       }),
     );
   } catch (error) {

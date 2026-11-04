@@ -195,6 +195,16 @@ export interface AdminPasswordResetLink {
   email: string;
 }
 
+export interface AdminRenewalManualInfo {
+  id: number;
+  amount: number | null;
+  paidOn: string | null;
+  note: string | null;
+  afterIncident: boolean;
+  hasDocument: boolean;
+  documentOriginalName: string | null;
+}
+
 export interface AdminRenewalListItem {
   id: number;
   schoolId: number;
@@ -209,6 +219,7 @@ export interface AdminRenewalListItem {
   endsOn: string | null;
   paidAt: string | null;
   createdAt: string;
+  manual: AdminRenewalManualInfo | null;
 }
 
 export interface AdminRenewalRequest {
@@ -226,6 +237,7 @@ export interface AdminRenewalRequest {
   createdAt: string;
   updatedAt: string;
   customer: RenewalCustomerData;
+  manual: AdminRenewalManualInfo | null;
 }
 
 export interface AdminRenewalsResponse {
@@ -236,6 +248,7 @@ export interface AdminRenewalsResponse {
     total: number;
     totalPages: number;
   };
+  manualStats: { count: number; totalAmount: number };
 }
 
 export type AuditLogStatus = "success" | "failure";

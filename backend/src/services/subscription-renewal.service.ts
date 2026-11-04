@@ -24,6 +24,16 @@ export interface RenewalCustomerData {
   inn: string;
 }
 
+export interface RenewalManualInfo {
+  id: number;
+  amount: number | null;
+  paidOn: string | null;
+  note: string | null;
+  afterIncident: boolean;
+  hasDocument: boolean;
+  documentOriginalName: string | null;
+}
+
 export interface RenewalRequest {
   id: number;
   schoolId: number;
@@ -39,6 +49,7 @@ export interface RenewalRequest {
   createdAt: string;
   updatedAt: string;
   customer: RenewalCustomerData;
+  manual: RenewalManualInfo | null;
 }
 
 export interface RenewalListItem {
@@ -55,6 +66,7 @@ export interface RenewalListItem {
   endsOn: string | null;
   paidAt: string | null;
   createdAt: string;
+  manual: RenewalManualInfo | null;
 }
 
 interface RenewalRow extends RowDataPacket {
@@ -75,6 +87,13 @@ interface RenewalRow extends RowDataPacket {
   createdAt: string;
   updatedAt: string;
   area?: string | null;
+  manualId?: number | null;
+  manualAmount?: string | number | null;
+  manualPaidOn?: string | null;
+  manualNote?: string | null;
+  manualAfterIncident?: number | null;
+  manualDocumentStoredName?: string | null;
+  manualDocumentOriginalName?: string | null;
 }
 
 interface PeriodEndRow {
@@ -351,7 +370,7 @@ export function validateRenewalCustomerData(
   };
 }
 
-function encryptCustomer(customer: RenewalCustomerData): {
+export function encryptCustomer(customer: RenewalCustomerData): {
   ciphertext: string;
   iv: string;
   authTag: string;
@@ -433,6 +452,29 @@ export async function ensureSubscriptionRenewalSchema(): Promise<void> {
           PRIMARY KEY (period_key)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
+      await query(`
+        CREATE TABLE IF NOT EXISTS subscription_manual_activations (
+          id bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+          school_id bigint(20) UNSIGNED NOT NULL,
+          renewal_request_id bigint(20) UNSIGNED DEFAULT NULL,
+          subscription_id bigint(20) UNSIGNED DEFAULT NULL,
+          amount decimal(12,2) DEFAULT NULL,
+          paid_on date DEFAULT NULL,
+          note varchar(500) DEFAULT NULL,
+          is_after_incident tinyint(1) NOT NULL DEFAULT 1,
+          document_original_name varchar(255) DEFAULT NULL,
+          document_mime varchar(100) DEFAULT NULL,
+          document_size int(10) UNSIGNED DEFAULT NULL,
+          document_stored_name varchar(255) DEFAULT NULL,
+          created_by_user_id bigint(20) UNSIGNED DEFAULT NULL,
+          created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+            ON UPDATE CURRENT_TIMESTAMP,
+          PRIMARY KEY (id),
+          KEY idx_manual_activation_school (school_id),
+          KEY idx_manual_activation_request (renewal_request_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+      `);
       await ensureUniqueDocumentIndexes();
     })().catch((error) => {
       schemaReady = null;
@@ -441,6 +483,38 @@ export async function ensureSubscriptionRenewalSchema(): Promise<void> {
   }
   await schemaReady;
 }
+
+const RENEWAL_SELECT_WITH_MANUAL = `
+  SELECT
+    rr.id,
+    rr.school_id AS schoolId,
+    s.school_name AS schoolName,
+    (SELECT a.title_area FROM area a WHERE a.id_area = s.area_id LIMIT 1) AS area,
+    rr.status,
+    rr.customer_ciphertext AS customerCiphertext,
+    rr.customer_iv AS customerIv,
+    rr.customer_auth_tag AS customerAuthTag,
+    rr.contract_number AS contractNumber,
+    rr.invoice_number AS invoiceNumber,
+    DATE_FORMAT(rr.issued_on, '%Y-%m-%d') AS issuedOn,
+    DATE_FORMAT(rr.starts_on, '%Y-%m-%d') AS startsOn,
+    DATE_FORMAT(rr.ends_on, '%Y-%m-%d') AS endsOn,
+    DATE_FORMAT(rr.consent_at, '%Y-%m-%dT%H:%i:%sZ') AS consentAt,
+    DATE_FORMAT(rr.paid_at, '%Y-%m-%dT%H:%i:%sZ') AS paidAt,
+    DATE_FORMAT(rr.created_at, '%Y-%m-%dT%H:%i:%sZ') AS createdAt,
+    DATE_FORMAT(rr.updated_at, '%Y-%m-%dT%H:%i:%sZ') AS updatedAt,
+    ma.id AS manualId,
+    ma.amount AS manualAmount,
+    DATE_FORMAT(ma.paid_on, '%Y-%m-%d') AS manualPaidOn,
+    ma.note AS manualNote,
+    ma.is_after_incident AS manualAfterIncident,
+    ma.document_stored_name AS manualDocumentStoredName,
+    ma.document_original_name AS manualDocumentOriginalName
+  FROM subscription_renewal_requests rr
+  JOIN schools s ON s.id_school = rr.school_id
+  LEFT JOIN subscription_manual_activations ma
+    ON ma.renewal_request_id = rr.id
+`;
 
 const RENEWAL_SELECT = `
   SELECT
@@ -465,6 +539,22 @@ const RENEWAL_SELECT = `
   JOIN schools s ON s.id_school = rr.school_id
 `;
 
+function mapManual(row: RenewalRow): RenewalManualInfo | null {
+  if (!row.manualId) return null;
+  return {
+    id: Number(row.manualId),
+    amount:
+      row.manualAmount === null || row.manualAmount === undefined
+        ? null
+        : Number(row.manualAmount),
+    paidOn: row.manualPaidOn ?? null,
+    note: row.manualNote ?? null,
+    afterIncident: Number(row.manualAfterIncident ?? 0) === 1,
+    hasDocument: Boolean(row.manualDocumentStoredName),
+    documentOriginalName: row.manualDocumentOriginalName ?? null,
+  };
+}
+
 function mapRequest(row: RenewalRow): RenewalRequest {
   return {
     id: Number(row.id),
@@ -481,6 +571,7 @@ function mapRequest(row: RenewalRow): RenewalRequest {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
     customer: decryptCustomer(row),
+    manual: mapManual(row),
   };
 }
 
@@ -490,7 +581,7 @@ export async function getRenewalRequest(
 ): Promise<RenewalRequest | null> {
   await ensureSubscriptionRenewalSchema();
   const rows = await query<RenewalRow[]>(
-    `${RENEWAL_SELECT}
+    `${RENEWAL_SELECT_WITH_MANUAL}
      WHERE rr.id = ? ${schoolId ? "AND rr.school_id = ?" : ""}
      LIMIT 1`,
     schoolId ? [id, schoolId] : [id],
@@ -503,7 +594,7 @@ export async function getLatestSchoolRenewal(
 ): Promise<RenewalRequest | null> {
   await ensureSubscriptionRenewalSchema();
   const rows = await query<RenewalRow[]>(
-    `${RENEWAL_SELECT}
+    `${RENEWAL_SELECT_WITH_MANUAL}
      WHERE rr.school_id = ?
      ORDER BY rr.id DESC
      LIMIT 1`,
@@ -780,9 +871,11 @@ export async function listRenewalRequests(input: {
   limit: number;
   status?: RenewalStatus | "all";
   search?: string;
+  manualOnly?: boolean;
 }): Promise<{
   items: RenewalListItem[];
   pagination: { page: number; limit: number; total: number; totalPages: number };
+  manualStats: { count: number; totalAmount: number };
 }> {
   await ensureSubscriptionRenewalSchema();
   const page = Math.max(1, input.page || 1);
@@ -794,6 +887,12 @@ export async function listRenewalRequests(input: {
   if (input.status && input.status !== "all") {
     conditions.push("rr.status = ?");
     params.push(input.status);
+  }
+  if (input.manualOnly) {
+    conditions.push(`EXISTS (
+      SELECT 1 FROM subscription_manual_activations ma2
+      WHERE ma2.renewal_request_id = rr.id
+    )`);
   }
   if (input.search?.trim()) {
     conditions.push(`(
@@ -811,7 +910,7 @@ export async function listRenewalRequests(input: {
 
   const where = conditions.join(" AND ");
   const rows = await query<RenewalRow[]>(
-    `${RENEWAL_SELECT}
+    `${RENEWAL_SELECT_WITH_MANUAL}
      WHERE ${where}
      ORDER BY
        FIELD(rr.status, 'pending', 'documents_ready', 'paid', 'cancelled'),
@@ -827,6 +926,11 @@ export async function listRenewalRequests(input: {
     params,
   );
   const total = Number(countRows[0]?.count ?? 0);
+  const statsRows = await query<{ count: number; totalAmount: string | null }[]>(
+    `SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS totalAmount
+     FROM subscription_manual_activations
+     WHERE is_after_incident = 1`,
+  );
 
   return {
     items: rows.map((row) => ({
@@ -835,7 +939,9 @@ export async function listRenewalRequests(input: {
       schoolName: row.schoolName,
       area: row.area ?? null,
       status: row.status,
-      customerName: decryptCustomer(row).fullName,
+      customerName: row.manualId
+        ? "Подключено вручную после аварии"
+        : decryptCustomer(row).fullName,
       contractNumber: row.contractNumber,
       invoiceNumber: row.invoiceNumber,
       issuedOn: row.issuedOn,
@@ -843,12 +949,17 @@ export async function listRenewalRequests(input: {
       endsOn: row.endsOn,
       paidAt: row.paidAt,
       createdAt: row.createdAt,
+      manual: mapManual(row),
     })),
     pagination: {
       page,
       limit,
       total,
       totalPages: Math.max(1, Math.ceil(total / limit)),
+    },
+    manualStats: {
+      count: Number(statsRows[0]?.count ?? 0),
+      totalAmount: Number(statsRows[0]?.totalAmount ?? 0),
     },
   };
 }

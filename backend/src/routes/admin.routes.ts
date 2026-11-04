@@ -1,4 +1,9 @@
-import { Router } from "express";
+import { Router, type NextFunction, type Request, type Response } from "express";
+import multer from "multer";
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+import { config } from "../config.js";
 import * as adminController from "../controllers/admin.controller.js";
 import * as settlementController from "../controllers/settlement.controller.js";
 import * as vacancyController from "../controllers/vacancy.controller.js";
@@ -7,6 +12,56 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { auditHttpAction } from "../services/audit-log.service.js";
 
 const router = Router();
+
+fs.mkdirSync(config.paymentDocsDir, { recursive: true });
+
+const PAYMENT_DOCUMENT_MIME = new Set([
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+]);
+const PAYMENT_DOCUMENT_EXT = new Set([".pdf", ".png", ".jpg", ".jpeg"]);
+
+const paymentDocumentUpload = multer({
+  storage: multer.diskStorage({
+    destination: config.paymentDocsDir,
+    filename: (_req, file, callback) => {
+      const extension = path.extname(file.originalname).toLowerCase();
+      callback(null, `${Date.now()}-${crypto.randomUUID()}${extension}`);
+    },
+  }),
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase();
+    if (
+      !PAYMENT_DOCUMENT_EXT.has(extension) ||
+      !PAYMENT_DOCUMENT_MIME.has(file.mimetype)
+    ) {
+      return callback(new Error("Приложите файл PDF, PNG или JPG"));
+    }
+    callback(null, true);
+  },
+});
+
+function uploadPaymentDocument(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  paymentDocumentUpload.single("document")(req, res, (error) => {
+    if (!error) return next();
+    if (error instanceof multer.MulterError) {
+      const message =
+        error.code === "LIMIT_FILE_SIZE"
+          ? "Файл больше 10 МБ"
+          : "Не удалось загрузить файл";
+      return res.status(400).json({ error: message });
+    }
+    return res.status(400).json({
+      error: error instanceof Error ? error.message : "Не удалось загрузить файл",
+    });
+  });
+}
 
 router.use(requireAuth, requireRole("admin"));
 router.get("/logs/options", auditLogController.options);
@@ -172,6 +227,21 @@ router.patch(
     }),
   }),
   adminController.updateSubscription,
+);
+router.post(
+  "/subscriptions/:schoolId/manual-activation",
+  auditHttpAction({
+    category: "subscription",
+    action: "subscription.manual_activation_created",
+    entityType: "school",
+    entityId: (req) => req.params.schoolId,
+  }),
+  uploadPaymentDocument,
+  adminController.createManualActivationHandler,
+);
+router.get(
+  "/manual-activations/:activationId/document",
+  adminController.downloadManualActivationDocument,
 );
 router.post(
   "/subscriptions/:schoolId/password-reset-link",

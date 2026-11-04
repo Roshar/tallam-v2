@@ -144,6 +144,31 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   return data as T;
 }
 
+async function requestForm<T>(path: string, body: FormData): Promise<T> {
+  const response = await fetch(path, {
+    method: "POST",
+    credentials: "include",
+    cache: "no-store",
+    body,
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      handleUnauthorizedResponse(path);
+    }
+    if (response.status === 403) {
+      handleSubscriptionRequired(data);
+    }
+    throw new Error(
+      typeof data.error === "string" ? data.error : "Ошибка запроса",
+    );
+  }
+
+  return data as T;
+}
+
 async function downloadFile(path: string, fallbackFilename: string) {
   const response = await fetch(path, { credentials: "include" });
   if (!response.ok) {
@@ -863,12 +888,14 @@ export const api = {
     limit?: number;
     status?: string;
     search?: string;
+    manualOnly?: boolean;
   }) {
     const search = new URLSearchParams();
     if (params?.page) search.set("page", String(params.page));
     if (params?.limit) search.set("limit", String(params.limit));
     if (params?.status) search.set("status", params.status);
     if (params?.search) search.set("search", params.search);
+    if (params?.manualOnly) search.set("manualOnly", "1");
     const query = search.toString();
     return request<AdminRenewalsResponse>(
       `/api/admin/renewals${query ? `?${query}` : ""}`,
@@ -892,6 +919,20 @@ export const api = {
     return downloadFile(
       `/api/admin/renewals/${requestId}/contract`,
       "Договор-и-акт-Таллам.pdf",
+    );
+  },
+
+  createAdminManualActivation(schoolId: number, payload: FormData) {
+    return requestForm<AdminSchoolDetail>(
+      `/api/admin/subscriptions/${schoolId}/manual-activation`,
+      payload,
+    );
+  },
+
+  downloadAdminManualActivationDocument(activationId: number) {
+    return downloadFile(
+      `/api/admin/manual-activations/${activationId}/document`,
+      "Платежка.pdf",
     );
   },
 

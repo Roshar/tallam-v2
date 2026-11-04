@@ -115,6 +115,15 @@ export function AdminSchoolDetailPage() {
   const [periodPhone, setPeriodPhone] = useState("");
   const [periodNote, setPeriodNote] = useState("");
   const [addingNewPeriod, setAddingNewPeriod] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualSaving, setManualSaving] = useState(false);
+  const [manualStartsOn, setManualStartsOn] = useState(isoDate(new Date()));
+  const [manualEndsOn, setManualEndsOn] = useState(addDays(isoDate(new Date()), 365));
+  const [manualAmount, setManualAmount] = useState("");
+  const [manualPaidOn, setManualPaidOn] = useState(isoDate(new Date()));
+  const [manualPhone, setManualPhone] = useState("");
+  const [manualNote, setManualNote] = useState("");
+  const [manualFile, setManualFile] = useState<File | null>(null);
   const [editingPeriodId, setEditingPeriodId] = useState<number | null>(null);
   const [renameOpen, setRenameOpen] = useState(false);
   const [nameDraft, setNameDraft] = useState("");
@@ -255,6 +264,47 @@ export function AdminSchoolDetailPage() {
     setPeriodEndsOn(addDays(start, 365));
     setPeriodPhone("");
     setPeriodNote("");
+  }
+
+  function openManualActivation() {
+    const start = isoDate(new Date());
+    setManualStartsOn(start);
+    setManualEndsOn(addDays(start, 365));
+    setManualAmount("");
+    setManualPaidOn(start);
+    setManualPhone(currentSubscription?.phone ?? "");
+    setManualNote("");
+    setManualFile(null);
+    setError("");
+    setManualOpen(true);
+  }
+
+  async function saveManualActivation() {
+    if (!detail) return;
+    setManualSaving(true);
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("startsOn", manualStartsOn);
+      form.append("endsOn", manualEndsOn);
+      if (manualAmount.trim()) form.append("amount", manualAmount.trim());
+      if (manualPaidOn) form.append("paidOn", manualPaidOn);
+      if (manualPhone.trim()) form.append("phone", manualPhone.trim());
+      if (manualNote.trim()) form.append("note", manualNote.trim());
+      if (manualFile) form.append("document", manualFile);
+      const next = await api.createAdminManualActivation(
+        detail.school.id,
+        form,
+      );
+      setDetail(next);
+      setManualOpen(false);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Не удалось подключить школу",
+      );
+    } finally {
+      setManualSaving(false);
+    }
   }
 
   async function saveSubscription() {
@@ -635,6 +685,13 @@ export function AdminSchoolDetailPage() {
               >
                 Управление подпиской
               </Link>
+              <button
+                type="button"
+                className="btn btn-primary admin-school-detail__manual-button"
+                onClick={openManualActivation}
+              >
+                Подключить после аварии
+              </button>
             </div>
           </section>
         </>
@@ -678,6 +735,13 @@ export function AdminSchoolDetailPage() {
               </span>
             ) : null}
           </div>
+          <button
+            type="button"
+            className="btn btn-primary admin-school-detail__manual-button"
+            onClick={openManualActivation}
+          >
+            Подключить после аварии
+          </button>
 
           {currentSubscription ? (
             <div className="admin-school-detail__body">
@@ -923,7 +987,15 @@ export function AdminSchoolDetailPage() {
                     </span>
                   </td>
                   <td>{subscription.phone ?? "—"}</td>
-                  <td>{subscription.sourceLabel ?? "—"}</td>
+                  <td>
+                    {subscription.sourceLabel === "after-incident" ? (
+                      <span className="admin-renewals__manual-badge">
+                        После аварии
+                      </span>
+                    ) : (
+                      subscription.sourceLabel ?? "—"
+                    )}
+                  </td>
                   <td>{subscription.note ?? "—"}</td>
                   <td>
                     {Number(subscription.isCancelled) === 0 ? (
@@ -951,6 +1023,149 @@ export function AdminSchoolDetailPage() {
       </section>
         </>
       )}
+
+      {manualOpen && detail ? (
+        <div
+          className="admin-reset-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="admin-manual-activation-title"
+          onClick={() => {
+            if (!manualSaving) setManualOpen(false);
+          }}
+        >
+          <div
+            className="admin-reset-modal__dialog admin-manual-modal"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="admin-reset-modal__header">
+              <div>
+                <h3 id="admin-manual-activation-title">
+                  Подключение после аварии
+                </h3>
+                <p>{detail.school.name}</p>
+              </div>
+              <button
+                type="button"
+                className="admin-reset-modal__close"
+                onClick={() => setManualOpen(false)}
+                aria-label="Закрыть"
+                disabled={manualSaving}
+              >
+                ×
+              </button>
+            </div>
+            <form
+              className="admin-manual-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void saveManualActivation();
+              }}
+            >
+              <p className="admin-manual-form__hint">
+                Создаст период подписки и оплаченную заявку в «Продлениях» с
+                пометкой «После аварии». Договор и счет не формируются.
+              </p>
+              <div className="admin-activate-form__dates">
+                <label>
+                  <span>Начало</span>
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={manualStartsOn}
+                    onChange={(event) => setManualStartsOn(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  <span>Окончание</span>
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={manualEndsOn}
+                    min={manualStartsOn}
+                    onChange={(event) => setManualEndsOn(event.target.value)}
+                    required
+                  />
+                </label>
+              </div>
+              <div className="admin-activate-form__dates">
+                <label>
+                  <span>Сумма, ₽</span>
+                  <input
+                    className="form-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={manualAmount}
+                    onChange={(event) => setManualAmount(event.target.value)}
+                    placeholder="Необязательно"
+                  />
+                </label>
+                <label>
+                  <span>Дата оплаты</span>
+                  <input
+                    className="form-input"
+                    type="date"
+                    value={manualPaidOn}
+                    onChange={(event) => setManualPaidOn(event.target.value)}
+                  />
+                </label>
+              </div>
+              <label>
+                <span>Телефон</span>
+                <input
+                  className="form-input"
+                  value={manualPhone}
+                  onChange={(event) => setManualPhone(event.target.value)}
+                  placeholder="Необязательно"
+                />
+              </label>
+              <label>
+                <span>Комментарий</span>
+                <input
+                  className="form-input"
+                  value={manualNote}
+                  onChange={(event) => setManualNote(event.target.value)}
+                  placeholder="Номер платежки или примечание"
+                />
+              </label>
+              <label>
+                <span>Платежный документ</span>
+                <input
+                  className="form-input"
+                  type="file"
+                  accept=".pdf,.png,.jpg,.jpeg"
+                  onChange={(event) =>
+                    setManualFile(event.target.files?.[0] ?? null)
+                  }
+                />
+                <small>PDF, PNG или JPG до 10 МБ. Можно приложить позже.</small>
+              </label>
+              {error ? <div className="alert alert-error">{error}</div> : null}
+              <div className="admin-school-detail__form-actions">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={
+                    manualSaving || !manualStartsOn || !manualEndsOn
+                  }
+                >
+                  {manualSaving ? "Подключение..." : "Подключить"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={() => setManualOpen(false)}
+                  disabled={manualSaving}
+                >
+                  Отмена
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {resetLink ? (
         <div
