@@ -169,8 +169,17 @@ export async function ensureAiAssistantSchema(): Promise<void> {
   await schemaReady;
 }
 
+const AI_PILOT_SCHOOL_IDS = [305, 423, 554, 171, 538];
+const AI_AFTER_INCIDENT_SCHOOL_IDS = [
+  69, 76, 114, 144, 206, 213, 231, 408, 413, 416, 529, 541,
+];
+
 export function isAiAssistantSchool(schoolId: number): boolean {
-  return Number.isInteger(schoolId) && schoolId > 0;
+  return (
+    AI_PILOT_SCHOOL_IDS.includes(schoolId) ||
+    AI_AFTER_INCIDENT_SCHOOL_IDS.includes(schoolId) ||
+    (config.isDev && schoolId === 483)
+  );
 }
 
 const MAX_HISTORY = 20;
