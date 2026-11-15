@@ -8,6 +8,7 @@ import {
   parseSubscriptionPeriod,
   syncSchoolCabinetAccess,
 } from "./school-access.service.js";
+import { SUBSCRIPTION_PRICE_RUB } from "./billing-details.js";
 
 export interface ManualActivationDocument {
   originalName: string;
@@ -62,7 +63,7 @@ export async function createManualActivation(
     input.startsOn,
     input.endsOn,
   );
-  const amount = optionalAmount(input.amount);
+  const amount = optionalAmount(input.amount) ?? SUBSCRIPTION_PRICE_RUB;
   const paidOn = optionalDate(input.paidOn);
   const phone = input.phone?.trim().slice(0, 100) || "";
   const note = input.note?.trim().slice(0, 500) || null;
