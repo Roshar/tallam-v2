@@ -414,20 +414,20 @@ export function CabinetChat({ enabled }: CabinetChatProps) {
           type="button"
           className="cabinet-chat__launcher"
           onClick={openChat}
-          aria-label="Открыть чат поддержки"
+          aria-label="Спросить Дика"
         >
           <ChatIcon size={20} />
-          <span>Чат</span>
+          <span>Спросить Дика</span>
         </button>
       ) : (
         <section
           className="cabinet-chat"
           role="dialog"
-          aria-label="Чат поддержки по кабинету"
+          aria-label="Дика | ИИ-помощник"
         >
           <header className="cabinet-chat__header">
             <div className="cabinet-chat__brand">
-              <strong>Чат с Дикой</strong>
+              <strong>Дика | ИИ-помощник</strong>
               <span>Поддержка по кабинету</span>
             </div>
             <div className="cabinet-chat__actions">

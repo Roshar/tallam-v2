@@ -587,14 +587,6 @@
   .cabinet-chat__launcher {
     right: 16px;
     bottom: 16px;
-    width: 52px;
-    height: 52px;
-    justify-content: center;
-    padding: 0;
-  }
-
-  .cabinet-chat__launcher span {
-    display: none;
   }
 
   .cabinet-chat {
