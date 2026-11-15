@@ -2,7 +2,7 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 55;
+  z-index: 200;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -30,7 +30,7 @@
   position: fixed;
   right: 24px;
   bottom: 24px;
-  z-index: 60;
+  z-index: 200;
   display: flex;
   flex-direction: column;
   width: 382px;
