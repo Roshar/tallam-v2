@@ -170,8 +170,7 @@ export async function ensureAiAssistantSchema(): Promise<void> {
 }
 
 export function isAiAssistantSchool(schoolId: number): boolean {
-  if (config.aiAssistant.schoolIds.includes(schoolId)) return true;
-  return config.isDev && schoolId === 483;
+  return Number.isInteger(schoolId) && schoolId > 0;
 }
 
 const MAX_HISTORY = 20;
