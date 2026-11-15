@@ -9,6 +9,7 @@ interface RenewalItem {
   email: string | null;
   status: "paid";
   contractNumber: string | null;
+  afterIncident: boolean;
   settlement: {
     id: number;
     label: string;
@@ -386,20 +387,29 @@ export function AccountantStatusPage() {
                   <td>
                     <strong>{item.schoolName}</strong>
                     {item.area ? <small>{item.area}</small> : null}
+                    {item.afterIncident ? (
+                      <small className="accountant-after-incident">После аварии</small>
+                    ) : null}
                     {item.contractNumber ? <small>{item.contractNumber}</small> : null}
                   </td>
                   <td>{item.email ?? "Почта не указана"}</td>
                   <td>Оплачено</td>
                   <td>{item.settlement?.label ?? "Не оформлен"}</td>
                   <td>
-                    <button
-                      className="btn btn-primary"
-                      type="button"
-                      disabled={downloadingId === item.id}
-                      onClick={() => void downloadOne(item.id)}
-                    >
-                      {downloadingId === item.id ? "Файл..." : "Скачать"}
-                    </button>
+                    {item.contractNumber ? (
+                      <button
+                        className="btn btn-primary"
+                        type="button"
+                        disabled={downloadingId === item.id}
+                        onClick={() => void downloadOne(item.id)}
+                      >
+                        {downloadingId === item.id ? "Файл..." : "Скачать"}
+                      </button>
+                    ) : (
+                      <span className="accountant-no-contract">
+                        Договор не сформирован
+                      </span>
+                    )}
                   </td>
                 </tr>
               ))

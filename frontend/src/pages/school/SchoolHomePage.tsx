@@ -8,7 +8,11 @@ import {
   FEATURED_NEWS,
   IRO_CARDS_NOTICE,
 } from "../../data/cabinetNews";
-import type { SchoolDashboard, SchoolSubscriptionOverview } from "../../types/school";
+import type {
+  SchoolContractData,
+  SchoolDashboard,
+  SchoolSubscriptionOverview,
+} from "../../types/school";
 
 function plural(count: number, one: string, few: string, many: string) {
   const mod10 = count % 10;
@@ -22,6 +26,9 @@ export function SchoolHomePage() {
   const [dashboard, setDashboard] = useState<SchoolDashboard | null>(null);
   const [subscription, setSubscription] =
     useState<SchoolSubscriptionOverview | null>(null);
+  const [contractData, setContractData] = useState<SchoolContractData | null>(
+    null,
+  );
   const [error, setError] = useState("");
   const [hintHidden, setHintHidden] = useState(true);
 
@@ -33,6 +40,12 @@ export function SchoolHomePage() {
     api
       .schoolSubscription()
       .then(setSubscription)
+      .catch(() => {
+        /* баннер необязателен */
+      });
+    api
+      .schoolContractData()
+      .then(setContractData)
       .catch(() => {
         /* баннер необязателен */
       });
@@ -63,6 +76,13 @@ export function SchoolHomePage() {
     <div className="card school-home">
       <div className="card-body">
         {error ? <div className="alert alert-error">{error}</div> : null}
+
+        {contractData?.required && !contractData.submitted ? (
+          <div className="alert alert-warning school-home-sub-alert">
+            Для договора не хватает данных директора.{" "}
+            <Link to="/school/contract-data">Заполнить данные</Link>
+          </div>
+        ) : null}
 
         {subscription?.status === "expiring" ? (
           <div className="alert alert-warning school-home-sub-alert">

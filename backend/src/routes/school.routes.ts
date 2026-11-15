@@ -85,6 +85,17 @@ router.get(
   schoolController.schoolRenewalContract,
 );
 
+router.get("/contract-data", schoolController.schoolContractDataHandler);
+router.put(
+  "/contract-data",
+  auditHttpAction({
+    category: "subscription",
+    action: "subscription.contract_data_submit",
+    entityType: "renewal_request",
+  }),
+  schoolController.saveSchoolContractDataHandler,
+);
+
 router.use(requireActiveSchoolCabinet);
 
 router.get("/vacancies/meta", vacancyController.vacancyFilters);

@@ -331,3 +331,18 @@ export interface CreateEvaluationPayload {
   commentHtml?: string;
   scores: Record<string, number>;
 }
+
+export interface SchoolContractData {
+  required: boolean;
+  requestId: number | null;
+  status: RenewalStatus | null;
+  customer: RenewalCustomerData;
+  submitted: boolean;
+  documentAvailable: boolean;
+  contractNumber: string | null;
+  issuedOn: string | null;
+  startsOn: string | null;
+  endsOn: string | null;
+  amount: number | null;
+  paidOn: string | null;
+}

@@ -6,6 +6,7 @@ import type {
   ProjectTeacherProfileResponse,
   SchoolDashboard,
   SchoolProfile,
+  SchoolContractData,
   SchoolRenewalRequest,
   SchoolSubscriptionOverview,
   SubmitRenewalPayload,
@@ -280,6 +281,7 @@ export const api = {
         email: string | null;
         status: "paid";
         contractNumber: string | null;
+        afterIncident: boolean;
         settlement: {
           id: number;
           contractNumber: string | null;
@@ -870,6 +872,17 @@ export const api = {
       "/api/school/subscription/renewal",
       { method: "POST", body: JSON.stringify(payload) },
     );
+  },
+
+  schoolContractData() {
+    return request<SchoolContractData>("/api/school/contract-data");
+  },
+
+  saveSchoolContractData(payload: SubmitRenewalPayload) {
+    return request<SchoolContractData>("/api/school/contract-data", {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
   },
 
   downloadSchoolRenewalDocument(requestId: number) {

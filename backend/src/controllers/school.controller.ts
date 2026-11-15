@@ -52,6 +52,11 @@ import {
 import { changeSchoolCabinetPassword } from "../services/password-reset.service.js";
 import { recordSchoolPresence } from "../services/school-visits.service.js";
 import { getSchoolSignals } from "../services/school-signals.service.js";
+import {
+  ContractDataError,
+  getSchoolContractData,
+  saveSchoolContractData,
+} from "../services/school-contract-data.service.js";
 
 function getSchoolId(req: Request): number | null {
   const user = req.session.user;
@@ -933,4 +938,34 @@ async function downloadRenewalDocument(req: Request, res: Response) {
 
 export async function schoolRenewalContract(req: Request, res: Response) {
   return downloadRenewalDocument(req, res);
+}
+
+
+export async function schoolContractDataHandler(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  try {
+    return res.json(await getSchoolContractData(schoolId));
+  } catch (error) {
+    console.error("School contract data error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить данные для договора" });
+  }
+}
+
+export async function saveSchoolContractDataHandler(req: Request, res: Response) {
+  const schoolId = getSchoolId(req);
+  if (!schoolId) {
+    return res.status(403).json({ error: "Доступ только для школы" });
+  }
+  try {
+    return res.json(await saveSchoolContractData(schoolId, req.body ?? {}));
+  } catch (error) {
+    if (error instanceof ContractDataError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    console.error("School contract data save error:", error);
+    return res.status(500).json({ error: "Не удалось сохранить данные для договора" });
+  }
 }

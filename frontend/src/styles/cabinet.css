@@ -1042,3 +1042,16 @@
   font-size: 0.82rem;
   color: var(--color-text-muted);
 }
+
+.school-contract-page {
+  display: grid;
+  gap: 16px;
+}
+
+.school-contract-page__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}

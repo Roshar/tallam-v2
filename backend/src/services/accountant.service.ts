@@ -37,6 +37,7 @@ export interface AccountantRenewalRow {
   email: string | null;
   status: "paid";
   contractNumber: string | null;
+  afterIncident: boolean;
   settlement: SettlementRef | null;
 }
 
@@ -83,6 +84,10 @@ const LIST_SQL = `
     ) AS email,
     rr.status,
     rr.contract_number AS contractNumber,
+    EXISTS(
+      SELECT 1 FROM subscription_manual_activations sma
+      WHERE sma.renewal_request_id = rr.id AND sma.is_after_incident = 1
+    ) AS afterIncident,
     cs.id AS settlementId,
     cs.contract_number AS settlementContractNumber,
     cs.settlement_date AS settlementDate
@@ -126,6 +131,7 @@ export async function listAccountantRenewals(input: {
     email: row.email,
     status: "paid",
     contractNumber: row.contractNumber,
+    afterIncident: Boolean(row.afterIncident),
     settlement: toSettlementRef(row),
   }));
 }
@@ -152,6 +158,7 @@ export async function findVisibleAccountantRenewal(
     email: row.email,
     status: "paid",
     contractNumber: row.contractNumber,
+    afterIncident: Boolean(row.afterIncident),
     settlement: null,
   };
 }

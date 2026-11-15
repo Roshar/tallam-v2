@@ -21,6 +21,7 @@ import { EvaluateChoosePage } from "./pages/school/EvaluateChoosePage";
 import { EvaluateFormPage } from "./pages/school/EvaluateFormPage";
 import { EvaluationViewPage } from "./pages/school/EvaluationViewPage";
 import { SchoolSubscriptionPage } from "./pages/school/SchoolSubscriptionPage";
+import { SchoolContractDataPage } from "./pages/school/SchoolContractDataPage";
 import { VacanciesPage } from "./pages/school/VacanciesPage";
 import { VacancyFormPage } from "./pages/school/VacancyFormPage";
 import { VacancyViewPage } from "./pages/school/VacancyViewPage";
@@ -72,6 +73,7 @@ export default function App() {
 
           <Route path="/school" element={<SchoolCabinetShell />}>
             <Route path="subscription" element={<SchoolSubscriptionPage />} />
+            <Route path="contract-data" element={<SchoolContractDataPage />} />
             <Route path="cabinet" element={<SchoolHomePage />} />
             <Route path="guide" element={<SchoolGuidePage />} />
             <Route path="feedback" element={<SchoolFeedbackPage />} />
