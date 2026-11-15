@@ -32,6 +32,7 @@ import { AdminSubscriptionsPage } from "./pages/admin/AdminSubscriptionsPage";
 import { AdminRenewalsPage } from "./pages/admin/AdminRenewalsPage";
 import { AdminSettlementsPage } from "./pages/admin/AdminSettlementsPage";
 import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
+import { AdminAiPage } from "./pages/admin/AdminAiPage";
 import { AdminFeedbackPage } from "./pages/admin/AdminFeedbackPage";
 import { AdminVacanciesPage } from "./pages/admin/AdminVacanciesPage";
 import { AdminFeedbackThreadPage } from "./pages/admin/AdminFeedbackThreadPage";
@@ -55,6 +56,9 @@ import "./styles/analytics.css";
 import "./styles/selections.css";
 import "./styles/dossier.css";
 import "./styles/incident-notice.css";
+import "./styles/ai-assistant.css";
+import "./styles/admin-ai.css";
+import "./styles/cabinet-chat.css";
 
 export default function App() {
   return (
@@ -72,6 +76,10 @@ export default function App() {
             <Route path="guide" element={<SchoolGuidePage />} />
             <Route path="feedback" element={<SchoolFeedbackPage />} />
             <Route path="analytics" element={<SchoolAnalyticsPage />} />
+            <Route
+              path="ai-assistant"
+              element={<Navigate to="/school/cabinet" replace />}
+            />
             <Route path="vacancies" element={<VacanciesPage />} />
             <Route path="vacancies/new" element={<VacancyFormPage />} />
             <Route path="vacancies/:vacancyId" element={<VacancyViewPage />} />
@@ -125,6 +133,8 @@ export default function App() {
             />
             <Route path="recovery" element={<AdminRecoveryPage />} />
             <Route path="logs" element={<AdminLogsPage />} />
+            <Route path="chat" element={<AdminAiPage />} />
+            <Route path="ai" element={<Navigate to="/admin/chat" replace />} />
             <Route
               path="subscriptions/:schoolId"
               element={<AdminSchoolDetailPage />}

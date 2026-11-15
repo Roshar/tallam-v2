@@ -46,6 +46,27 @@ export const config = {
   schoolPasswordLog:
     process.env.SCHOOL_PASSWORD_LOG ??
     path.resolve(__dirname, "../data/school-passwords.log"),
+  deepseek: {
+    apiKey: process.env.DEEPSEEK_API_KEY ?? "",
+    baseUrl: (process.env.DEEPSEEK_API_URL ?? "https://api.deepseek.com").replace(
+      /\/+$/,
+      "",
+    ),
+    model: process.env.DEEPSEEK_MODEL ?? "deepseek-chat",
+    maxTokens: Number(process.env.DEEPSEEK_MAX_TOKENS ?? 1400),
+    timeoutMs: Number(process.env.DEEPSEEK_TIMEOUT_MS ?? 60_000),
+    inputPricePerM: Number(process.env.DEEPSEEK_INPUT_PRICE_PER_M ?? 0.3),
+    outputPricePerM: Number(process.env.DEEPSEEK_OUTPUT_PRICE_PER_M ?? 1.2),
+  },
+  aiAssistant: {
+    schoolIds: (process.env.AI_ASSISTANT_SCHOOL_IDS ?? "305,423,554,171,538")
+      .split(",")
+      .map((value) => Number(value.trim()))
+      .filter((value) => Number.isInteger(value) && value > 0),
+    dailyLimit: Number(process.env.AI_ASSISTANT_DAILY_LIMIT ?? 50),
+    monthlyLimit: Number(process.env.AI_ASSISTANT_MONTHLY_LIMIT ?? 30),
+    logRetentionDays: Number(process.env.AI_LOG_RETENTION_DAYS ?? 365),
+  },
   paymentDocsDir:
     process.env.PAYMENT_DOCS_DIR ??
     path.resolve(__dirname, "../data/payment-docs"),

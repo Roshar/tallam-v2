@@ -4,6 +4,8 @@ import { NavLink, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useSchool } from "../context/SchoolContext";
+import { isAiAssistantEnabled } from "../config/aiAssistant";
+import { CabinetChat } from "./CabinetChat";
 
 export const SCHOOL_MENU = [
   { id: "home", label: "Главная", to: "/school/cabinet" },
@@ -44,6 +46,7 @@ export function SchoolCabinetLayout({
   const billingOnly =
     user?.accountType === "school" && user.cabinetAccess === "billing";
   const impersonating = Boolean(user?.impersonatedBy);
+  const aiEnabled = isAiAssistantEnabled(profile?.schoolId);
   const menu = billingOnly
     ? [SUBSCRIPTION_ITEM]
     : [...SCHOOL_MENU, SUBSCRIPTION_ITEM];
@@ -191,6 +194,8 @@ export function SchoolCabinetLayout({
           {children}
         </div>
       </main>
+
+      <CabinetChat enabled={aiEnabled} />
 
       <footer className="site-footer">
         <div className="site-footer__inner page-container">

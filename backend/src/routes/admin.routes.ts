@@ -126,6 +126,22 @@ router.post(
 router.get("/subscriptions/areas", adminController.subscriptionAreas);
 router.get("/subscriptions/export", adminController.exportSubscriptions);
 router.get("/subscriptions", adminController.subscriptions);
+router.get("/ai-usage", adminController.aiUsage);
+router.get("/ai-questions", adminController.aiQuestions);
+router.get("/ai-suggestions", adminController.aiSuggestions);
+router.get("/ai-repeated", adminController.aiRepeated);
+router.post(
+  "/ai-questions/purge",
+  auditHttpAction({
+    category: "ai",
+    action: "ai_assistant.logs_purged",
+    entityType: "ai_journal",
+    details: (req) => ({
+      days: Number(req.body?.days ?? 0) || null,
+    }),
+  }),
+  adminController.aiPurgeLogs,
+);
 router.get("/renewals", adminController.renewalRequests);
 router.get("/settlements", settlementController.settlements);
 router.get("/settlements/:settlementId", settlementController.settlement);

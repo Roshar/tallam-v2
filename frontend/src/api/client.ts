@@ -55,6 +55,16 @@ import type {
   AdminSupportConversation,
   AdminVisitStats,
 } from "../types/admin";
+import type {
+  AiAdminUsage,
+  AiChatResponse,
+  AiConversationDetail,
+  AiConversationSummary,
+  AiJournalResponse,
+  AiRepeatedQuery,
+  AiSuggestionEntry,
+  AiUsage,
+} from "../types/ai";
 
 export type AccountType = "school" | "methodist" | "admin" | "accountant";
 export type SchoolCabinetAccess = "full" | "billing";
@@ -664,6 +674,46 @@ export const api = {
     });
   },
 
+  aiAssistantChat(payload: {
+    conversationId?: number | null;
+    message: string;
+  }) {
+    return request<AiChatResponse>("/api/school/ai/chat", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+  },
+
+  aiAssistantConversations() {
+    return request<{ items: AiConversationSummary[] }>(
+      "/api/school/ai/conversations",
+    );
+  },
+
+  aiAssistantConversation(conversationId: number) {
+    return request<{ conversation: AiConversationDetail }>(
+      `/api/school/ai/conversations/${conversationId}`,
+    );
+  },
+
+  aiAssistantUsage() {
+    return request<{ usage: AiUsage }>("/api/school/ai/usage");
+  },
+
+  aiAssistantDeleteConversation(conversationId: number) {
+    return request<{ ok: boolean }>(
+      `/api/school/ai/conversations/${conversationId}`,
+      { method: "DELETE" },
+    );
+  },
+
+  aiAssistantSuggestion(suggestion: string) {
+    return request<{ id: number }>("/api/school/ai/suggestions", {
+      method: "POST",
+      body: JSON.stringify({ suggestion }),
+    });
+  },
+
   schoolProfile() {
     return request<SchoolProfile>("/api/school/profile");
   },
@@ -934,6 +984,48 @@ export const api = {
       `/api/admin/manual-activations/${activationId}/document`,
       "Платежка.pdf",
     );
+  },
+
+  adminAiUsage() {
+    return request<AiAdminUsage>("/api/admin/ai-usage");
+  },
+
+  adminAiQuestions(params?: {
+    page?: number;
+    limit?: number;
+    search?: string;
+  }) {
+    const search = new URLSearchParams();
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    if (params?.search) search.set("search", params.search);
+    const query = search.toString();
+    return request<AiJournalResponse>(
+      `/api/admin/ai-questions${query ? `?${query}` : ""}`,
+    );
+  },
+
+  adminAiSuggestions() {
+    return request<{ items: AiSuggestionEntry[] }>(
+      "/api/admin/ai-suggestions",
+    );
+  },
+
+  adminAiRepeated(days = 30) {
+    return request<{ items: AiRepeatedQuery[] }>(
+      `/api/admin/ai-repeated?days=${days}`,
+    );
+  },
+
+  adminAiPurge(payload: { confirm: string; days: number }) {
+    return request<{
+      days: number;
+      deletedQuestions: number;
+      deletedToolCalls: number;
+    }>("/api/admin/ai-questions/purge", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   },
 
   schoolWorkers(params?: { page?: number; limit?: number }) {

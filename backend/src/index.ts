@@ -14,6 +14,7 @@ import schoolRoutes from "./routes/school.routes.js";
 import { syncSchoolCabinetAccess } from "./services/school-access.service.js";
 import { ensureAllSchoolsHaveLessonAnalysisProject } from "./services/project.service.js";
 import { ensureAuditLogSchema } from "./services/audit-log.service.js";
+import { ensureAiAssistantSchema } from "./services/ai-assistant.service.js";
 import { ensureEvaluationEmailSchema } from "./services/card-view.service.js";
 import { ensureEvaluationCommentSchema } from "./services/evaluation-comment.service.js";
 import { ensureSchoolFeedbackSchema } from "./services/school-feedback.service.js";
@@ -119,6 +120,9 @@ app.listen(config.port, () => {
   console.log(`Tallam API listening on http://localhost:${config.port}`);
   void ensureAuditLogSchema().catch((error) => {
     console.error("Failed to initialize audit log schema:", error);
+  });
+  void ensureAiAssistantSchema().catch((error) => {
+    console.error("Failed to initialize AI assistant schema:", error);
   });
   void ensureEvaluationCommentSchema().catch((error) => {
     console.error("Failed to initialize evaluation comments schema:", error);

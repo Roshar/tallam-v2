@@ -43,6 +43,13 @@ import {
   RenewalDocumentUnavailableError,
 } from "../services/subscription-documents.service.js";
 import {
+  getAdminAiUsage,
+  getRepeatedAiQuestions,
+  listAiQuestions,
+  listAiSuggestions,
+  purgeAiLogs,
+} from "../services/ai-assistant.service.js";
+import {
   createManualActivation,
   getManualActivationDocument,
 } from "../services/manual-activation.service.js";
@@ -812,6 +819,62 @@ export async function renewalQueueCount(_req: Request, res: Response) {
   } catch (error) {
     console.error("Admin renewal queue count error:", error);
     return res.status(500).json({ error: "Не удалось загрузить счётчик заявок" });
+  }
+}
+
+export async function aiUsage(_req: Request, res: Response) {
+  try {
+    return res.json(await getAdminAiUsage());
+  } catch (error) {
+    console.error("Admin AI usage error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить статистику" });
+  }
+}
+
+export async function aiQuestions(req: Request, res: Response) {
+  try {
+    const page = Number(req.query.page ?? 1) || 1;
+    const limit = Number(req.query.limit ?? 50) || 50;
+    const search = String(req.query.search ?? "");
+    return res.json(await listAiQuestions({ page, limit, search }));
+  } catch (error) {
+    console.error("Admin AI questions error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить вопросы" });
+  }
+}
+
+export async function aiSuggestions(req: Request, res: Response) {
+  try {
+    const limit = Number(req.query.limit ?? 100) || 100;
+    return res.json({ items: await listAiSuggestions(limit) });
+  } catch (error) {
+    console.error("Admin AI suggestions error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить предложения" });
+  }
+}
+
+export async function aiRepeated(req: Request, res: Response) {
+  try {
+    const days = Number(req.query.days ?? 30) || 30;
+    return res.json({ items: await getRepeatedAiQuestions(days) });
+  } catch (error) {
+    console.error("Admin AI repeated error:", error);
+    return res.status(500).json({ error: "Не удалось загрузить повторы" });
+  }
+}
+
+export async function aiPurgeLogs(req: Request, res: Response) {
+  if (String(req.body?.confirm ?? "") !== "PURGE") {
+    return res.status(400).json({
+      error: "Подтвердите очистку: передайте confirm со значением PURGE",
+    });
+  }
+  try {
+    const days = Number(req.body?.days ?? 0) || undefined;
+    return res.json(await purgeAiLogs(days));
+  } catch (error) {
+    console.error("Admin AI purge error:", error);
+    return res.status(500).json({ error: "Не удалось очистить журнал" });
   }
 }
 

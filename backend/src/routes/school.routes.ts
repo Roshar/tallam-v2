@@ -1,5 +1,6 @@
 import { Router } from "express";
 import * as schoolController from "../controllers/school.controller.js";
+import * as aiAssistantController from "../controllers/ai-assistant.controller.js";
 import * as analyticsController from "../controllers/analytics.controller.js";
 import * as teacherDeleteController from "../controllers/teacher-delete.controller.js";
 import * as selectionController from "../controllers/selection.controller.js";
@@ -19,6 +20,18 @@ router.use(requireAuth, requireRole("school"), requireSchoolSession);
 
 router.get("/profile", schoolController.schoolProfile);
 router.get("/presence", schoolController.schoolPresence);
+router.get("/ai/conversations", aiAssistantController.conversations);
+router.get(
+  "/ai/conversations/:conversationId",
+  aiAssistantController.conversation,
+);
+router.get("/ai/usage", aiAssistantController.usage);
+router.post("/ai/chat", aiAssistantController.chat);
+router.delete(
+  "/ai/conversations/:conversationId",
+  aiAssistantController.deleteConversation,
+);
+router.post("/ai/suggestions", aiAssistantController.suggestion);
 router.post(
   "/password",
   auditHttpAction({
