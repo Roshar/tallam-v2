@@ -10,7 +10,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-HOST="${TALLAM_VPS:-root@185.207.0.41}"
+HOST="${TALLAM_VPS:-root@168.113.188.10}"
 REMOTE_DIR="/home/tallam-v2"
 BACKUP_DIR="/var/backups/tallam/dist"
 SSH_OPTS=(-o BatchMode=yes -o ConnectTimeout=20)
@@ -23,7 +23,7 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+BRANCH="${TALLAM_BRANCH:-main}"
 LOCAL_HEAD="$(git rev-parse HEAD)"
 SERVER_HEAD="$(ssh "${SSH_OPTS[@]}" "$HOST" "cd $REMOTE_DIR && git rev-parse HEAD")"
 
@@ -38,7 +38,7 @@ ssh "${SSH_OPTS[@]}" "$HOST" "cd $REMOTE_DIR && git pull --ff-only origin $BRANC
 
 if git diff --name-only "$SERVER_HEAD" "$LOCAL_HEAD" 2>/dev/null | grep -q '^package-lock\.json$'; then
   echo "→ Dependencies changed, running npm ci on the server"
-  ssh "${SSH_OPTS[@]}" "$HOST" "cd $REMOTE_DIR && npm ci --no-audit --no-fund | tail -3"
+  ssh "${SSH_OPTS[@]}" "$HOST" "cd $REMOTE_DIR && NODE_OPTIONS=--max-old-space-size=384 npm ci --omit=dev --no-audit --no-fund | tail -3"
 else
   echo "→ Dependencies unchanged, skipping npm ci"
 fi
