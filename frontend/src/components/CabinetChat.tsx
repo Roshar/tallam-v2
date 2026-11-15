@@ -8,6 +8,7 @@ import {
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { api } from "../api/client";
+import { useAuth } from "../context/AuthContext";
 import {
   ChatIcon,
   CloseIcon,
@@ -46,12 +47,37 @@ function timeFromIso(value: string): string {
   }).format(date);
 }
 
+const AUTO_OPEN_DELAY_MS = 20_000;
+const AUTO_SHOWN_PREFIX = "dika_chat_auto_shown:";
+const CLOSED_PREFIX = "dika_chat_closed:";
+
+function readFlag(key: string): boolean {
+  try {
+    return window.localStorage.getItem(key) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function writeFlag(key: string): void {
+  try {
+    window.localStorage.setItem(key, "1");
+  } catch {
+    // localStorage can be unavailable in private mode.
+  }
+}
+
 function welcomeMessage(): AiMessage {
   return {
     id: newId(),
     role: "assistant",
     content:
-      "Здравствуйте! Я Дика. Помогу разобраться в кабинете: добавить педагога, найти аналитику, оформить карточку урока, разобрать данные школы. Что нужно?",
+      "Маршалла хуьлда! 👋\n\n" +
+      "Меня зовут Дика. Я ваш ИИ-помощник на платформе Таллам.\n\n" +
+      "Моя задача заключается в том, чтобы помогать вам в работе, собирать ваши вопросы, замечания и пожелания, а также передавать их разработчикам для улучшения платформы.\n\n" +
+      "Я пока только учусь и могу чего-то не знать или не уметь. Но благодаря вашим вопросам и предложениям я смогу становиться полезнее.\n\n" +
+      "Расскажите, чего вам не хватает в Таллам, что вызывает трудности или какие процессы вы хотели бы автоматизировать.\n\n" +
+      "Давайте вместе сделаем Таллам лучше!",
     time: nowTime(),
     welcome: true,
   };
@@ -112,7 +138,13 @@ interface CabinetChatProps {
 }
 
 export function CabinetChat({ enabled }: CabinetChatProps) {
+  const { user } = useAuth();
+  const userKey = user?.id ? String(user.id) : user?.email ?? "guest";
+  const autoShownKey = `${AUTO_SHOWN_PREFIX}${userKey}`;
+  const closedKey = `${CLOSED_PREFIX}${userKey}`;
   const [open, setOpen] = useState(false);
+  const [autoShown, setAutoShown] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
   const [conversations, setConversations] = useState<AiConversationSummary[]>([]);
@@ -134,6 +166,21 @@ export function CabinetChat({ enabled }: CabinetChatProps) {
   const sentCount = useRef(0);
 
   const exhausted = Boolean(usage && usage.remaining <= 0);
+
+  useEffect(() => {
+    setAutoShown(readFlag(autoShownKey));
+    setDismissed(readFlag(closedKey));
+  }, [autoShownKey, closedKey]);
+
+  useEffect(() => {
+    if (!enabled || open || autoShown || dismissed) return;
+    const timer = window.setTimeout(() => {
+      setOpen(true);
+      setAutoShown(true);
+      writeFlag(autoShownKey);
+    }, AUTO_OPEN_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [enabled, open, autoShown, dismissed, autoShownKey]);
 
   useEffect(() => {
     if (!enabled || !open || loaded) return;
@@ -177,6 +224,20 @@ export function CabinetChat({ enabled }: CabinetChatProps) {
   }, [draft]);
 
   if (!enabled) return null;
+
+  function openChat() {
+    setOpen(true);
+    if (!autoShown) {
+      setAutoShown(true);
+      writeFlag(autoShownKey);
+    }
+  }
+
+  function closeChat() {
+    setOpen(false);
+    setDismissed(true);
+    writeFlag(closedKey);
+  }
 
   async function loadConversation(conversationId: number) {
     setLoading(true);
@@ -352,7 +413,7 @@ export function CabinetChat({ enabled }: CabinetChatProps) {
         <button
           type="button"
           className="cabinet-chat__launcher"
-          onClick={() => setOpen(true)}
+          onClick={openChat}
           aria-label="Открыть чат поддержки"
         >
           <ChatIcon size={20} />
@@ -388,7 +449,7 @@ export function CabinetChat({ enabled }: CabinetChatProps) {
               </button>
               <button
                 type="button"
-                onClick={() => setOpen(false)}
+                onClick={closeChat}
                 aria-label="Закрыть чат"
                 title="Закрыть"
               >
