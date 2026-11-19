@@ -34,6 +34,7 @@ import { AdminRenewalsPage } from "./pages/admin/AdminRenewalsPage";
 import { AdminSettlementsPage } from "./pages/admin/AdminSettlementsPage";
 import { AdminLogsPage } from "./pages/admin/AdminLogsPage";
 import { AdminAiPage } from "./pages/admin/AdminAiPage";
+import { AdminTemplatesPage } from "./pages/admin/AdminTemplatesPage";
 import { AdminFeedbackPage } from "./pages/admin/AdminFeedbackPage";
 import { AdminVacanciesPage } from "./pages/admin/AdminVacanciesPage";
 import { AdminFeedbackThreadPage } from "./pages/admin/AdminFeedbackThreadPage";
@@ -59,6 +60,7 @@ import "./styles/dossier.css";
 import "./styles/incident-notice.css";
 import "./styles/ai-assistant.css";
 import "./styles/admin-ai.css";
+import "./styles/admin-templates.css";
 import "./styles/cabinet-chat.css";
 
 export default function App() {
@@ -136,6 +138,7 @@ export default function App() {
             <Route path="recovery" element={<AdminRecoveryPage />} />
             <Route path="logs" element={<AdminLogsPage />} />
             <Route path="chat" element={<AdminAiPage />} />
+            <Route path="templates" element={<AdminTemplatesPage />} />
             <Route path="ai" element={<Navigate to="/admin/chat" replace />} />
             <Route
               path="subscriptions/:schoolId"

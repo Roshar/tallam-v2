@@ -12,6 +12,7 @@ const ADMIN_MENU = [
   { label: "Отзывы", to: "/admin/feedback", enabled: true },
   { label: "Вакансии", to: "/admin/vacancies", enabled: true },
   { label: "Обращения", to: "/admin/recovery", enabled: true },
+  { label: "Заготовки", to: "/admin/templates", enabled: true },
   { label: "Логи", to: "/admin/logs", enabled: true },
   { label: "Чат поддержки", to: "/admin/chat", enabled: true },
   { label: "Проекты", to: "/admin/projects", enabled: false },
