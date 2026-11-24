@@ -172,7 +172,7 @@ export async function listProjectTeachers(
        t.email,
        p.title_position
      FROM \`${safeTable}\` mpt
-     INNER JOIN teachers t ON mpt.teacher_id = t.id_teacher
+     INNER JOIN teachers t ON mpt.teacher_id = t.id_teacher COLLATE utf8mb3_unicode_ci
      LEFT JOIN position p ON t.position = p.id_position
      WHERE t.school_id = ?
        AND mpt.in_project_status = 2
@@ -212,7 +212,7 @@ export async function listTeachersNotInProject(
      FROM teachers t
      LEFT JOIN position p ON t.position = p.id_position
      LEFT JOIN \`${safeTable}\` mpt
-       ON mpt.teacher_id = t.id_teacher AND mpt.project_id = ?
+       ON mpt.teacher_id = t.id_teacher COLLATE utf8mb3_unicode_ci AND mpt.project_id = ?
      WHERE t.school_id = ?
        AND (mpt.in_project_status IS NULL OR mpt.in_project_status != 2)
      ORDER BY t.surname ASC, t.firstname ASC`,
