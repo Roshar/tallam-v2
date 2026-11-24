@@ -57,7 +57,6 @@ import "./styles/vacancies.css";
 import "./styles/analytics.css";
 import "./styles/selections.css";
 import "./styles/dossier.css";
-import "./styles/incident-notice.css";
 import "./styles/ai-assistant.css";
 import "./styles/admin-ai.css";
 import "./styles/admin-templates.css";
