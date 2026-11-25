@@ -10,6 +10,7 @@ interface RenewalItem {
   status: "paid";
   contractNumber: string | null;
   afterIncident: boolean;
+  activationDate: string | null;
   settlement: {
     id: number;
     label: string;
@@ -20,6 +21,12 @@ type SettlementFilter = "all" | "pending" | "settled";
 
 function moscowToday(): string {
   return new Date(Date.now() + 3 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
+function formatActivationDate(value: string | null): string {
+  if (!value) return "—";
+  const [year, month, day] = value.slice(0, 10).split("-");
+  return year && month && day ? `${day}.${month}.${year}` : value;
 }
 
 export function AccountantStatusPage() {
@@ -40,6 +47,7 @@ export function AccountantStatusPage() {
   const [settlementDate, setSettlementDate] = useState(moscowToday);
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<RenewalItem[]>([]);
+  const [stats, setStats] = useState({ activated: 0, paid: 0, contracts: 0 });
   const [archiveLimit, setArchiveLimit] = useState(200);
   const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState("");
@@ -56,6 +64,7 @@ export function AccountantStatusPage() {
     setSettlementFilter("all");
     setSelectedIds([]);
     setItems([]);
+    setStats({ activated: 0, paid: 0, contracts: 0 });
     setError("");
   }, [isAccountant]);
 
@@ -88,6 +97,7 @@ export function AccountantStatusPage() {
       .then((data) => {
         if (!active) return;
         setItems(data.items);
+        setStats(data.stats);
         setArchiveLimit(data.archiveLimit);
         setSelectedIds((current) =>
           current.filter((id) =>
@@ -282,6 +292,21 @@ export function AccountantStatusPage() {
         </button>
       </header>
 
+      <div className="status-stats">
+        <div className="status-stats__item">
+          <span>Активировано школ</span>
+          <strong>{stats.activated}</strong>
+        </div>
+        <div className="status-stats__item">
+          <span>Выплачено</span>
+          <strong>{stats.paid}</strong>
+        </div>
+        <div className="status-stats__item">
+          <span>Договоров создано</span>
+          <strong>{stats.contracts}</strong>
+        </div>
+      </div>
+
       <div className="status-page__filters">
         <label>
           <span>Район</span>
@@ -355,6 +380,7 @@ export function AccountantStatusPage() {
             <col className="status-table__check" />
             <col className="status-table__num" />
             <col className="status-table__school" />
+            <col className="status-table__activation" />
             <col className="status-table__mail" />
             <col className="status-table__state" />
             <col className="status-table__settlement" />
@@ -373,6 +399,7 @@ export function AccountantStatusPage() {
               </th>
               <th>№</th>
               <th>Школа</th>
+              <th>Активация</th>
               <th>Почта</th>
               <th>Статус</th>
               <th>Расчёт по договору</th>
@@ -382,11 +409,11 @@ export function AccountantStatusPage() {
           <tbody>
             {listLoading ? (
               <tr>
-                <td colSpan={7}>Загрузка списка...</td>
+                <td colSpan={8}>Загрузка списка...</td>
               </tr>
             ) : items.length === 0 ? (
               <tr>
-                <td colSpan={7}>Нет школ с подтверждённой оплатой продления</td>
+                <td colSpan={8}>Нет школ с подтверждённой оплатой продления</td>
               </tr>
             ) : (
               items.map((item, index) => (
@@ -409,6 +436,7 @@ export function AccountantStatusPage() {
                     ) : null}
                     {item.contractNumber ? <small>{item.contractNumber}</small> : null}
                   </td>
+                  <td>{formatActivationDate(item.activationDate)}</td>
                   <td>{item.email ?? "Почта не указана"}</td>
                   <td>Оплачено</td>
                   <td>{item.settlement?.label ?? "Не оформлен"}</td>

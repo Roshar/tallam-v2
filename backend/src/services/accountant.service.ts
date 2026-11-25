@@ -38,7 +38,59 @@ export interface AccountantRenewalRow {
   status: "paid";
   contractNumber: string | null;
   afterIncident: boolean;
+  activationDate: string | null;
   settlement: SettlementRef | null;
+}
+
+
+function isoDateOnly(value: Date | string | null): string | null {
+  if (!value) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toISOString().slice(0, 10);
+}
+
+export interface AccountantStats {
+  activated: number;
+  paid: number;
+  contracts: number;
+}
+
+export async function getAccountantStats(): Promise<AccountantStats> {
+  await ensureSubscriptionRenewalSchema();
+  const hidden = hiddenSchoolFilter();
+  const [activatedRows, paidRows, contractRows] = await Promise.all([
+    query<{ count: number }[]>(
+      `SELECT COUNT(DISTINCT ss.school_id) AS count
+       FROM school_subscriptions ss
+       JOIN schools s ON s.id_school = ss.school_id
+       WHERE ss.is_cancelled = 0
+         AND ss.ends_on >= CURDATE()
+         AND ${hidden.sql}`,
+      hidden.params,
+    ),
+    query<{ count: number }[]>(
+      `SELECT COUNT(*) AS count
+       FROM subscription_renewal_requests rr
+       JOIN schools s ON s.id_school = rr.school_id
+       WHERE rr.status = 'paid' AND ${hidden.sql}`,
+      hidden.params,
+    ),
+    query<{ count: number }[]>(
+      `SELECT COUNT(*) AS count
+       FROM subscription_renewal_requests rr
+       JOIN schools s ON s.id_school = rr.school_id
+       WHERE rr.status = 'paid'
+         AND rr.contract_number IS NOT NULL
+         AND ${hidden.sql}`,
+      hidden.params,
+    ),
+  ]);
+  return {
+    activated: Number(activatedRows[0]?.count ?? 0),
+    paid: Number(paidRows[0]?.count ?? 0),
+    contracts: Number(contractRows[0]?.count ?? 0),
+  };
 }
 
 export interface AccountantArea {
@@ -84,6 +136,17 @@ const LIST_SQL = `
     ) AS email,
     rr.status,
     rr.contract_number AS contractNumber,
+    COALESCE(
+      (
+        SELECT sma.paid_on
+        FROM subscription_manual_activations sma
+        WHERE sma.renewal_request_id = rr.id
+          AND sma.is_after_incident = 1
+        LIMIT 1
+      ),
+      rr.paid_at,
+      rr.starts_on
+    ) AS activationDate,
     EXISTS(
       SELECT 1 FROM subscription_manual_activations sma
       WHERE sma.renewal_request_id = rr.id AND sma.is_after_incident = 1
@@ -121,7 +184,7 @@ export async function listAccountantRenewals(input: {
   >(
     `${LIST_SQL}
      WHERE ${where}
-     ORDER BY rr.paid_at DESC, rr.id DESC`,
+     ORDER BY activationDate DESC, rr.id DESC`,
     params,
   );
   return rows.map((row) => ({
@@ -132,6 +195,7 @@ export async function listAccountantRenewals(input: {
     status: "paid",
     contractNumber: row.contractNumber,
     afterIncident: Boolean(row.afterIncident),
+    activationDate: isoDateOnly(row.activationDate),
     settlement: toSettlementRef(row),
   }));
 }
@@ -159,6 +223,7 @@ export async function findVisibleAccountantRenewal(
     status: "paid",
     contractNumber: row.contractNumber,
     afterIncident: Boolean(row.afterIncident),
+    activationDate: isoDateOnly(row.activationDate),
     settlement: null,
   };
 }

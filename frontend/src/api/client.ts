@@ -282,6 +282,7 @@ export const api = {
         status: "paid";
         contractNumber: string | null;
         afterIncident: boolean;
+        activationDate: string | null;
         settlement: {
           id: number;
           contractNumber: string | null;
@@ -289,6 +290,7 @@ export const api = {
           label: string;
         } | null;
       }>;
+      stats: { activated: number; paid: number; contracts: number };
       archiveLimit: number;
     }>(`/api/status/renewals${query ? `?${query}` : ""}`);
   },

@@ -6,6 +6,7 @@ import {
   ACCOUNTANT_ARCHIVE_LIMIT,
   findVisibleAccountantRenewal,
   listAccountantAreas,
+  getAccountantStats,
   listAccountantRenewals,
 } from "../services/accountant.service.js";
 import {
@@ -89,8 +90,11 @@ export async function areas(_req: Request, res: Response) {
 
 export async function renewals(req: Request, res: Response) {
   try {
-    const items = await listAccountantRenewals(filters(req));
-    return res.json({ items, archiveLimit: ACCOUNTANT_ARCHIVE_LIMIT });
+    const [items, stats] = await Promise.all([
+      listAccountantRenewals(filters(req)),
+      getAccountantStats(),
+    ]);
+    return res.json({ items, stats, archiveLimit: ACCOUNTANT_ARCHIVE_LIMIT });
   } catch (error) {
     console.error("Accountant renewals error:", error);
     return res.status(500).json({ error: "Не удалось загрузить список" });
