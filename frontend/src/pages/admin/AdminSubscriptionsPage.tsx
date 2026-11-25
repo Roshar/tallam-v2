@@ -12,6 +12,16 @@ import type {
 import type { WorkersPageLimit } from "../../types/school";
 
 type StatusFilter = "all" | AdminSubscriptionListStatus;
+type StatusValue = Exclude<StatusFilter, "all"> | "unpaid";
+
+const FILTER_OPTIONS: Array<{ value: StatusValue; label: string }> = [
+  { value: "active", label: "Активные" },
+  { value: "expiring", label: "Истекают за 30 дней" },
+  { value: "expired", label: "Истёкшие" },
+  { value: "scheduled", label: "Ещё не начались" },
+  { value: "missing", label: "Без данных о подписке" },
+  { value: "unpaid", label: "Заблокированы, нужна оплата" },
+];
 
 const STATUS_LABELS: Record<AdminSubscriptionListStatus, string> = {
   active: "Активна",
@@ -63,7 +73,7 @@ export function AdminSubscriptionsPage() {
   const [total, setTotal] = useState(0);
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [statuses, setStatuses] = useState<StatusValue[]>([]);
   const [areas, setAreas] = useState<AdminSubscriptionArea[]>([]);
   const [areaId, setAreaId] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -97,7 +107,13 @@ export function AdminSubscriptionsPage() {
     setError("");
 
     api
-      .adminSubscriptions({ page, limit, search, status, areaId })
+      .adminSubscriptions({
+        page,
+        limit,
+        search,
+        status: statuses.join(","),
+        areaId,
+      })
       .then((data) => {
         if (!active) return;
         setItems(data.items);
@@ -113,7 +129,7 @@ export function AdminSubscriptionsPage() {
     return () => {
       active = false;
     };
-  }, [page, limit, search, status, areaId]);
+  }, [page, limit, search, statuses, areaId]);
 
   async function createResetLink(schoolId: number) {
     setLinkLoadingId(schoolId);
@@ -154,12 +170,33 @@ export function AdminSubscriptionsPage() {
     setExporting(true);
     setError("");
     try {
-      await api.downloadAdminSubscriptions({ search, status, areaId });
+      await api.downloadAdminSubscriptions({
+        search,
+        status: statuses.join(","),
+        areaId,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ошибка экспорта");
     } finally {
       setExporting(false);
     }
+  }
+
+  const selectedStatusLabels = statuses.map(
+    (value) => FILTER_OPTIONS.find((option) => option.value === value)?.label ?? value,
+  );
+  const statusSummary =
+    selectedStatusLabels.length === 0
+      ? "Все школы"
+      : selectedStatusLabels.join(" + ");
+
+  function toggleStatus(value: StatusValue) {
+    setStatuses((current) =>
+      current.includes(value)
+        ? current.filter((status) => status !== value)
+        : [...current, value],
+    );
+    setPage(1);
   }
 
   return (
@@ -199,25 +236,38 @@ export function AdminSubscriptionsPage() {
           />
         </label>
 
-        <label className="admin-subscriptions__status">
+        <div className="admin-subscriptions__status">
           <span>Статус</span>
-          <select
-            className="form-input"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as StatusFilter);
-              setPage(1);
-            }}
-          >
-            <option value="all">Все школы</option>
-            <option value="active">Активные</option>
-            <option value="expiring">Истекают за 30 дней</option>
-            <option value="expired">Истёкшие</option>
-            <option value="scheduled">Ещё не начались</option>
-            <option value="missing">Без данных о подписке</option>
-            <option value="unpaid">Заблокированы, нужна оплата</option>
-          </select>
-        </label>
+          <details className="admin-status-filter">
+            <summary className="form-input admin-status-filter__summary">
+              <span>{statusSummary}</span>
+              <span aria-hidden="true">▾</span>
+            </summary>
+            <div className="admin-status-filter__menu">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={statuses.length === 0}
+                  onChange={() => {
+                    setStatuses([]);
+                    setPage(1);
+                  }}
+                />
+                <span>Все школы</span>
+              </label>
+              {FILTER_OPTIONS.map((option) => (
+                <label key={option.value}>
+                  <input
+                    type="checkbox"
+                    checked={statuses.includes(option.value)}
+                    onChange={() => toggleStatus(option.value)}
+                  />
+                  <span>{option.label}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+        </div>
 
         <label className="admin-subscriptions__area">
           <span>Район</span>

@@ -512,3 +512,15 @@
 - **Где:** `backend/src/controllers/admin.controller.ts` (`impersonateAccountant`), `backend/src/routes/admin.routes.ts` (`POST /api/admin/impersonate-accountant`), `backend/src/services/accountant-session.service.ts`, `backend/src/controllers/auth.controller.ts` (возврат), `frontend/src/components/AdminCabinetShell.tsx`, `frontend/src/context/AuthContext.tsx`, `frontend/src/api/client.ts`, `frontend/src/pages/AccountantStatusPage.tsx`.
 - **Проверка:** войти администратором, нажать «Войти как бухгалтер» в шапке. Откроется `/status` с баннером возврата. Нажать «Вернуться в админку» - откроется `/admin/cabinet` под администратором. В аудите будут `auth.impersonate_accountant` и `auth.impersonation_stopped`.
 - **Ограничения:** доступно только администратору; бухгалтерская сессия использует общий логин из конфигурации; повторный вход под бухгалтером без возврата запрещён.
+
+---
+
+## 17. Мультивыбор статусов в подписках
+
+### 17.1 Фильтр по нескольким статусам чекбоксами
+`🚧` · введено 25.11.2026, DeepSeek Harness (ветка `feature/ai-assistant`)
+
+- **Что:** в админском разделе «Подписки» статус выбирается чекбоксами, можно отметить сразу несколько статусов (например, «Истёкшие» и «Истекают за 30 дней»). Выбранные статусы объединяются по «ИЛИ», район и поиск применяются по «И». Выбор отражается в счётчике школ, списке и экспорте в Excel.
+- **Где:** `frontend/src/pages/admin/AdminSubscriptionsPage.tsx` (выпадающий список с чекбоксами, состояние `statuses`), `frontend/src/styles/admin.css` (`.admin-status-filter`); backend `backend/src/controllers/admin.controller.ts` (`parseSubscriptionFilters` принимает `status=a,b`), `backend/src/services/admin.service.ts` (`getAdminSubscriptions`, условие `statusCondition`); `frontend/src/api/client.ts` (`adminSubscriptions`, `downloadAdminSubscriptions`).
+- **Проверка:** открыть `/admin/subscriptions`, нажать «Статус», отметить «Истёкшие» и «Истекают за 30 дней». В списке появятся школы обоих статусов, счётчик и экспорт будут учитывать оба. Снять все чекбоксы - вернуться ко всем школам. Выбрать район - условия сложатся: выбранные статусы и этот район.
+- **Ограничения:** условия по статусам объединяются по «ИЛИ»; район и поиск - по «И»; другие поля (проект, кабинет) не затрагиваются.

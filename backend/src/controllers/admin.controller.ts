@@ -86,17 +86,21 @@ const SUBSCRIPTION_STATUSES = new Set<SubscriptionStatusFilter>([
 ]);
 
 function parseSubscriptionFilters(req: Request) {
-  const requestedStatus = String(req.query.status ?? "all");
-  const status: SubscriptionStatusFilter = SUBSCRIPTION_STATUSES.has(
-    requestedStatus as SubscriptionStatusFilter,
-  )
-    ? (requestedStatus as SubscriptionStatusFilter)
-    : "all";
+  const requestedStatuses = String(req.query.status ?? "all")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+  const statuses: SubscriptionStatusFilter[] =
+    requestedStatuses.length === 0 || requestedStatuses.includes("all")
+      ? ["all"]
+      : (requestedStatuses.filter((value) =>
+          SUBSCRIPTION_STATUSES.has(value as SubscriptionStatusFilter),
+        ) as SubscriptionStatusFilter[]);
   const requestedAreaId = Number(req.query.areaId ?? 0);
 
   return {
     search: String(req.query.search ?? "").trim().slice(0, 100),
-    status,
+    statuses: statuses.length > 0 ? statuses : (["all"] as SubscriptionStatusFilter[]),
     areaId:
       Number.isInteger(requestedAreaId) && requestedAreaId > 0
         ? requestedAreaId

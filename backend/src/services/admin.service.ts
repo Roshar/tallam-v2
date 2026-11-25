@@ -278,7 +278,7 @@ export async function getAdminSubscriptions(input: {
   page: number;
   limit: number;
   search: string;
-  status: SubscriptionStatusFilter;
+  statuses: SubscriptionStatusFilter[];
   areaId: number | null;
 }) {
   await syncSchoolCabinetAccess();
@@ -286,7 +286,12 @@ export async function getAdminSubscriptions(input: {
   const limit = Math.min(100, Math.max(10, input.limit));
   const offset = (page - 1) * limit;
   const params: Array<string | number> = [];
-  const conditions = [subscriptionStatusCondition(input.status)];
+  const selectedStatuses = input.statuses.filter((status) => status !== "all");
+  const statusCondition =
+    selectedStatuses.length === 0
+      ? "1 = 1"
+      : `(${selectedStatuses.map(subscriptionStatusCondition).join(" OR ")})`;
+  const conditions = [statusCondition];
 
   if (input.areaId) {
     conditions.push("s.area_id = ?");
