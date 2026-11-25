@@ -154,6 +154,11 @@ export function AccountantStatusPage() {
     };
   }, [isAccountant, areaId, search, settlementFilter, settlementId]);
 
+  const settledSchools = stats.sinceSeptember.settlements.reduce(
+    (sum, settlement) => sum + settlement.schools,
+    0,
+  );
+
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
     setAuthError("");
@@ -333,12 +338,12 @@ export function AccountantStatusPage() {
       <p className="status-stats__title">С 1 сентября 2026</p>
       <div className="status-stats status-stats--period">
         <div className="status-stats__item">
-          <span>Купили подписку</span>
-          <strong>{stats.sinceSeptember.purchased}</strong>
+          <span>Оплачено подписок</span>
+          <strong>{stats.sinceSeptember.paid}</strong>
         </div>
         <div className="status-stats__item">
-          <span>Из них выплачено</span>
-          <strong>{stats.sinceSeptember.paid}</strong>
+          <span>Расчитались с разработчиком</span>
+          <strong>{settledSchools}</strong>
         </div>
         <div className="status-stats__item">
           <span>Договоров с разработчиком</span>
