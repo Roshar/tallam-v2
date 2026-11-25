@@ -54,12 +54,18 @@ export interface AccountantStats {
   activated: number;
   paid: number;
   contracts: number;
+  sinceSeptember: {
+    purchased: number;
+    paid: number;
+    contracts: number;
+  };
 }
 
 export async function getAccountantStats(): Promise<AccountantStats> {
   await ensureSubscriptionRenewalSchema();
   const hidden = hiddenSchoolFilter();
-  const [activatedRows, paidRows, contractRows] = await Promise.all([
+  const [activatedRows, paidRows, contractRows, periodRows, settlementRows] =
+    await Promise.all([
     query<{ count: number }[]>(
       `SELECT COUNT(DISTINCT ss.school_id) AS count
        FROM school_subscriptions ss
@@ -85,11 +91,30 @@ export async function getAccountantStats(): Promise<AccountantStats> {
          AND ${hidden.sql}`,
       hidden.params,
     ),
+    query<{ purchased: number; paid: number }[]>(
+      `SELECT COUNT(*) AS purchased,
+              SUM(rr.status = 'paid') AS paid
+       FROM subscription_renewal_requests rr
+       JOIN schools s ON s.id_school = rr.school_id
+       WHERE rr.created_at >= '2026-09-01'
+         AND ${hidden.sql}`,
+      hidden.params,
+    ),
+    query<{ count: number }[]>(
+      `SELECT COUNT(*) AS count
+       FROM contract_settlements
+       WHERE settlement_date >= '2026-09-01'`,
+    ),
   ]);
   return {
     activated: Number(activatedRows[0]?.count ?? 0),
     paid: Number(paidRows[0]?.count ?? 0),
     contracts: Number(contractRows[0]?.count ?? 0),
+    sinceSeptember: {
+      purchased: Number(periodRows[0]?.purchased ?? 0),
+      paid: Number(periodRows[0]?.paid ?? 0),
+      contracts: Number(settlementRows[0]?.count ?? 0),
+    },
   };
 }
 

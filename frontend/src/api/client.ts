@@ -290,7 +290,16 @@ export const api = {
           label: string;
         } | null;
       }>;
-      stats: { activated: number; paid: number; contracts: number };
+      stats: {
+        activated: number;
+        paid: number;
+        contracts: number;
+        sinceSeptember: {
+          purchased: number;
+          paid: number;
+          contracts: number;
+        };
+      };
       archiveLimit: number;
     }>(`/api/status/renewals${query ? `?${query}` : ""}`);
   },

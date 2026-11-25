@@ -47,7 +47,12 @@ export function AccountantStatusPage() {
   const [settlementDate, setSettlementDate] = useState(moscowToday);
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<RenewalItem[]>([]);
-  const [stats, setStats] = useState({ activated: 0, paid: 0, contracts: 0 });
+  const [stats, setStats] = useState({
+    activated: 0,
+    paid: 0,
+    contracts: 0,
+    sinceSeptember: { purchased: 0, paid: 0, contracts: 0 },
+  });
   const [archiveLimit, setArchiveLimit] = useState(200);
   const [listLoading, setListLoading] = useState(false);
   const [error, setError] = useState("");
@@ -64,7 +69,12 @@ export function AccountantStatusPage() {
     setSettlementFilter("all");
     setSelectedIds([]);
     setItems([]);
-    setStats({ activated: 0, paid: 0, contracts: 0 });
+    setStats({
+      activated: 0,
+      paid: 0,
+      contracts: 0,
+      sinceSeptember: { purchased: 0, paid: 0, contracts: 0 },
+    });
     setError("");
   }, [isAccountant]);
 
@@ -292,6 +302,7 @@ export function AccountantStatusPage() {
         </button>
       </header>
 
+      <p className="status-stats__title">Всего</p>
       <div className="status-stats">
         <div className="status-stats__item">
           <span>Активировано школ</span>
@@ -304,6 +315,22 @@ export function AccountantStatusPage() {
         <div className="status-stats__item">
           <span>Договоров создано</span>
           <strong>{stats.contracts}</strong>
+        </div>
+      </div>
+
+      <p className="status-stats__title">С 1 сентября 2026</p>
+      <div className="status-stats status-stats--period">
+        <div className="status-stats__item">
+          <span>Купили подписку</span>
+          <strong>{stats.sinceSeptember.purchased}</strong>
+        </div>
+        <div className="status-stats__item">
+          <span>Из них выплачено</span>
+          <strong>{stats.sinceSeptember.paid}</strong>
+        </div>
+        <div className="status-stats__item">
+          <span>Договоров со мной</span>
+          <strong>{stats.sinceSeptember.contracts}</strong>
         </div>
       </div>
 

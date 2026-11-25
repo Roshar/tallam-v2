@@ -268,3 +268,62 @@
     grid-template-columns: 1fr;
   }
 }
+
+.status-stats__title {
+  margin: 0.2rem 0 0.5rem;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.status-stats--period .status-stats__item {
+  background: #f0f6ff;
+}
+
+.status-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.status-table td,
+.status-table th {
+  vertical-align: top;
+}
+
+.status-table__check {
+  width: 40px;
+}
+
+.status-table__num {
+  width: 48px;
+}
+
+.status-table__school {
+  width: 28%;
+}
+
+.status-table__activation {
+  width: 104px;
+  white-space: nowrap;
+}
+
+.status-table__mail {
+  width: 22%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.status-table__state {
+  width: 96px;
+  white-space: nowrap;
+}
+
+.status-table__settlement {
+  width: 150px;
+}
+
+.status-table__file {
+  width: 112px;
+}
