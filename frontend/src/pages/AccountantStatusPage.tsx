@@ -345,15 +345,6 @@ export function AccountantStatusPage() {
           <strong>{stats.sinceSeptember.contracts}</strong>
         </div>
       </div>
-      {stats.sinceSeptember.settlements.length > 0 ? (
-        <div className="status-stats__breakdown">
-          {stats.sinceSeptember.settlements.map((settlement) => (
-            <span key={settlement.id}>
-              {settlementOptionLabel(settlement)} - {settlement.schools} школ
-            </span>
-          ))}
-        </div>
-      ) : null}
 
       <div className="status-page__filters">
         <label>
@@ -380,6 +371,24 @@ export function AccountantStatusPage() {
             onChange={(event) => setSearchInput(event.target.value)}
             placeholder="Название школы"
           />
+        </label>
+        <label>
+          <span>Договор с разработчиком</span>
+          <select
+            className="form-input"
+            value={settlementId}
+            onChange={(event) => {
+              setSettlementId(Number(event.target.value));
+              setSettlementFilter("all");
+            }}
+          >
+            <option value={0}>Все</option>
+            {stats.sinceSeptember.settlements.map((settlement) => (
+              <option key={settlement.id} value={settlement.id}>
+                {settlementOptionLabel(settlement)} - {settlement.schools} школ
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           <span>Статус расчёта</span>
@@ -451,24 +460,7 @@ export function AccountantStatusPage() {
               <th>Активация</th>
               <th>Почта</th>
               <th>Статус</th>
-              <th>
-                <span>Договор с разработчиком</span>
-                <select
-                  className="status-table__select"
-                  value={settlementId}
-                  onChange={(event) => {
-                    setSettlementId(Number(event.target.value));
-                    setSettlementFilter("all");
-                  }}
-                >
-                  <option value={0}>Все</option>
-                  {stats.sinceSeptember.settlements.map((settlement) => (
-                    <option key={settlement.id} value={settlement.id}>
-                      {settlementOptionLabel(settlement)} - {settlement.schools} школ
-                    </option>
-                  ))}
-                </select>
-              </th>
+              <th>Договор с разработчиком</th>
               <th>Договор и акт</th>
             </tr>
           </thead>

@@ -93,7 +93,7 @@
 
 .status-page__filters {
   display: grid;
-  grid-template-columns: minmax(160px, 220px) minmax(180px, 1fr) minmax(180px, 240px);
+  grid-template-columns: minmax(150px, 200px) minmax(180px, 1fr) minmax(180px, 240px) minmax(160px, 220px);
   gap: 0.75rem;
   align-items: end;
   margin-bottom: 0.75rem;
