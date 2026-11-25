@@ -58,6 +58,12 @@ export interface AccountantStats {
     purchased: number;
     paid: number;
     contracts: number;
+    settlements: Array<{
+      id: number;
+      contractNumber: string | null;
+      settlementDate: string;
+      schools: number;
+    }>;
   };
 }
 
@@ -100,10 +106,23 @@ export async function getAccountantStats(): Promise<AccountantStats> {
          AND ${hidden.sql}`,
       hidden.params,
     ),
-    query<{ count: number }[]>(
-      `SELECT COUNT(*) AS count
-       FROM contract_settlements
-       WHERE settlement_date >= '2026-09-01'`,
+    query<
+      Array<{
+        id: number;
+        contractNumber: string | null;
+        settlementDate: Date | string;
+        schools: number;
+      }>
+    >(
+      `SELECT cs.id,
+              cs.contract_number AS contractNumber,
+              cs.settlement_date AS settlementDate,
+              COUNT(csi.id) AS schools
+       FROM contract_settlements cs
+       LEFT JOIN contract_settlement_items csi ON csi.settlement_id = cs.id
+       WHERE cs.settlement_date >= '2026-09-01'
+       GROUP BY cs.id, cs.contract_number, cs.settlement_date
+       ORDER BY cs.settlement_date, cs.id`,
     ),
   ]);
   return {
@@ -113,7 +132,13 @@ export async function getAccountantStats(): Promise<AccountantStats> {
     sinceSeptember: {
       purchased: Number(periodRows[0]?.purchased ?? 0),
       paid: Number(periodRows[0]?.paid ?? 0),
-      contracts: Number(settlementRows[0]?.count ?? 0),
+      contracts: settlementRows.length,
+      settlements: settlementRows.map((row) => ({
+        id: Number(row.id),
+        contractNumber: row.contractNumber,
+        settlementDate: isoDateOnly(row.settlementDate) ?? "",
+        schools: Number(row.schools ?? 0),
+      })),
     },
   };
 }

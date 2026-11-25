@@ -298,6 +298,12 @@ export const api = {
           purchased: number;
           paid: number;
           contracts: number;
+          settlements: Array<{
+            id: number;
+            contractNumber: string | null;
+            settlementDate: string;
+            schools: number;
+          }>;
         };
       };
       archiveLimit: number;

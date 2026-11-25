@@ -51,7 +51,17 @@ export function AccountantStatusPage() {
     activated: 0,
     paid: 0,
     contracts: 0,
-    sinceSeptember: { purchased: 0, paid: 0, contracts: 0 },
+    sinceSeptember: {
+      purchased: 0,
+      paid: 0,
+      contracts: 0,
+      settlements: [] as Array<{
+        id: number;
+        contractNumber: string | null;
+        settlementDate: string;
+        schools: number;
+      }>,
+    },
   });
   const [archiveLimit, setArchiveLimit] = useState(200);
   const [listLoading, setListLoading] = useState(false);
@@ -73,7 +83,12 @@ export function AccountantStatusPage() {
       activated: 0,
       paid: 0,
       contracts: 0,
-      sinceSeptember: { purchased: 0, paid: 0, contracts: 0 },
+      sinceSeptember: {
+        purchased: 0,
+        paid: 0,
+        contracts: 0,
+        settlements: [],
+      },
     });
     setError("");
   }, [isAccountant]);
@@ -333,6 +348,17 @@ export function AccountantStatusPage() {
           <strong>{stats.sinceSeptember.contracts}</strong>
         </div>
       </div>
+      {stats.sinceSeptember.settlements.length > 0 ? (
+        <div className="status-stats__breakdown">
+          {stats.sinceSeptember.settlements.map((settlement) => (
+            <span key={settlement.id}>
+              {settlement.contractNumber ?? "Без номера"} от{" "}
+              {formatActivationDate(settlement.settlementDate)} -{" "}
+              {settlement.schools} школ
+            </span>
+          ))}
+        </div>
+      ) : null}
 
       <div className="status-page__filters">
         <label>
