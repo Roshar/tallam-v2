@@ -25,6 +25,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
   impersonateSchool: (schoolId: number) => Promise<void>;
+  impersonateAccountant: () => Promise<void>;
   stopImpersonation: () => Promise<void>;
 }
 
@@ -107,9 +108,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.location.assign(schoolLandingPath(schoolUser));
   }, []);
 
+  const impersonateAccountant = useCallback(async () => {
+    const { user: accountant } = await api.impersonateAccountant();
+    setUser(accountant);
+    window.location.assign("/status");
+  }, []);
+
   const stopImpersonation = useCallback(async () => {
-    const { schoolId } = await api.stopImpersonation();
-    window.location.assign(`/admin/schools/${schoolId}`);
+    const { returnTo } = await api.stopImpersonation();
+    window.location.assign(returnTo);
   }, []);
 
   const value = useMemo(
@@ -121,6 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refresh,
       impersonateSchool,
+      impersonateAccountant,
       stopImpersonation,
     }),
     [
@@ -131,6 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       refresh,
       impersonateSchool,
+      impersonateAccountant,
       stopImpersonation,
     ],
   );

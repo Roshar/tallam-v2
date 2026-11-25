@@ -18,7 +18,7 @@ import {
   buildRenewalDocument,
   RenewalDocumentUnavailableError,
 } from "../services/subscription-documents.service.js";
-import type { SessionUser } from "../types/session.js";
+import { buildAccountantSession } from "../services/accountant-session.service.js";
 
 function secretsMatch(left: string, right: string): boolean {
   const a = createHash("sha256").update(left).digest();
@@ -42,18 +42,6 @@ function filters(req: Request) {
 
 const REMEMBER_SESSION_MS = 30 * 24 * 60 * 60 * 1000;
 
-function accountantSession(login: string): SessionUser {
-  return {
-    id: 0,
-    idUser: "accountant",
-    email: login,
-    role: "accountant",
-    schoolId: 0,
-    status: "on",
-    accountType: "accountant",
-  };
-}
-
 export async function login(req: Request, res: Response) {
   const loginName = String((req.body as { login?: string })?.login ?? "")
     .trim()
@@ -74,7 +62,7 @@ export async function login(req: Request, res: Response) {
   }
 
   const remember = (req.body as { remember?: unknown }).remember === true;
-  req.session.user = accountantSession(expectedLogin);
+  req.session.user = buildAccountantSession();
   req.session.impersonator = undefined;
   if (remember) {
     req.session.cookie.maxAge = REMEMBER_SESSION_MS;

@@ -23,7 +23,7 @@ function moscowToday(): string {
 }
 
 export function AccountantStatusPage() {
-  const { user, loading, loginAccountant, logout } = useAuth();
+  const { user, loading, loginAccountant, logout, stopImpersonation } = useAuth();
   const [login, setLogin] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
@@ -254,6 +254,23 @@ export function AccountantStatusPage() {
 
   return (
     <div className="status-page">
+      {user?.impersonatedBy ? (
+        <div className="impersonation-banner">
+          <div className="page-container impersonation-banner__inner">
+            <p>
+              Вы вошли как бухгалтер. Администратор:{" "}
+              {user.impersonatedBy.email}
+            </p>
+            <button
+              className="btn btn-ghost"
+              type="button"
+              onClick={() => void stopImpersonation()}
+            >
+              Вернуться в админку
+            </button>
+          </div>
+        </div>
+      ) : null}
       <header className="status-page__header">
         <div>
           <p className="status-page__brand">Tallam</p>

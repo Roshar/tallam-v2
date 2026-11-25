@@ -500,3 +500,15 @@
 - **Где:** `backend/src/services/school-contract-data.service.ts`; эндпоинты `GET/PUT /api/school/contract-data`; `frontend/src/pages/school/SchoolContractDataPage.tsx` и маршрут `/school/contract-data`; баннер на `frontend/src/pages/school/SchoolHomePage.tsx`; отметка в `frontend/src/pages/AccountantStatusPage.tsx`; используется существующая `subscription_renewal_requests` (данные зашифрованы), `subscription_manual_activations` и генератор `subscription-documents.service.ts`.
 - **Проверка:** локально школа 423 подключена после аварии; после заполнения формы получен договор `Д-2026-11-0005`, PDF на 3 страницы; тот же PDF скачан бухгалтером через `/api/status/renewals/8/contract`. На проде 12 школ: 69, 76, 114, 144, 206, 213, 231, 408, 413, 416, 529, 541; период у всех 04.11.2026–04.11.2027, сумма 10 000 ₽.
 - **Ограничения:** форма доступна только школам с ручной активацией после аварии; договор заключается с физическим лицом (директором), как в текущем шаблоне; данные шифруются; сумма в существующем шаблоне фиксированная, 10 000 ₽; отправка запроса школам и выкат на прод выполняются отдельно.
+
+---
+
+## 16. Вход администратора под бухгалтером
+
+### 16.1 Переход в кабинет бухгалтера из админки
+`🚧` · введено 24.11.2026, DeepSeek Harness (локальная ветка `feature/ai-assistant`)
+
+- **Что:** в шапке админки появилась кнопка «Войти как бухгалтер». Администратор попадает в кабинет бухгалтера `/status` без ввода логина и пароля. В кабинете бухгалтера показывается баннер «Вы вошли как бухгалтер» с кнопкой «Вернуться в админку». Возврат восстанавливает админскую сессию и ведёт на `/admin/cabinet`.
+- **Где:** `backend/src/controllers/admin.controller.ts` (`impersonateAccountant`), `backend/src/routes/admin.routes.ts` (`POST /api/admin/impersonate-accountant`), `backend/src/services/accountant-session.service.ts`, `backend/src/controllers/auth.controller.ts` (возврат), `frontend/src/components/AdminCabinetShell.tsx`, `frontend/src/context/AuthContext.tsx`, `frontend/src/api/client.ts`, `frontend/src/pages/AccountantStatusPage.tsx`.
+- **Проверка:** войти администратором, нажать «Войти как бухгалтер» в шапке. Откроется `/status` с баннером возврата. Нажать «Вернуться в админку» - откроется `/admin/cabinet` под администратором. В аудите будут `auth.impersonate_accountant` и `auth.impersonation_stopped`.
+- **Ограничения:** доступно только администратору; бухгалтерская сессия использует общий логин из конфигурации; повторный вход под бухгалтером без возврата запрещён.

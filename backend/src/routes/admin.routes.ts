@@ -94,6 +94,10 @@ router.post(
   }),
   adminController.createSchool,
 );
+router.post(
+  "/impersonate-accountant",
+  adminController.impersonateAccountant,
+);
 router.get("/schools", adminController.schools);
 router.post(
   "/schools/:schoolId/impersonate",

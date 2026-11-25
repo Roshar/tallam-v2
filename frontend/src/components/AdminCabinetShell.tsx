@@ -20,9 +20,19 @@ const ADMIN_MENU = [
 ] as const;
 
 export function AdminCabinetShell() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading, logout, impersonateAccountant } = useAuth();
   const location = useLocation();
+  const [accountantLoading, setAccountantLoading] = useState(false);
   const [renewalQueue, setRenewalQueue] = useState(0);
+
+  async function openAccountantCabinet() {
+    setAccountantLoading(true);
+    try {
+      await impersonateAccountant();
+    } finally {
+      setAccountantLoading(false);
+    }
+  }
   const [feedbackUnread, setFeedbackUnread] = useState(0);
   const [recoveryUnread, setRecoveryUnread] = useState(0);
 
@@ -127,6 +137,14 @@ export function AdminCabinetShell() {
 
             <div className="cabinet-nav__user">
               <span className="cabinet-nav__email">{user.email}</span>
+              <button
+                className="btn btn-ghost"
+                type="button"
+                disabled={accountantLoading}
+                onClick={() => void openAccountantCabinet()}
+              >
+                {accountantLoading ? "Вход..." : "Войти как бухгалтер"}
+              </button>
               <button
                 className="btn btn-ghost"
                 type="button"

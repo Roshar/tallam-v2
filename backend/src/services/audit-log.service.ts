@@ -15,6 +15,9 @@ export const AUDIT_ACTIONS = [
   {
     category: "auth",
     action: "auth.impersonate_school",
+  },
+  {
+    action: "auth.impersonate_accountant",
     label: "Вход под учётной записью школы",
   },
   {

@@ -346,7 +346,7 @@ export const api = {
   },
 
   stopImpersonation() {
-    return request<{ user: User; schoolId: number }>(
+    return request<{ user: User; schoolId: number; returnTo: string }>(
       "/api/auth/stop-impersonation",
       { method: "POST" },
     );
@@ -502,6 +502,12 @@ export const api = {
       `/api/admin/schools/${schoolId}/impersonate`,
       { method: "POST" },
     );
+  },
+
+  impersonateAccountant() {
+    return request<{ user: User }>("/api/admin/impersonate-accountant", {
+      method: "POST",
+    });
   },
 
   adminSubscriptions(params?: {

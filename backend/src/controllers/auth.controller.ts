@@ -105,6 +105,7 @@ export async function stopImpersonation(req: Request, res: Response) {
   }
 
   const schoolId = schoolUser.schoolId;
+  const isAccountant = schoolUser.accountType === "accountant";
   await recordAuditLog({
     actorUserId: admin.id,
     actorEmail: admin.email,
@@ -113,9 +114,11 @@ export async function stopImpersonation(req: Request, res: Response) {
     category: "auth",
     action: "auth.impersonation_stopped",
     status: "success",
-    entityType: "school",
-    entityId: schoolId,
-    details: { schoolEmail: schoolUser.email },
+    entityType: isAccountant ? "accountant" : "school",
+    entityId: isAccountant ? 0 : schoolId,
+    details: isAccountant
+      ? { accountantEmail: schoolUser.email }
+      : { schoolEmail: schoolUser.email },
     ipAddress: req.ip || req.socket.remoteAddress || null,
     userAgent: req.get("user-agent") ?? null,
   });
@@ -126,5 +129,9 @@ export async function stopImpersonation(req: Request, res: Response) {
   await new Promise<void>((resolve, reject) => {
     req.session.save((err) => (err ? reject(err) : resolve()));
   });
-  return res.json({ user: admin, schoolId });
+  return res.json({
+    user: admin,
+    schoolId,
+    returnTo: isAccountant ? "/admin/cabinet" : `/admin/schools/${schoolId}`,
+  });
 }

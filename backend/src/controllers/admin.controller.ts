@@ -1,3 +1,4 @@
+import { buildAccountantSession } from "../services/accountant-session.service.js";
 import ExcelJS from "exceljs";
 import type { Request, Response } from "express";
 import path from "node:path";
@@ -383,6 +384,45 @@ export async function schoolDetail(req: Request, res: Response) {
   } catch (error) {
     console.error("Admin school detail error:", error);
     return res.status(500).json({ error: "Не удалось загрузить данные школы" });
+  }
+}
+
+export async function impersonateAccountant(req: Request, res: Response) {
+  const admin = req.session.user;
+  if (!admin || admin.accountType !== "admin") {
+    return res.status(403).json({ error: "Недостаточно прав" });
+  }
+  if (req.session.impersonator) {
+    return res.status(400).json({ error: "Сначала вернитесь из другого кабинета" });
+  }
+
+  try {
+    const accountant = buildAccountantSession();
+    accountant.impersonatedBy = { id: admin.id, email: admin.email };
+
+    await recordAuditLog({
+      actorUserId: admin.id,
+      actorEmail: admin.email,
+      actorAccountType: "admin",
+      category: "auth",
+      action: "auth.impersonate_accountant",
+      status: "success",
+      entityType: "accountant",
+      entityId: 0,
+      details: { accountantEmail: accountant.email },
+      ipAddress: req.ip || req.socket.remoteAddress || null,
+      userAgent: req.get("user-agent") ?? null,
+    });
+
+    req.session.impersonator = admin;
+    req.session.user = accountant;
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => (err ? reject(err) : resolve()));
+    });
+    return res.json({ user: accountant });
+  } catch (error) {
+    console.error("Admin impersonate accountant error:", error);
+    return res.status(500).json({ error: "Не удалось войти как бухгалтер" });
   }
 }
 
