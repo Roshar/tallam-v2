@@ -120,7 +120,7 @@ export async function getAccountantStats(): Promise<AccountantStats> {
               COUNT(csi.id) AS schools
        FROM contract_settlements cs
        LEFT JOIN contract_settlement_items csi ON csi.settlement_id = cs.id
-       WHERE cs.settlement_date >= '2026-09-01'
+       WHERE cs.settlement_date >= '2026-08-31'
        GROUP BY cs.id, cs.contract_number, cs.settlement_date
        ORDER BY cs.settlement_date, cs.id`,
     ),
