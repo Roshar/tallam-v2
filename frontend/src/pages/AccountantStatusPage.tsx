@@ -29,6 +29,16 @@ function formatActivationDate(value: string | null): string {
   return year && month && day ? `${day}.${month}.${year}` : value;
 }
 
+function settlementOptionLabel(settlement: {
+  contractNumber: string | null;
+  settlementDate: string;
+}): string {
+  const number = settlement.contractNumber?.trim() || "Без номера";
+  return number.includes(" от ")
+    ? number
+    : `${number} от ${formatActivationDate(settlement.settlementDate)}`;
+}
+
 export function AccountantStatusPage() {
   const { user, loading, loginAccountant, logout, stopImpersonation } = useAuth();
   const [login, setLogin] = useState("");
@@ -41,6 +51,7 @@ export function AccountantStatusPage() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [settlementFilter, setSettlementFilter] = useState<SettlementFilter>("all");
+  const [settlementId, setSettlementId] = useState(0);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [contractNumber, setContractNumber] = useState("");
@@ -77,6 +88,7 @@ export function AccountantStatusPage() {
     setSearchInput("");
     setSearch("");
     setSettlementFilter("all");
+    setSettlementId(0);
     setSelectedIds([]);
     setItems([]);
     setStats({
@@ -118,6 +130,7 @@ export function AccountantStatusPage() {
         areaId: areaId || undefined,
         search: search || undefined,
         settlement: settlementFilter,
+        settlementId: settlementId || undefined,
       })
       .then((data) => {
         if (!active) return;
@@ -139,7 +152,7 @@ export function AccountantStatusPage() {
     return () => {
       active = false;
     };
-  }, [isAccountant, areaId, search, settlementFilter]);
+  }, [isAccountant, areaId, search, settlementFilter, settlementId]);
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
@@ -317,22 +330,6 @@ export function AccountantStatusPage() {
         </button>
       </header>
 
-      <p className="status-stats__title">Всего</p>
-      <div className="status-stats">
-        <div className="status-stats__item">
-          <span>Активировано школ</span>
-          <strong>{stats.activated}</strong>
-        </div>
-        <div className="status-stats__item">
-          <span>Выплачено</span>
-          <strong>{stats.paid}</strong>
-        </div>
-        <div className="status-stats__item">
-          <span>Договоров создано</span>
-          <strong>{stats.contracts}</strong>
-        </div>
-      </div>
-
       <p className="status-stats__title">С 1 сентября 2026</p>
       <div className="status-stats status-stats--period">
         <div className="status-stats__item">
@@ -344,7 +341,7 @@ export function AccountantStatusPage() {
           <strong>{stats.sinceSeptember.paid}</strong>
         </div>
         <div className="status-stats__item">
-          <span>Договоров со мной</span>
+          <span>Договоров с разработчиком</span>
           <strong>{stats.sinceSeptember.contracts}</strong>
         </div>
       </div>
@@ -352,9 +349,7 @@ export function AccountantStatusPage() {
         <div className="status-stats__breakdown">
           {stats.sinceSeptember.settlements.map((settlement) => (
             <span key={settlement.id}>
-              {settlement.contractNumber ?? "Без номера"} от{" "}
-              {formatActivationDate(settlement.settlementDate)} -{" "}
-              {settlement.schools} школ
+              {settlementOptionLabel(settlement)} - {settlement.schools} школ
             </span>
           ))}
         </div>
@@ -387,17 +382,31 @@ export function AccountantStatusPage() {
           />
         </label>
         <label>
-          <span>Расчёт по договору</span>
+          <span>Договор с разработчиком</span>
           <select
             className="form-input"
-            value={settlementFilter}
-            onChange={(event) =>
-              setSettlementFilter(event.target.value as SettlementFilter)
+            value={
+              settlementId ? `settlement:${settlementId}` : settlementFilter
             }
+            onChange={(event) => {
+              const value = event.target.value;
+              if (value.startsWith("settlement:")) {
+                setSettlementId(Number(value.slice("settlement:".length)));
+                setSettlementFilter("all");
+              } else {
+                setSettlementId(0);
+                setSettlementFilter(value as SettlementFilter);
+              }
+            }}
           >
             <option value="all">Все</option>
             <option value="pending">Не оформлен</option>
             <option value="settled">Оформлен</option>
+            {stats.sinceSeptember.settlements.map((settlement) => (
+              <option key={settlement.id} value={`settlement:${settlement.id}`}>
+                {settlementOptionLabel(settlement)} - {settlement.schools} школ
+              </option>
+            ))}
           </select>
         </label>
       </div>
@@ -455,7 +464,7 @@ export function AccountantStatusPage() {
               <th>Активация</th>
               <th>Почта</th>
               <th>Статус</th>
-              <th>Расчёт по договору</th>
+              <th>Договор с разработчиком</th>
               <th>Договор и акт</th>
             </tr>
           </thead>

@@ -38,6 +38,7 @@ function filters(req: Request) {
     areaId: Number(req.query.areaId ?? 0) || 0,
     search: String(req.query.search ?? ""),
     settlement: parseSettlementFilter(String(req.query.settlement ?? "")),
+    settlementId: Number(req.query.settlementId ?? 0) || 0,
   };
 }
 

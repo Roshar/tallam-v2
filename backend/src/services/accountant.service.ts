@@ -153,7 +153,12 @@ function likeTerm(search: string): string | null {
   return value ? `%${value}%` : null;
 }
 
-function filters(areaId: number, search: string, settlement: SettlementFilter) {
+function filters(
+  areaId: number,
+  search: string,
+  settlement: SettlementFilter,
+  settlementId = 0,
+) {
   const hidden = hiddenSchoolFilter();
   const conditions = ["rr.status = 'paid'", hidden.sql];
   const params: unknown[] = [...hidden.params];
@@ -168,6 +173,10 @@ function filters(areaId: number, search: string, settlement: SettlementFilter) {
   }
   if (settlement === "pending") conditions.push("csi.id IS NULL");
   if (settlement === "settled") conditions.push("csi.id IS NOT NULL");
+  if (Number.isInteger(settlementId) && settlementId > 0) {
+    conditions.push("csi.settlement_id = ?");
+    params.push(settlementId);
+  }
   return { where: conditions.join(" AND "), params };
 }
 
@@ -215,6 +224,7 @@ export async function listAccountantRenewals(input: {
   areaId: number;
   search: string;
   settlement?: SettlementFilter;
+  settlementId?: number;
 }): Promise<AccountantRenewalRow[]> {
   await ensureSubscriptionRenewalSchema();
   await ensureContractSettlementSchema();
@@ -222,6 +232,7 @@ export async function listAccountantRenewals(input: {
     input.areaId,
     input.search,
     input.settlement ?? "all",
+    input.settlementId ?? 0,
   );
   const rows = await query<
     Array<

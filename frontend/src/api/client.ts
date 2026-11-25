@@ -265,12 +265,16 @@ export const api = {
     areaId?: number;
     search?: string;
     settlement?: "all" | "pending" | "settled";
+    settlementId?: number;
   }) {
     const search = new URLSearchParams();
     if (params?.areaId) search.set("areaId", String(params.areaId));
     if (params?.search) search.set("search", params.search);
     if (params?.settlement && params.settlement !== "all") {
       search.set("settlement", params.settlement);
+    }
+    if (params?.settlementId) {
+      search.set("settlementId", String(params.settlementId));
     }
     const query = search.toString();
     return request<{
